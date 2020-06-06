@@ -2,23 +2,23 @@ module AST where
 
 import Data.Text
 
-data Statement
+data Stmt
     = SEmpty
-    | SExpression Expression
-    | SVar VarName Expression -- ^ Declaring a local variable
-    | SAssign Variable Expression -- ^ Assigning an existing variable
+    | SExpression Expr
+    | SVar VarName Expr -- ^ Declaring a local variable
+    | SAssign Variable Expr -- ^ Assigning an existing variable
     | SWith VarName Block
-    | SFor Statement Expression Expression Block
+    | SFor Stmt Expr Expr Block {-TODO: limit to assign/declare -}
     | SBreak -- ^ Break from a loop
-    | SIf Expression Block Block
-    | SReturn Expression
+    | SIf Expr Block Block
+    | SReturn Expr
     | SExit -- ^ Exit from a script/event
     deriving (Eq, Show)
 
-type Block = [Statement]
+type Block = [Stmt]
 
 {-| Unary operators. -}
-data UnOp = UPreInc | UPostInc | UPreDec | UPostDec | UNot
+data UnOp = UPreInc | UPostInc | UPreDec | UPostDec | UNeg | UNot
     deriving (Eq, Show)
 
 {-| Binary operators. -}
@@ -26,20 +26,20 @@ data BinOp = BAdd | BSub | BMul | BDiv | BLess | BEq | BGreater
     deriving (Eq, Show)
 
 {-| Expressions which can be evaluated to a value. -}
-data Expression
-    = EUnary UnOp Expression
-    | EBinary Expression BinOp Expression
-    | EFuncall FunName [Expression] -- ^ Function/script call with arguments
-    | EVariable Variable
-    | ELiteral Literal
+data Expr
+    = EUnary UnOp Expr
+    | EBinary BinOp Expr Expr
+    | EFuncall FunName [Expr] -- ^ Function/script call with arguments
+    | EVar Variable
+    | ELit Literal
     deriving (Eq, Show)
 
 {-| Variables that hold a value and may be read or changed. -}
 data Variable
     = VVar VarName -- ^ Local, instance or global variable
-    | VField Variable VarName -- ^ Field/instance variable
-    | VArray Variable Expression -- ^ One-dimensional array, indexed by a number
-    | VArray2 Variable (Expression, Expression) -- ^ Two-dimensional array, indexed by two numbers
+    | VField VarName VarName -- ^ Field/instance variable
+    | VArray Variable Expr -- ^ One-dimensional array, indexed by a number
+    | VArray2 Variable (Expr, Expr) -- ^ Two-dimensional array, indexed by two numbers
     deriving (Eq, Show)
 
 type FunName = String
