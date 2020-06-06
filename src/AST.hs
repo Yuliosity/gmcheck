@@ -5,17 +5,28 @@ import Data.Text
 data Stmt
     = SEmpty
     | SExpression Expr
-    | SDeclare VarName Expr -- ^ Declaring a local variable
+    | SDeclare VarName (Maybe Expr) -- ^ Declaring a local variable
     | SAssign Variable Expr -- ^ Assigning an existing variable
+    | SModify Variable ModifyOp Expr
     | SWith VarName Block
+    | SRepeat Expr Block
+    | SWhile Expr Block
+    | SDoUntil Stmt Block
     | SFor Stmt Expr Expr Block {-TODO: limit to assign/declare -}
-    | SBreak -- ^ Break from a loop
+    | SSwitch Expr [Block]
+    | SBreak -- ^ Break from a loop or switch-case
+    | SContinue 
     | SIf Expr Block Block
     | SReturn Expr
     | SExit -- ^ Exit from a script/event
     deriving (Eq, Show)
 
 type Block = [Stmt]
+
+data ModifyOp
+    = MAdd | MSub | MMul | MDiv
+    | MAnd | MOr | MXor
+    deriving (Eq, Show)
 
 {-| Unary operators, in order of precedence. -}
 data UnOp
@@ -29,7 +40,7 @@ data BinOp
     = BIntDiv | BMod
     | BMul | BDiv
     | BAdd | BSub 
-    | BEq | BNotEq | BLess | BGreater | BLTE | BGTE
+    | BEq | BNotEq | BLess | BGreater | BLessEq | BGreaterEq
     | BAnd | BOr | BXor | BShr | BShl
     | BBitAnd | BBitOr | BBitXor
     deriving (Eq, Show)
@@ -38,6 +49,7 @@ data BinOp
 data Expr
     = EUnary UnOp Expr
     | EBinary BinOp Expr Expr
+    | ETernary Expr Expr Expr -- ^ Ternary conditional [cond ? t : f]
     | EFuncall FunName [Expr] -- ^ Function/script call with arguments
     | EVar Variable
     | ELit Literal

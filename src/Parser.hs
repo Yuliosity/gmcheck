@@ -39,7 +39,7 @@ literal =
 
 assignOp = symbol "=" <|> symbol ":="
 
-sDeclare = SDeclare <$> (symbol "var" *> varName) <*> (assignOp *> expr)
+sDeclare = SDeclare <$> (symbol "var" *> varName) <*> optional (assignOp *> expr)
 
 sAssign = SAssign <$> variable <*> (assignOp *> expr)
 
