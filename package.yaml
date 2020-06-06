@@ -1,5 +1,5 @@
 name:                gmcheck
-version:             0.1.0.0
+version:             0.0.1.0
 github:              "yuuri/gmcheck"
 license:             BSD3
 author:              "Yuri Gorshkov"
@@ -21,6 +21,8 @@ description:         Please see the README on BitBucket at <https://bitbucket.or
 
 dependencies:
 - base >= 4.7 && < 5
+- megaparsec
+- text
 
 library:
   source-dirs: src

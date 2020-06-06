@@ -1,3 +1,5 @@
+module AST where
+
 data Statement
     = SEmpty
     | SExpression Expression
@@ -37,4 +39,4 @@ type FunName = String
 
 type VarName = String
 
-data Literal = LNumeric Float | LString String
+data Literal = LNumeric Double | LString String
