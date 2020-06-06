@@ -37,25 +37,65 @@ literal =
     LNumeric <$> numericLiteral
     <|> LString <$> stringLiteral
 
-sVar = SVar <$> (string "var" *> varName) <*> (string "=" *> expr)
+assignOp = symbol "=" <|> symbol ":="
+
+sDeclare = SDeclare <$> (symbol "var" *> varName) <*> (assignOp *> expr)
+
+sAssign = SAssign <$> variable <*> (assignOp *> expr)
+
+brackets :: Parser a -> Parser a
+brackets = between (symbol "[") (symbol "]")
+
+variable = choice
+    [ VVar <$> varName
+    , VField <$> varName <*> (symbol "." *> variable)
+    , VArray <$> variable <*> brackets expr
+    , VArray2 <$> variable <*> brackets ((,) <$> expr <*> (symbol "," *> expr))
+    ]
 
 varName = (:) <$> letterChar <*> many alphaNumChar <?> "variable"
 
-statement :: Parser Stmt
-statement = sVar
+stmt :: Parser Stmt
+stmt = sDeclare
 
 opTable :: [[Operator Parser Expr]]
 opTable =
     [   [ prefix "-" (EUnary UNeg)
-        , prefix "--" (EUnary UPreDec)
-        , prefix "++" (EUnary UPostDec)
+        , prefix "~" (EUnary UBitNeg)
+        , prefix "!" (EUnary UNot)
         , prefix "+" id
+        ]
+    ,   [ binary "div" (EBinary BIntDiv)
+        , binary "%" (EBinary BMod)
+        , binary "mod" (EBinary BMod)
+        ]
+    ,   [ prefix "--" (EUnary UPreDec)
+        , prefix "++" (EUnary UPreInc)
+        , postfix "--" (EUnary UPostDec)
+        , postfix "++" (EUnary UPostInc)
+        ]
+    ,   [ binary "|" (EBinary BBitOr)
+        , binary "&" (EBinary BBitAnd)
+        , binary "^" (EBinary BBitXor)
+        , binary ">>" (EBinary BShr)
+        , binary "<<" (EBinary BShl)
         ]
     ,   [ binary "*" (EBinary BMul)
         , binary "/" (EBinary BDiv)
         ]
     ,   [ binary "+" (EBinary BAdd)
         , binary "-" (EBinary BSub)
+        ]
+    ,   [ binary "<" (EBinary BLess)
+        , binary "==" (EBinary BEq)
+        , binary "!=" (EBinary BNotEq)
+        , binary ">" (EBinary BGreater)
+        , binary "<=" (EBinary BLessEq)
+        , binary ">=" (EBinary BGreaterEq)
+        ]
+    ,   [ binary "&&" (EBinary BAnd)
+        , binary "||" (EBinary BOr)
+        , binary "^^" (EBinary BXor)
         ]
     ]
 
@@ -65,8 +105,6 @@ binary  name f = InfixL  (f <$ symbol name)
 prefix, postfix :: Text -> (Expr -> Expr) -> Operator Parser Expr
 prefix  name f = Prefix  (f <$ symbol name)
 postfix name f = Postfix (f <$ symbol name)
-
-variable = VVar <$> varName
 
 eTerm = choice [ELit <$> literal, EVar <$> variable]
 

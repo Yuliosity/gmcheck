@@ -5,7 +5,7 @@ import Data.Text
 data Stmt
     = SEmpty
     | SExpression Expr
-    | SVar VarName Expr -- ^ Declaring a local variable
+    | SDeclare VarName Expr -- ^ Declaring a local variable
     | SAssign Variable Expr -- ^ Assigning an existing variable
     | SWith VarName Block
     | SFor Stmt Expr Expr Block {-TODO: limit to assign/declare -}
@@ -17,12 +17,21 @@ data Stmt
 
 type Block = [Stmt]
 
-{-| Unary operators. -}
-data UnOp = UPreInc | UPostInc | UPreDec | UPostDec | UNeg | UNot
+{-| Unary operators, in order of precedence. -}
+data UnOp
+    = UBitNeg | UNeg | UNot
+    | UPreInc | UPreDec
+    | UPostInc | UPostDec
     deriving (Eq, Show)
 
-{-| Binary operators. -}
-data BinOp = BAdd | BSub | BMul | BDiv | BLess | BEq | BGreater
+{-| Binary operators, in order of precedence. -}
+data BinOp
+    = BIntDiv | BMod
+    | BMul | BDiv
+    | BAdd | BSub 
+    | BEq | BNotEq | BLess | BGreater | BLTE | BGTE
+    | BAnd | BOr | BXor | BShr | BShl
+    | BBitAnd | BBitOr | BBitXor
     deriving (Eq, Show)
 
 {-| Expressions which can be evaluated to a value. -}
@@ -37,7 +46,7 @@ data Expr
 {-| Variables that hold a value and may be read or changed. -}
 data Variable
     = VVar VarName -- ^ Local, instance or global variable
-    | VField VarName VarName -- ^ Field/instance variable
+    | VField VarName Variable -- ^ Field/instance variable
     | VArray Variable Expr -- ^ One-dimensional array, indexed by a number
     | VArray2 Variable (Expr, Expr) -- ^ Two-dimensional array, indexed by two numbers
     deriving (Eq, Show)
