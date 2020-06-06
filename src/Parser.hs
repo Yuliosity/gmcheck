@@ -17,6 +17,9 @@ type Parser = Parsec Void Text
 sc :: Parser ()
 sc = L.space space1 (L.skipLineComment "//") (L.skipBlockComment "/*" "*/")
 
+parens :: Parser a -> Parser a
+parens = between (symbol "(") (symbol ")")
+
 lexeme :: Parser a -> Parser a
 lexeme = L.lexeme sc
 
@@ -26,7 +29,7 @@ symbol = L.symbol sc
 {-| Number literal.-}
 numericLiteral :: Parser Double
 numericLiteral =
-    lexeme (L.signed sc L.float)
+    try (lexeme (L.signed sc L.float))
     <|> fromIntegral <$> lexeme (L.signed sc L.decimal)
 
 {-| String literal.-}
@@ -47,9 +50,9 @@ brackets :: Parser a -> Parser a
 brackets = between (symbol "[") (symbol "]")
 
 variable = choice
-    [ VVar <$> varName
-    , VField <$> varName <*> (symbol "." *> variable)
-    , VArray <$> variable <*> brackets expr
+    [ VVar <$> try varName
+    , VField <$> try varName <*> (symbol "." *> variable)
+    , VArray <$> try variable <*> brackets expr
     , VArray2 <$> variable <*> brackets ((,) <$> expr <*> (symbol "," *> expr))
     ]
 
@@ -106,7 +109,7 @@ prefix, postfix :: Text -> (Expr -> Expr) -> Operator Parser Expr
 prefix  name f = Prefix  (f <$ symbol name)
 postfix name f = Postfix (f <$ symbol name)
 
-eTerm = choice [ELit <$> literal, EVar <$> variable]
+eTerm = choice [parens expr, ELit <$> literal, EVar <$> variable]
 
 expr :: Parser Expr
 expr = makeExprParser eTerm opTable

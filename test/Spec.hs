@@ -1,7 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-import Text.Megaparsec
 import Test.Hspec
+import Test.Hspec.Megaparsec
+import Text.Megaparsec
 
 import AST
 import Parser
@@ -15,20 +16,20 @@ baz = VVar "baz"
 
 vars = describe "variables" $ do
     it "can parse fields" $ do
-        parse (variable <* eof) "test" "foo" `shouldBe` Right foo
-        parse (variable <* eof) "test" "bar.foo" `shouldBe` Right (VField "bar" foo)
+        parse variable "test" "foo" `shouldParse` foo
+        parse variable "test" "bar.foo" `shouldParse` (VField "bar" foo)
     it "can parse arrays" $ do
-        parse (variable <* eof) "test" "foo[42.0]" `shouldBe` Right (VArray foo lit42)
-        parse (variable <* eof) "test" "baz.bar[foo]" `shouldBe` Right (VField "baz" $ VArray bar $ EVar foo)
+        parse variable "test" "foo[42.0]" `shouldParse` (VArray foo lit42)
+        parse variable "test" "baz.bar[foo]" `shouldParse` (VField "baz" $ VArray bar $ EVar foo)
     it "can parse nested fields" $ do
-        parse (variable <* eof) "test" "baz[bar[foo]]" `shouldBe` Right (VArray baz $ EVar $ VArray bar $ EVar foo)
+        parse variable "test" "baz[bar[foo]]" `shouldParse` (VArray baz $ EVar $ VArray bar $ EVar foo)
 
 simpleExpr = describe "simple expressions" $ do
     it "can parse a single literal" $ do
-        parse (expr <* eof) "test" "42.0" `shouldBe` Right lit42
-        parse (expr <* eof) "test" "\"string\"" `shouldBe` Right litString
+        parse expr "test" "42.0" `shouldParse` lit42
+        parse expr "test" "\"string\"" `shouldParse` litString
     it "can parse binary operators" $ do
-        parse (expr <* eof) "test" "42.0+foo" `shouldBe` Right (EBinary BAdd lit42 $ EVar foo)
+        parse expr "test" "42.0+foo" `shouldParse` (EBinary BAdd lit42 $ EVar foo)
 
 main :: IO ()
 main = hspec $ do
