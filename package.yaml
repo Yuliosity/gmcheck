@@ -49,4 +49,5 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - hspec
+    - hspec-megaparsec
     - gmcheck

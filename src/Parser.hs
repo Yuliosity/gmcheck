@@ -13,18 +13,30 @@ import AST
 
 type Parser = Parsec Void Text
 
+-- $token
+-- Basic tokens
+
 {-| Spaces and comments skipper. -}
 sc :: Parser ()
 sc = L.space space1 (L.skipLineComment "//") (L.skipBlockComment "/*" "*/")
-
-parens :: Parser a -> Parser a
-parens = between (symbol "(") (symbol ")")
 
 lexeme :: Parser a -> Parser a
 lexeme = L.lexeme sc
 
 symbol :: Text -> Parser Text
 symbol = L.symbol sc
+
+parens, curly, brackets :: Parser a -> Parser a
+parens = between (symbol "(") (symbol ")")
+curly = between (symbol "{") (symbol "}")
+brackets = between (symbol "[") (symbol "]")
+
+semicolon = symbol ";"
+
+ident = (:) <$> letterChar <*> many alphaNumChar
+
+varName = ident <?> "variable"
+funName = ident <?> "function or script"
 
 {-| Number literal.-}
 numericLiteral :: Parser Double
@@ -40,14 +52,8 @@ literal =
     LNumeric <$> numericLiteral
     <|> LString <$> stringLiteral
 
-assignOp = symbol "=" <|> symbol ":="
-
-sDeclare = SDeclare <$> (symbol "var" *> varName) <*> optional (assignOp *> expr)
-
-sAssign = SAssign <$> variable <*> (assignOp *> expr)
-
-brackets :: Parser a -> Parser a
-brackets = between (symbol "[") (symbol "]")
+-- $expr
+-- Expressions
 
 variable = choice
     [ VVar <$> try varName
@@ -55,11 +61,6 @@ variable = choice
     , VArray <$> try variable <*> brackets expr
     , VArray2 <$> variable <*> brackets ((,) <$> expr <*> (symbol "," *> expr))
     ]
-
-varName = (:) <$> letterChar <*> many alphaNumChar <?> "variable"
-
-stmt :: Parser Stmt
-stmt = sDeclare
 
 opTable :: [[Operator Parser Expr]]
 opTable =
@@ -112,4 +113,16 @@ postfix name f = Postfix (f <$ symbol name)
 eTerm = choice [parens expr, ELit <$> literal, EVar <$> variable]
 
 expr :: Parser Expr
-expr = makeExprParser eTerm opTable
+expr = makeExprParser eTerm opTable <?> "expression"
+
+-- $stmt
+-- Statements
+
+assignOp = symbol "=" <|> symbol ":=" <?> "assignment"
+
+sDeclare = SDeclare <$> (symbol "var" *> varName) <*> optional (assignOp *> expr)
+
+sAssign = SAssign <$> variable <*> (assignOp *> expr)
+
+stmt :: Parser Stmt
+stmt = sDeclare <?> "statement"
