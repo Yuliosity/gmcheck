@@ -6,26 +6,26 @@ data Stmt
     = SEmpty
     | SExpression Expr
     | SDeclare VarName (Maybe Expr) -- ^ Declaring a local variable
-    | SAssign Variable Expr -- ^ Assigning an existing variable
-    | SModify Variable ModifyOp Expr
+    | SAssign Variable AssignOp Expr -- ^ Assigning or modifying an existing variable
     | SWith VarName Block
+    | SIf Expr Block Block
     | SRepeat Expr Block
     | SWhile Expr Block
-    | SDoUntil Stmt Block
+    | SDoUntil Block Expr
     | SFor Stmt Expr Expr Block {-TODO: limit to assign/declare -}
-    | SSwitch Expr [Block]
+    | SSwitch Expr [([Expr], Block)]
     | SBreak -- ^ Break from a loop or switch-case
     | SContinue 
-    | SIf Expr Block Block
-    | SReturn Expr
     | SExit -- ^ Exit from a script/event
+    | SReturn Expr
     deriving (Eq, Show)
 
 type Block = [Stmt]
 
-data ModifyOp
-    = MAdd | MSub | MMul | MDiv
-    | MAnd | MOr | MXor
+data AssignOp
+    = AAssign
+    | AAdd | ASub | AMul | ADiv
+    | AAnd | AOr | AXor
     deriving (Eq, Show)
 
 {-| Unary operators, in order of precedence. -}

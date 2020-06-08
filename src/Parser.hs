@@ -6,7 +6,7 @@ import Text.Megaparsec
 import Text.Megaparsec.Char
 import qualified Text.Megaparsec.Char.Lexer as L
 import Control.Monad.Combinators.Expr
-import Data.Text
+import Data.Text hiding (empty, map)
 import Data.Void (Void)
 
 import AST
@@ -26,9 +26,12 @@ lexeme = L.lexeme sc
 symbol :: Text -> Parser Text
 symbol = L.symbol sc
 
-parens, curly, brackets :: Parser a -> Parser a
+keyword :: Text -> Parser Text
+keyword kw = lexeme (string kw <* notFollowedBy alphaNumChar)
+
+parens, braces, brackets :: Parser a -> Parser a
 parens = between (symbol "(") (symbol ")")
-curly = between (symbol "{") (symbol "}")
+braces = between (symbol "{") (symbol "}")
 brackets = between (symbol "[") (symbol "]")
 
 semicolon = symbol ";"
@@ -39,18 +42,16 @@ varName = ident <?> "variable"
 funName = ident <?> "function or script"
 
 {-| Number literal.-}
-numericLiteral :: Parser Double
-numericLiteral =
-    try (lexeme (L.signed sc L.float))
-    <|> fromIntegral <$> lexeme (L.signed sc L.decimal)
+lNumeric :: Parser Literal
+lNumeric = LNumeric <$>
+    (try (lexeme (L.signed empty L.float))
+    <|> fromIntegral <$> lexeme (L.signed empty L.decimal))
 
 {-| String literal.-}
-stringLiteral :: Parser String
-stringLiteral = char '\"' *> manyTill L.charLiteral (char '\"')
+lString :: Parser Literal
+lString = LString <$> (char '\"' *> manyTill L.charLiteral (char '\"'))
 
-literal =
-    LNumeric <$> numericLiteral
-    <|> LString <$> stringLiteral
+literal = lNumeric <|> lString
 
 -- $expr
 -- Expressions
@@ -62,6 +63,8 @@ variable = choice
     , VArray2 <$> variable <*> brackets ((,) <$> expr <*> (symbol "," *> expr))
     ]
 
+funcall = EFuncall <$> funName <*> parens (sepBy expr $ symbol ",")
+
 opTable :: [[Operator Parser Expr]]
 opTable =
     [   [ prefix "-" (EUnary UNeg)
@@ -70,30 +73,30 @@ opTable =
         , prefix "+" id
         ]
     ,   [ binary "div" (EBinary BIntDiv)
-        , binary "%" (EBinary BMod)
+        , binary "%"   (EBinary BMod)
         , binary "mod" (EBinary BMod)
         ]
-    ,   [ prefix "--" (EUnary UPreDec)
-        , prefix "++" (EUnary UPreInc)
+    ,   [ prefix  "--" (EUnary UPreDec)
+        , prefix  "++" (EUnary UPreInc)
         , postfix "--" (EUnary UPostDec)
         , postfix "++" (EUnary UPostInc)
         ]
-    ,   [ binary "|" (EBinary BBitOr)
-        , binary "&" (EBinary BBitAnd)
-        , binary "^" (EBinary BBitXor)
+    ,   [ binary "|"  (EBinary BBitOr)
+        , binary "&"  (EBinary BBitAnd)
+        , binary "^"  (EBinary BBitXor)
         , binary ">>" (EBinary BShr)
         , binary "<<" (EBinary BShl)
         ]
-    ,   [ binary "*" (EBinary BMul)
-        , binary "/" (EBinary BDiv)
+    ,   [ binary "*"  (EBinary BMul)
+        , binary "/"  (EBinary BDiv)
         ]
-    ,   [ binary "+" (EBinary BAdd)
-        , binary "-" (EBinary BSub)
+    ,   [ binary "+"  (EBinary BAdd)
+        , binary "-"  (EBinary BSub)
         ]
-    ,   [ binary "<" (EBinary BLess)
+    ,   [ binary "<"  (EBinary BLess)
         , binary "==" (EBinary BEq)
         , binary "!=" (EBinary BNotEq)
-        , binary ">" (EBinary BGreater)
+        , binary ">"  (EBinary BGreater)
         , binary "<=" (EBinary BLessEq)
         , binary ">=" (EBinary BGreaterEq)
         ]
@@ -110,7 +113,7 @@ prefix, postfix :: Text -> (Expr -> Expr) -> Operator Parser Expr
 prefix  name f = Prefix  (f <$ symbol name)
 postfix name f = Postfix (f <$ symbol name)
 
-eTerm = choice [parens expr, ELit <$> literal, EVar <$> variable]
+eTerm = choice [parens expr, ELit <$> literal,{- funcall,-} EVar <$> variable]
 
 expr :: Parser Expr
 expr = makeExprParser eTerm opTable <?> "expression"
@@ -118,11 +121,24 @@ expr = makeExprParser eTerm opTable <?> "expression"
 -- $stmt
 -- Statements
 
-assignOp = symbol "=" <|> symbol ":=" <?> "assignment"
+assignOp = choice (map (\(c, s) -> c <$ symbol s) ops) <?> "assignment" where
+    ops =
+        [ (AAssign, "="), (AAssign, ":=")
+        , (AAdd, "+="), (ASub, "-="), (AMul, "*="), (ADiv, "/=")
+        , (AOr, "|="), (AAnd, "&="), (AXor, "^=")
+        ]
 
-sDeclare = SDeclare <$> (symbol "var" *> varName) <*> optional (assignOp *> expr)
-
-sAssign = SAssign <$> variable <*> (assignOp *> expr)
+block = (symbol "{" <|> keyword "begin") *> manyTill stmt (symbol "}" <|> keyword "end")
 
 stmt :: Parser Stmt
-stmt = sDeclare <?> "statement"
+stmt = choice
+    [ SDeclare <$> (keyword "var" *> varName) <*> optional (assignOp *> expr)
+    , SAssign <$> variable <*> assignOp <*> expr
+    , SWith <$> (keyword "with" *> varName) <*> block
+    , SIf <$> (keyword "if" *> expr) <*> block <*> option [] (keyword "else" *> block)
+    , SRepeat <$> (keyword "repeat" *> expr) <*> block
+    , SWhile <$> (keyword "while" *> expr) <*> block
+    , SDoUntil <$> (keyword "do" *> block) <*> (keyword "until" *> expr)
+    , SBreak <$ keyword "break", SContinue <$ keyword "continue", SExit <$ keyword "exit"
+    , SReturn <$> (keyword "return" *> expr)
+    ] <?> "statement"
