@@ -56,12 +56,14 @@ literal = lNumeric <|> lString
 -- $expr
 -- Expressions
 
-variable = choice
-    [ VVar <$> try varName
-    , VField <$> try varName <*> (symbol "." *> variable)
-    , VArray <$> try variable <*> brackets expr
-    , VArray2 <$> variable <*> brackets ((,) <$> expr <*> (symbol "," *> expr))
-    ]
+variable = do
+    name <- varName
+    choice
+        [ VField name <$> (symbol "." *> variable)
+        , try $ VArray name <$> brackets expr
+        , VArray2 name <$> brackets ((,) <$> expr <*> (symbol "," *> expr))
+        , pure $ VVar name
+        ]
 
 funcall = EFuncall <$> funName <*> parens (sepBy expr $ symbol ",")
 

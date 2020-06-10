@@ -57,10 +57,10 @@ data Expr
 
 {-| Variables that hold a value and may be read or changed. -}
 data Variable
-    = VVar VarName -- ^ Local, instance or global variable
+    = VVar VarName -- ^ Local, self or global variable
     | VField VarName Variable -- ^ Field/instance variable
-    | VArray Variable Expr -- ^ One-dimensional array, indexed by a number
-    | VArray2 Variable (Expr, Expr) -- ^ Two-dimensional array, indexed by two numbers
+    | VArray VarName Expr -- ^ One-dimensional array, indexed by a number
+    | VArray2 VarName (Expr, Expr) -- ^ Two-dimensional array, indexed by two numbers
     deriving (Eq, Show)
 
 type FunName = String
