@@ -21,6 +21,9 @@ description:         Please see the README on BitBucket at <https://bitbucket.or
 
 dependencies:
 - base >= 4.7 && < 5
+- containers
+- directory
+- filepath
 - megaparsec
 - parser-combinators
 - text

@@ -12,6 +12,7 @@ import Data.Void (Void)
 import AST
 
 type Parser = Parsec Void Text
+type Error = ParseErrorBundle Text Void
 
 -- $token
 -- Basic tokens
@@ -145,3 +146,9 @@ stmt = choice
     , SReturn <$> (keyword "return" *> expr)
     , SAssign <$> variable <*> assignOp <*> expr
     ] <?> "statement"
+
+
+type Source = Either Error Block
+
+parseSource :: String -> Text -> Source
+parseSource = parse (many stmt <* eof)
