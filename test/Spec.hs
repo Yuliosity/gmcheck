@@ -49,7 +49,13 @@ simpleStmt = describe "statements parser" $ do
     it "can parse conditionals" $ do
         parse' stmt "if foo==42 exit" `shouldParse` SIf (EBinary BEq (EVar foo) lit42) [SExit] []
         parse' stmt "if foo bar=42 else exit" `shouldParse` SIf (EVar foo) [SAssign bar AAssign lit42] [SExit]
-
+    it "can parse parens" $ do
+        parse' stmt "if (foo < 42) exit" `shouldParse` SIf (EBinary BLess (EVar foo) lit42) [SExit] []
+    it "can parse blocks" $ do
+        parse' stmt "if (foo < 42) {foo += 42 exit}" `shouldParse`
+            SIf (EBinary BLess (EVar foo) lit42) [SAssign foo AAdd lit42, SExit] []
+    it "can parse multi-lines" $ do
+        parse' block "{var foo\nfoo = 42}" `shouldParse` [SDeclare "foo" Nothing, SAssign foo AAssign lit42]
 main :: IO ()
 main = hspec $ do
     vars
