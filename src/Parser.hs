@@ -36,7 +36,7 @@ brackets = between (symbol "[") (symbol "]")
 
 semicolon = symbol ";"
 
-ident = (:) <$> letterChar <*> many alphaNumChar
+ident = lexeme $ (:) <$> letterChar <*> many alphaNumChar
 
 varName = ident <?> "variable"
 funName = ident <?> "function or script"
@@ -115,7 +115,7 @@ prefix, postfix :: Text -> (Expr -> Expr) -> Operator Parser Expr
 prefix  name f = Prefix  (f <$ symbol name)
 postfix name f = Postfix (f <$ symbol name)
 
-eTerm = choice [parens expr, ELit <$> literal,{- funcall,-} EVar <$> variable]
+eTerm = choice [parens expr, ELit <$> literal, try funcall, EVar <$> variable]
 
 expr :: Parser Expr
 expr = makeExprParser eTerm opTable <?> "expression"
@@ -130,12 +130,12 @@ assignOp = choice (map (\(c, s) -> c <$ symbol s) ops) <?> "assignment" where
         , (AOr, "|="), (AAnd, "&="), (AXor, "^=")
         ]
 
-block = (symbol "{" <|> keyword "begin") *> manyTill stmt (symbol "}" <|> keyword "end")
+block = ((symbol "{" <|> keyword "begin") *> manyTill stmt (symbol "}" <|> keyword "end"))
+    <|> (:[]) <$> stmt
 
 stmt :: Parser Stmt
 stmt = choice
     [ SDeclare <$> (keyword "var" *> varName) <*> optional (assignOp *> expr)
-    , SAssign <$> variable <*> assignOp <*> expr
     , SWith <$> (keyword "with" *> varName) <*> block
     , SIf <$> (keyword "if" *> expr) <*> block <*> option [] (keyword "else" *> block)
     , SRepeat <$> (keyword "repeat" *> expr) <*> block
@@ -143,4 +143,5 @@ stmt = choice
     , SDoUntil <$> (keyword "do" *> block) <*> (keyword "until" *> expr)
     , SBreak <$ keyword "break", SContinue <$ keyword "continue", SExit <$ keyword "exit"
     , SReturn <$> (keyword "return" *> expr)
+    , SAssign <$> variable <*> assignOp <*> expr
     ] <?> "statement"
