@@ -10,22 +10,37 @@ import System.IO
 import AST
 import Parser
 
-data KeyState = Pressed | Hold | Released
-    deriving Show
+data KeyState = Press | Hold | Release
+    deriving (Eq, Ord, Show)
     
-data KeyCode = Up | Down | Char Char
-    deriving Show   
+data KeyCode = KUp | KDown | KLeft | KRight | KChar Char
+    deriving (Eq, Ord, Show)   
 
 instance Enum KeyCode where
-    fromEnum = undefined
-    toEnum = undefined
+    toEnum x = case x of
+        37 -> KLeft
+        39 -> KRight
+    fromEnum x = case x of
+        KLeft -> 37
+        KRight -> 39
 
 data Event
     = Create
     | Step
     | Draw
     | Key KeyState KeyCode
-    deriving Show
+    deriving (Eq, Ord, Show)
+
+parseEvent :: String -> Event
+parseEvent str = case name of
+    "Create" -> Create
+    "Step" -> Step
+    "KeyPress" -> Key Press code
+    "Keyboard" -> Key Hold code
+    "KeyRelease" -> Key Release code
+    where
+        (name, _:scode) = break (== '_') str
+        code = toEnum $ read scode
 
 instance Enum Event where
     fromEnum = undefined
@@ -38,8 +53,8 @@ data Script = Script
     deriving Show
 
 data Object = Object
-    { obName :: String
-    , obEvents :: M.Map String Source
+    { {- obName :: String
+    , -} obEvents :: M.Map Event Source
     }
     deriving Show
 
@@ -51,6 +66,7 @@ data Project = Project
 
 loadProject :: FilePath -> IO Project
 loadProject path = do
+    -- Load scripts
     let sDir = path </> "scripts"
     sNames <- listDirectory sDir
     scripts <- forM sNames $ \name -> do
@@ -58,4 +74,15 @@ loadProject path = do
         hPutStrLn stderr $ "Loading a script from " ++ sPath
         src <- T.readFile sPath
         return (name, parseSource name src)
-    return $ Project (M.fromList scripts) M.empty
+    -- Load objects
+    let oDir = path </> "objects"
+    oNames <- listDirectory oDir
+    objects <- forM oNames $ \name -> do
+        eNames <- filter ((== ".gml") . takeExtension) <$> (listDirectory $ oDir </> name)
+        events <- forM eNames $ \eName -> do
+            let ePath = oDir </> name </> eName
+            hPutStrLn stderr $ "Loading an event from " ++ ePath
+            src <- T.readFile ePath
+            return (parseEvent $ dropExtension eName, parseSource eName src)
+        return (name, Object (M.fromList events))
+    return $ Project (M.fromList scripts) (M.fromList objects)

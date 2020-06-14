@@ -151,4 +151,4 @@ stmt = choice
 type Source = Either Error Block
 
 parseSource :: String -> Text -> Source
-parseSource = parse (many stmt <* eof)
+parseSource = parse (sc *> many stmt <* eof)
