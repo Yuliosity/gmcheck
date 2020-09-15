@@ -47,19 +47,21 @@ instance Enum Event where
     toEnum = undefined
 
 data Script = Script
-    { scName :: String
-    , scSource :: Source
+    { sName :: String
+    , sSource :: Result
     }
     deriving Show
 
+type OName = String
+
 data Object = Object
-    { {- obName :: String
-    , -} obEvents :: M.Map Event Source
+    { {- oName :: OName
+    , -} oEvents :: M.Map Event Result
     }
     deriving Show
 
 data Project = Project
-    { pScripts :: M.Map String Source
+    { pScripts :: M.Map String Result
     , pObjects :: M.Map String Object
     }
     deriving Show

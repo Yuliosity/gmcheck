@@ -148,7 +148,7 @@ stmt = choice
     ] <?> "statement"
 
 
-type Source = Either Error Block
+type Result = Either Error Source
 
-parseSource :: String -> Text -> Source
+parseSource :: String -> Text -> Result
 parseSource = parse (sc *> many stmt <* eof)

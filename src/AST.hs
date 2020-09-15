@@ -20,7 +20,8 @@ data Stmt
     | SReturn Expr
     deriving (Eq, Show)
 
-type Block = [Stmt]
+type Source = [Stmt]
+type Block = Source
 
 data AssignOp
     = AAssign
