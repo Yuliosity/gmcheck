@@ -1,6 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
 
-module Typecheck where
+module Checker where
 
 import Prelude hiding (lookup)
 
@@ -10,26 +10,7 @@ import qualified Data.Map as M
 
 import AST
 import Project
-
-data Resource = RSprite | RSound | RObject | RRoom
-    deriving (Eq, Show)
-
-data Type
-    = TVoid -- ^ Should be used only as a return type
-    | TReal | TString | TArray Type | TArray2 Type
-    | TId Resource -- ^ Resource descriptor
-    | TUnknown [Type] -- ^ Unknown type with possibilities, if any
-    deriving (Eq, Show)
-
-tBool, tInstance, tSprite, tObject :: Type
-tBool = TReal
-tInstance = TReal
-tSprite = TId RSprite
-tObject = TId RObject
-tUnknown = TUnknown []
-
-data Signature = Sig [Type] Type --TODO: variadic and optional arguments
-    deriving (Eq, Show)
+import Types
 
 type Memory = M.Map VarName Type
 
