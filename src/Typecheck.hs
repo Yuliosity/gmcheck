@@ -33,13 +33,19 @@ data Signature = Sig [Type] Type --TODO: variadic and optional arguments
 
 type Memory = M.Map VarName Type
 
-data Env {- =
-    { eVars :: M.Map VarName Type
-    , eScope :: [Memory]
-    --, eGlobals :: Memory
+data Env = Env
+    { eVars    :: M.Map VarName Type
+    --, eScope   :: [Memory] -- TODO: stack
+    --, eGlobals :: Memory -- TODO: globals
     , eObjects :: M.Map OName Memory
     }
-    -}
+
+emptyEnv :: Env
+emptyEnv = Env
+    { eVars    = M.empty
+    -- , eScope   = []
+    , eObjects = M.empty
+    }
 
 -- annotate :: Source -> Memory -> 
 
@@ -50,13 +56,19 @@ data Error
 
 type Log = [Error]
 
-type Checker = RWS Project Log Memory
+type Checker = RWS Project Log Env
 
 lookup :: Variable -> Checker Type
-lookup = do
-    -- check locals
-    -- check 
-    return undefined
+lookup = \case
+    VVar var -> gets (M.findWithDefault tUnknown var . eVars) --report a warning if not found?
+    _ -> return tUnknown
+
+setVar :: Variable -> Type -> Checker ()
+setVar var ty = do
+    env <- get
+    case var of
+        VVar var -> put $ env { eVars = M.insert var ty (eVars env) } -- TODO: lens
+        _ -> error "changing non-local variables is not implemented yet"
 
 report err = tell [err]
 
@@ -64,12 +76,12 @@ derive :: Expr -> Checker Type
 derive = \case
     ELit (LNumeric _) -> return TReal
     ELit (LString _) -> return TString
-    EVar var -> undefined --lookup in memory
+    EVar var -> lookup var
     EUnary op expr -> do
         exprT <- derive expr
         case exprT of
             TReal -> return TReal
-            _ -> report (EBadUnary op exprT) >> return tUnknown
+            _ -> report (EBadUnary op exprT) >> return exprT
     EBinary op e1 e2 -> do --check for consistency
         e1T <- derive e1
         e2T <- derive e2
@@ -83,8 +95,10 @@ derive = \case
 
 run :: Source -> Checker ()
 run = mapM_ $ \case
-    SDeclare var Nothing -> undefined -- add TUnknown local
+    SDeclare var Nothing ->
+        setVar (VVar var) tUnknown
     SDeclare var (Just expr) -> undefined -- add (derive expr) local
+
     SAssign var op expr -> do
         varT <- lookup var
         exprT <- derive expr
@@ -93,12 +107,13 @@ run = mapM_ $ \case
             (TString, AAssign, TString) -> return ()
             (TString, AAdd, TString) -> return ()
             (_, AAssign, _) -> do
-                tell [WChangeType var exprT]
+                report $ WChangeType var exprT
+                setVar var exprT
                 -- change type
-            
+
     SIf cond true false -> do
         condT <- derive cond
         --when (condT /= tBool) undefined --report error
         run true
         run false
-    _ -> pure ()
+    _ -> return ()
