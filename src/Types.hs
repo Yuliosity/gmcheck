@@ -1,3 +1,10 @@
+{-|
+Module      : Types
+Description : GML Types
+
+Type system of GML values.
+-}
+
 module Types where
 
 {-| Resource type. In GML it's actually just a number, but here we want to differ. -}

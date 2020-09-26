@@ -1,6 +1,18 @@
+{-|
+Module      : Project
+Description : GM Project
+
+Facilities for representing the whole Game Maker project and loading its codebase.
+-}
+
 {-# LANGUAGE LambdaCase #-}
 
-module Project where
+module Project
+    ( Script (..)
+    , Object (..)
+    , Project (..)
+    , loadProject
+    ) where
 
 import Control.Applicative ((<|>))
 import Control.Monad (forM)
@@ -14,14 +26,14 @@ import Parser (Result, parseSource)
 import Types (Resource (..))
 import Events
 
+{-| Executable script. -}
 data Script = Script
     { sName :: String
     , sSource :: Result
     }
     deriving Show
 
-type OName = String
-
+{-| Object with callable events. -}
 data Object = Object
     { {- oName :: OName
     , -} oEvents :: M.Map Event Result
@@ -54,6 +66,7 @@ loadResources path ty = do
     <|>
     return M.empty
 
+{-| Loads the project from a directory. -}
 loadProject :: FilePath -> IO Project
 loadProject path = do
     -- Load resources

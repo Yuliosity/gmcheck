@@ -1,3 +1,10 @@
+{-|
+Module      : Events
+Description : GM object events
+
+Events in Game Maker objects.
+-}
+
 module Events where
 
 import Data.Char (isAlpha, isDigit)
@@ -5,9 +12,11 @@ import Text.Read (Read (..))
 import Text.ParserCombinators.ReadP
 import Text.ParserCombinators.ReadPrec (lift)
 
+{-| Key state of keyboard events. -}
 data KeyState = Press | Hold | Release
     deriving (Eq, Ord, Show)
-    
+
+{-| Keycode of keyboard events. -}
 data KeyCode = KUp | KDown | KLeft | KRight | KChar Char
     deriving (Eq, Ord, Show)   
 

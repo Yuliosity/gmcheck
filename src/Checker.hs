@@ -1,3 +1,11 @@
+{-|
+Module      : Checker
+Description : GML typecheck
+
+A rudimentary and conservative typechecker for the GML project codebase.
+It tries to derive types of variables and expressions based on their assignment order.
+-}
+
 {-# LANGUAGE LambdaCase #-}
 
 module Checker where
@@ -14,6 +22,7 @@ import qualified Data.Map as M
 import AST
 import Project
 import Types
+import Errors
 
 type Memory = M.Map VarName Type
 
@@ -21,7 +30,7 @@ data Env = Env
     { eVars    :: M.Map VarName Type
     --, eScope   :: [Memory] -- TODO: stack
     --, eGlobals :: Memory -- TODO: globals
-    , eObjects :: M.Map OName Memory
+    , eObjects :: M.Map String Memory
     }
 
 emptyEnv :: Env
@@ -32,13 +41,6 @@ emptyEnv = Env
     }
 
 -- annotate :: Source -> Memory -> 
-
-data Error
-    = WChangeType Variable Type
-    | EWrongType Variable Type Type
-    | EBadUnary UnOp Type
-    | EBadBinary BinOp Type Type
-    | EArrayIndex Variable
 
 type Log = [Error]
 
@@ -55,7 +57,7 @@ lookup var = case var of
         --report a warning if not found?
     VArray name expr -> do
         index <- derive expr
-        when (index /= tBool) $ report $ EArrayIndex var
+        when (index /= tBool) $ report $ EArrayIndex var index
         ty <- lookup (VVar name)
         case ty of
             TArray res -> return res
@@ -107,7 +109,8 @@ run = mapM_ $ \case
             (TString, AAssign, TString) -> return ()
             (TString, AAdd, TString) -> return ()
             (_, AAssign, _) -> do
-                report $ WChangeType var exprT
+                when (varT /= exprT) $
+                    report $ WChangeType var varT exprT
                 setVar var exprT
                 -- change type
 
