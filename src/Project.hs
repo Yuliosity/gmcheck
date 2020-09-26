@@ -3,52 +3,16 @@
 module Project where
 
 import Control.Applicative ((<|>))
-import Control.Monad
+import Control.Monad (forM)
 import qualified Data.Map as M
 import qualified Data.Text.IO as T (readFile)
 import System.Directory
 import System.FilePath
 import System.IO
 
-import AST
-import Parser
+import Parser (Result, parseSource)
 import Types (Resource (..))
-
-data KeyState = Press | Hold | Release
-    deriving (Eq, Ord, Show)
-    
-data KeyCode = KUp | KDown | KLeft | KRight | KChar Char
-    deriving (Eq, Ord, Show)   
-
-instance Enum KeyCode where
-    toEnum x = case x of
-        37 -> KLeft
-        39 -> KRight
-    fromEnum x = case x of
-        KLeft -> 37
-        KRight -> 39
-
-data Event
-    = Create
-    | Step
-    | Draw
-    | Key KeyState KeyCode
-    deriving (Eq, Ord, Show)
-
-parseEvent :: String -> Event
-parseEvent str = case name of
-    "Create" -> Create
-    "Step" -> Step
-    "KeyPress" -> Key Press code
-    "Keyboard" -> Key Hold code
-    "KeyRelease" -> Key Release code
-    where
-        (name, _:scode) = break (== '_') str
-        code = toEnum $ read scode
-
-instance Enum Event where
-    fromEnum = undefined
-    toEnum = undefined
+import Events
 
 data Script = Script
     { sName :: String
@@ -116,6 +80,6 @@ loadProject path = do
             let ePath = oDir </> name </> eName
             logTrace $ "Loading an event from " ++ ePath
             src <- T.readFile ePath
-            return (parseEvent $ dropExtension eName, parseSource eName src)
+            return (read $ dropExtension eName, parseSource eName src)
         return (name, Object (M.fromList events))
     return $ Project (M.unions resources) (M.fromList scripts) (M.fromList objects)
