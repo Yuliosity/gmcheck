@@ -4,7 +4,10 @@ module Checker where
 
 import Prelude hiding (lookup)
 
+import Control.Applicative ((<|>))
+import Control.Monad (when)
 import Control.Monad.Trans.RWS
+import Data.Maybe (fromMaybe)
 import Data.Void (Void)
 import qualified Data.Map as M
 
@@ -32,16 +35,33 @@ emptyEnv = Env
 
 data Error
     = WChangeType Variable Type
+    | EWrongType Variable Type Type
     | EBadUnary UnOp Type
     | EBadBinary BinOp Type Type
+    | EArrayIndex Variable
 
 type Log = [Error]
+
+report err = tell [err]
 
 type Checker = RWS Project Log Env
 
 lookup :: Variable -> Checker Type
-lookup = \case
-    VVar var -> gets (M.findWithDefault tUnknown var . eVars) --report a warning if not found?
+lookup var = case var of
+    VVar name -> do
+        resources <- asks pResources
+        vars <- gets eVars
+        return $ fromMaybe tUnknown $ (TId <$> M.lookup name resources) <|> M.lookup name vars
+        --report a warning if not found?
+    VArray name expr -> do
+        index <- derive expr
+        when (index /= tBool) $ report $ EArrayIndex var
+        ty <- lookup (VVar name)
+        case ty of
+            TArray res -> return res
+            res -> do
+                report $ EWrongType var res (TArray TVoid)
+                return tUnknown
     _ -> return tUnknown
 
 setVar :: Variable -> Type -> Checker ()
@@ -51,7 +71,6 @@ setVar var ty = do
         VVar var -> put $ env { eVars = M.insert var ty (eVars env) } -- TODO: lens
         _ -> error "changing non-local variables is not implemented yet"
 
-report err = tell [err]
 
 derive :: Expr -> Checker Type
 derive = \case

@@ -2,27 +2,32 @@ module AST where
 
 import Data.Text
 
+{-| Statement (instruction). -}
 data Stmt
     = SEmpty
-    | SExpression Expr
+    | SExpression Expr -- ^ Calling an expression (typically a function/script with side effects)
     | SDeclare VarName (Maybe Expr) -- ^ Declaring a local variable
     | SAssign Variable AssignOp Expr -- ^ Assigning or modifying an existing variable
-    | SWith VarName Block
-    | SIf Expr Block Block
-    | SRepeat Expr Block
-    | SWhile Expr Block
-    | SDoUntil Block Expr
+    | SWith VarName Block -- ^ Switchig the execution context to an another instance
+    | SIf Expr Block Block -- ^ Conditional. If the `else` branch is missing, the second block is simply empty
+    | SRepeat Expr Block -- ^ Repeating some instructions several times
+    | SWhile Expr Block -- ^ Loop with a pre-condition
+    | SDoUntil Block Expr -- ^ Loop with a post-condition
     | SFor Stmt Expr Expr Block {-TODO: limit to assign/declare -}
     | SSwitch Expr [([Expr], Block)]
     | SBreak -- ^ Break from a loop or switch-case
     | SContinue 
     | SExit -- ^ Exit from a script/event
-    | SReturn Expr
+    | SReturn Expr -- ^ Return the result from a script
     deriving (Eq, Show)
 
+{-| Any GML source is a list of statements. -}
 type Source = [Stmt]
+
+{-| A code sub-block is a bracketed list of statements. -}
 type Block = Source
 
+{-| Assigning operations, possibly with arithmetical/boolean modification. -}
 data AssignOp
     = AAssign
     | AAdd | ASub | AMul | ADiv
@@ -68,5 +73,6 @@ type FunName = String
 
 type VarName = String
 
+{-| Literal constant in a source. -}
 data Literal = LNumeric Double | LString String
     deriving (Eq, Show)
