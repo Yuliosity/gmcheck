@@ -35,5 +35,5 @@ tRoom = TId RRoom
 tUnknown = TUnknown []
 
 {-| Function or script signature. -}
-data Signature = Sig [Type] Type --TODO: variadic and optional arguments
+data Signature = [Type] :-> Type --TODO: variadic and optional arguments
     deriving (Eq, Show)

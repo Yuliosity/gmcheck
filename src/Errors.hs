@@ -8,6 +8,8 @@ import Types
 data Error
     -- | Changing the variable type
     = WChangeType Variable Type Type
+    -- | Function doesn't return anything
+    | ENoResult Variable
     -- | Wrong variable type
     | EWrongType Variable Type Type
     -- | Wrong operand of an unary operator
@@ -16,6 +18,10 @@ data Error
     | EBadBinary BinOp Type Type
     -- | Non-numeric array indexing
     | EArrayIndex Variable Type
+    -- | No such function or script
+    | EUnknownFunction FunName
+    -- | Wrong type of function argument
+    | EWrongArgument FunName Int Type Type
     deriving Show
 
 pretty :: Error -> String

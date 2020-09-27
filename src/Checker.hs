@@ -13,13 +13,14 @@ module Checker where
 import Prelude hiding (lookup)
 
 import Control.Applicative ((<|>))
-import Control.Monad (when)
+import Control.Monad
 import Control.Monad.Trans.RWS
 import Data.Maybe (fromMaybe)
 import Data.Void (Void)
 import qualified Data.Map as M
 
 import AST
+import Builtin
 import Project
 import Types
 import Errors
@@ -48,6 +49,7 @@ report err = tell [err]
 
 type Checker = RWS Project Log Env
 
+{-| Lookup for a variable type. -}
 lookup :: Variable -> Checker Type
 lookup var = case var of
     VVar name -> do
@@ -73,7 +75,13 @@ setVar var ty = do
         VVar var -> put $ env { eVars = M.insert var ty (eVars env) } -- TODO: lens
         _ -> error "changing non-local variables is not implemented yet"
 
+{-| Lookup for a function signature. -}
+lookupFn :: FunName -> Checker (Maybe Signature)
+lookupFn name = do
+    -- TODO: derive and store script types
+    return $ M.lookup name builtinFn
 
+{-| Deriving the expression type. -}
 derive :: Expr -> Checker Type
 derive = \case
     ELit (LNumeric _) -> return TReal
@@ -93,7 +101,23 @@ derive = \case
             _ -> report (EBadBinary op e1T e2T) >> return tUnknown
             --(_, TString, _) -> undefined --report error
             --(_, _, TString) -> undefined --report error
-    EFuncall fn args -> undefined --check consistency
+    EFuncall fn args -> do --check consistency
+        sig <- lookupFn fn
+        case sig of
+            Nothing -> report (EUnknownFunction fn) >> return tUnknown
+            Just (needed :-> res) -> do
+                argsT <- mapM derive args
+                --FIXME: check the arguments number
+                forM_ (zip3 [1..] needed argsT) $ \(i, a, b) ->
+                    when (a /= b) $ report (EWrongArgument fn i a b)
+                return res
+
+{-| Deriving the script signature. -}
+{-
+scriptDerive :: Source -> Checker Signature
+scriptDerive = go where
+    go (stmt:rest) = case stmt of
+-}
 
 run :: Source -> Checker ()
 run = mapM_ $ \case
@@ -105,6 +129,7 @@ run = mapM_ $ \case
         varT <- lookup var
         exprT <- derive expr
         case (varT, op, exprT) of
+            (_, _, TVoid) -> report (ENoResult var)
             (TReal, op, TReal) -> return ()
             (TString, AAssign, TString) -> return ()
             (TString, AAdd, TString) -> return ()
