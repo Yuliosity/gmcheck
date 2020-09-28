@@ -64,7 +64,7 @@ lookup var = case var of
         case ty of
             TArray res -> return res
             res -> do
-                report $ EWrongType var res (TArray TVoid)
+                report $ EWrongVarType var res (TArray TVoid)
                 return tUnknown
     _ -> return tUnknown
 
@@ -119,11 +119,19 @@ scriptDerive = go where
     go (stmt:rest) = case stmt of
 -}
 
+checkType descr ty expr = do
+    varT <- derive expr
+    when (varT /= ty) $ report $ EWrongExprType descr ty varT
+
+checkCond = checkType "conditional" tBool
+
 run :: Source -> Checker ()
 run = mapM_ $ \case
-    SDeclare var Nothing ->
-        setVar (VVar var) tUnknown
-    SDeclare var (Just expr) -> undefined -- add (derive expr) local
+    SDeclare var mExpr -> do
+        exprT <- case mExpr of
+            Nothing -> return tUnknown -- tEmpty?
+            Just expr -> derive expr
+        setVar (VVar var) exprT
 
     SAssign var op expr -> do
         varT <- lookup var
@@ -131,17 +139,35 @@ run = mapM_ $ \case
         case (varT, op, exprT) of
             (_, _, TVoid) -> report (ENoResult var)
             (TReal, op, TReal) -> return ()
+            -- TODO: refactor using common operators
             (TString, AAssign, TString) -> return ()
             (TString, AAdd, TString) -> return ()
             (_, AAssign, _) -> do
                 when (varT /= exprT) $
                     report $ WChangeType var varT exprT
                 setVar var exprT
-                -- change type
+
+    SExpression expr ->
+        -- If the expression returns anything, the result is actually lost
+        checkType "expression statement" TVoid expr
 
     SIf cond true false -> do
-        condT <- derive cond
-        --when (condT /= tBool) undefined --report error
+        checkCond cond
         run true
         run false
+
+    SWhile cond block -> do
+        checkCond cond
+        run block
+
+    SDoUntil block cond -> do 
+        run block
+        checkCond cond
+
+    SRepeat count block -> do
+        checkType "count" TReal count
+        run block
+
+    --TODO: for break/continue/exit/return, check that it's the last statement in a block
+
     _ -> return ()

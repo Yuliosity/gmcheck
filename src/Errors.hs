@@ -10,8 +10,10 @@ data Error
     = WChangeType Variable Type Type
     -- | Function doesn't return anything
     | ENoResult Variable
+    -- | Wrong expression type
+    | EWrongExprType String Type Type
     -- | Wrong variable type
-    | EWrongType Variable Type Type
+    | EWrongVarType Variable Type Type
     -- | Wrong operand of an unary operator
     | EBadUnary UnOp Type
     -- | Wrong operand(s) of a binary operator
@@ -22,12 +24,14 @@ data Error
     | EUnknownFunction FunName
     -- | Wrong type of function argument
     | EWrongArgument FunName Int Type Type
+    -- | Non-boolean type of a conditional expression
     deriving Show
 
 pretty :: Error -> String
 pretty = \case
     WChangeType var from to -> "Type of " ++ show var ++ " might be changed from " ++ show from ++ " to " ++ show to
-    EWrongType var act need -> "Type of " ++ show var ++ " is derived to be " ++ show act ++ ", but should be " ++ show need
+    EWrongExprType descr need real -> "Type of " ++ descr ++ "should be " ++ show need ++ ", but is derived to be " ++ show real 
+    EWrongVarType var need real -> "Type of " ++ show var ++ "should be " ++ show need ++ ", but is derived to be " ++ show real 
     EBadUnary op ty -> "Unary operation " ++ show op ++ " cannot be applied to the type " ++ show ty
     EArrayIndex var ty -> "Trying to index the array " ++ show var ++ " with not a number, but " ++ show ty
     err -> "Raw error: " ++ show err
