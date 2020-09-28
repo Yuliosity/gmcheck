@@ -34,11 +34,26 @@ type Source = [Stmt]
 {-| A code sub-block is a bracketed list of statements. -}
 type Block = Source
 
+{-| Arithetical and logical operations, used in both modification assignment and binary operations. -}
+data NumOp
+    = Add | Sub | Mul | Div
+    | Mod | IntDiv
+    | And | Or | Xor
+    deriving (Eq, Show)
+
+{-| Comparison operators. -}
+data CompOp
+    = Eq | NotEq | Less | Greater | LessEq | GreaterEq
+    deriving (Eq, Show)
+
 {-| Assigning operations, possibly with arithmetical/boolean modification. -}
 data AssignOp
-    = AAssign
-    | AAdd | ASub | AMul | ADiv
-    | AAnd | AOr | AXor
+    = AAssign | AMod NumOp
+    deriving (Eq, Show)
+
+{-| Bitwise operations. -}
+data BitOp
+    = Shr | Shl | BitAnd | BitOr | BitXor
     deriving (Eq, Show)
 
 {-| Unary operators, in order of precedence. -}
@@ -48,14 +63,11 @@ data UnOp
     | UPostInc | UPostDec
     deriving (Eq, Show)
 
-{-| Binary operators, in order of precedence. -}
+{-| Binary operators. -}
 data BinOp
-    = BIntDiv | BMod
-    | BMul | BDiv
-    | BAdd | BSub 
-    | BEq | BNotEq | BLess | BGreater | BLessEq | BGreaterEq
-    | BAnd | BOr | BXor | BShr | BShl
-    | BBitAnd | BBitOr | BBitXor
+    = BNum NumOp
+    | BComp CompOp
+    | BBit BitOp
     deriving (Eq, Show)
 
 {-| Expressions which can be evaluated to a value. -}
@@ -67,6 +79,21 @@ data Expr
     | EVar Variable
     | ELit Literal
     deriving (Eq, Show)
+
+class Binary a where
+    toBin :: a -> BinOp
+
+instance Binary NumOp where
+    toBin = BNum
+
+instance Binary CompOp where
+    toBin =  BComp
+
+instance Binary BitOp where
+    toBin =  BBit
+
+eBinary :: Binary a => a -> Expr -> Expr -> Expr
+eBinary = EBinary . toBin
 
 {-| Variables that hold a value and may be read or changed. -}
 data Variable

@@ -8,6 +8,8 @@ import Types
 data Error
     -- | Changing the variable type
     = WChangeType Variable Type Type
+    -- | Different types of the ternary operator
+    | WTernaryDiff Type Type
     -- | Function doesn't return anything
     | ENoResult Variable
     -- | Wrong expression type

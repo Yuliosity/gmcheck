@@ -81,27 +81,52 @@ lookupFn name = do
     -- TODO: derive and store script types
     return $ M.lookup name builtinFn
 
+binCompat :: BinOp -> Type -> Type -> Bool
+binCompat (BNum Add) TString TString = True
+binCompat _ TReal TReal = True
+binCompat _ _ _ = False
+
+checkType descr ty expr = do
+    varT <- derive expr
+    when (varT /= ty) $ report $ EWrongExprType descr ty varT
+
+checkCond = checkType "conditional" tBool
+
 {-| Deriving the expression type. -}
 derive :: Expr -> Checker Type
 derive = \case
     ELit (LNumeric _) -> return TReal
     ELit (LString _) -> return TString
+
     EVar var -> lookup var
+
     EUnary op expr -> do
         exprT <- derive expr
         case exprT of
             TReal -> return TReal
             _ -> report (EBadUnary op exprT) >> return exprT
-    EBinary op e1 e2 -> do --check for consistency
+
+    EBinary op e1 e2 -> do
         e1T <- derive e1
         e2T <- derive e2
-        case (op, e1T, e2T) of
-            (BAdd, TString, TString) -> return TString
-            (_, TReal, TReal) -> return TReal
-            _ -> report (EBadBinary op e1T e2T) >> return tUnknown
-            --(_, TString, _) -> undefined --report error
-            --(_, _, TString) -> undefined --report error
-    EFuncall fn args -> do --check consistency
+
+        if binCompat op e1T e2T then
+            return e2T
+        else do
+            report (EBadBinary op e1T e2T)
+            return $ e1T `tCombine` e2T
+
+    ETernary cond e1 e2 -> do
+        checkCond cond
+        e1T <- derive e1
+        e2T <- derive e2
+        if e1T == e2T then
+            return e1T
+        else do
+            report (WTernaryDiff e1T e2T)
+            return $ e1T `tCombine` e2T
+
+    EFuncall fn args -> do
         sig <- lookupFn fn
         case sig of
             Nothing -> report (EUnknownFunction fn) >> return tUnknown
@@ -119,12 +144,6 @@ scriptDerive = go where
     go (stmt:rest) = case stmt of
 -}
 
-checkType descr ty expr = do
-    varT <- derive expr
-    when (varT /= ty) $ report $ EWrongExprType descr ty varT
-
-checkCond = checkType "conditional" tBool
-
 run :: Source -> Checker ()
 run = mapM_ $ \case
     SDeclare var mExpr -> do
@@ -133,19 +152,21 @@ run = mapM_ $ \case
             Just expr -> derive expr
         setVar (VVar var) exprT
 
-    SAssign var op expr -> do
+    SAssign var ass expr -> do
         varT <- lookup var
         exprT <- derive expr
-        case (varT, op, exprT) of
-            (_, _, TVoid) -> report (ENoResult var)
-            (TReal, op, TReal) -> return ()
-            -- TODO: refactor using common operators
-            (TString, AAssign, TString) -> return ()
-            (TString, AAdd, TString) -> return ()
-            (_, AAssign, _) -> do
-                when (varT /= exprT) $
+
+        when (exprT == TVoid) $ report (ENoResult var)
+        case ass of
+            AAssign -> do
+                when (varT /= tUnknown && varT /= exprT) $
                     report $ WChangeType var varT exprT
                 setVar var exprT
+            AMod op -> do
+                -- TODO: refactor copy-pasta with binary derive
+                when (not $ binCompat (BNum op) varT exprT) $
+                    report (EBadBinary (BNum op) varT exprT)
+            _ -> return ()
 
     SExpression expr ->
         -- If the expression returns anything, the result is actually lost

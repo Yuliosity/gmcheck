@@ -75,37 +75,37 @@ opTable =
         , prefix "!" (EUnary UNot)
         , prefix "+" id
         ]
-    ,   [ binary "div" (EBinary BIntDiv)
-        , binary "%"   (EBinary BMod)
-        , binary "mod" (EBinary BMod)
+    ,   [ binary "div" (eBinary IntDiv)
+        , binary "%"   (eBinary Mod)
+        , binary "mod" (eBinary Mod)
         ]
     ,   [ prefix  "--" (EUnary UPreDec)
         , prefix  "++" (EUnary UPreInc)
         , postfix "--" (EUnary UPostDec)
         , postfix "++" (EUnary UPostInc)
         ]
-    ,   [ binary "|"  (EBinary BBitOr)
-        , binary "&"  (EBinary BBitAnd)
-        , binary "^"  (EBinary BBitXor)
-        , binary ">>" (EBinary BShr)
-        , binary "<<" (EBinary BShl)
+    ,   [ binary "|"  (eBinary BitOr)
+        , binary "&"  (eBinary BitAnd)
+        , binary "^"  (eBinary BitXor)
+        , binary ">>" (eBinary Shr)
+        , binary "<<" (eBinary Shl)
         ]
-    ,   [ binary "*"  (EBinary BMul)
-        , binary "/"  (EBinary BDiv)
+    ,   [ binary "*"  (eBinary Mul)
+        , binary "/"  (eBinary Div)
         ]
-    ,   [ binary "+"  (EBinary BAdd)
-        , binary "-"  (EBinary BSub)
+    ,   [ binary "+"  (eBinary Add)
+        , binary "-"  (eBinary Sub)
         ]
-    ,   [ binary "<"  (EBinary BLess)
-        , binary "==" (EBinary BEq)
-        , binary "!=" (EBinary BNotEq)
-        , binary ">"  (EBinary BGreater)
-        , binary "<=" (EBinary BLessEq)
-        , binary ">=" (EBinary BGreaterEq)
+    ,   [ binary "<"  (eBinary Less)
+        , binary "==" (eBinary Eq)
+        , binary "!=" (eBinary NotEq)
+        , binary ">"  (eBinary Greater)
+        , binary "<=" (eBinary LessEq)
+        , binary ">=" (eBinary GreaterEq)
         ]
-    ,   [ binary "&&" (EBinary BAnd)
-        , binary "||" (EBinary BOr)
-        , binary "^^" (EBinary BXor)
+    ,   [ binary "&&" (eBinary And)
+        , binary "||" (eBinary Or)
+        , binary "^^" (eBinary Xor)
         ]
     ]
 
@@ -127,8 +127,9 @@ expr = makeExprParser eTerm opTable <?> "expression"
 assignOp = choice (map (\(c, s) -> c <$ symbol s) ops) <?> "assignment" where
     ops =
         [ (AAssign, "="), (AAssign, ":=")
-        , (AAdd, "+="), (ASub, "-="), (AMul, "*="), (ADiv, "/=")
-        , (AOr, "|="), (AAnd, "&="), (AXor, "^=")
+        , (AMod Add, "+="), (AMod Sub, "-=")
+        , (AMod Mul, "*="), (AMod Div, "/=")
+        , (AMod Or, "|="), (AMod And, "&="), (AMod Xor, "^=")
         ]
 
 block = ((symbol "{" <|> keyword "begin") *> manyTill stmt (symbol "}" <|> keyword "end"))
