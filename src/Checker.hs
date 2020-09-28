@@ -12,7 +12,7 @@ module Checker where
 
 import Prelude hiding (lookup)
 
-import Control.Applicative ((<|>))
+import Control.Applicative (Alternative, (<|>))
 import Control.Monad
 import Control.Monad.Trans.RWS
 import Data.Maybe (fromMaybe)
@@ -47,7 +47,14 @@ type Log = [Error]
 
 report err = tell [err]
 
+{-| Typechecking monad.
+    Reader environment: all of the project data.
+    Writer output: errors/warnings log.
+    State: all derived data about the codebase at the moment. -}
 type Checker = RWS Project Log Env
+
+choice :: (Foldable f, Alternative a) => f (a t) -> (a t)
+choice = foldl1 (<|>)
 
 {-| Lookup for a variable type. -}
 lookup :: Variable -> Checker Type
@@ -55,8 +62,17 @@ lookup var = case var of
     VVar name -> do
         resources <- asks pResources
         vars <- gets eVars
-        return $ fromMaybe tUnknown $ (TId <$> M.lookup name resources) <|> M.lookup name vars
+        return $ fromMaybe tUnknown $ choice
+            [ M.lookup name builtinVar
+            , TId <$> M.lookup name resources
+            , M.lookup name vars
+            ]
         --report a warning if not found?
+    {-
+    VField name var -> do
+        objects <- asks pObjects
+        M.lookup name objects
+    -}
     VArray name expr -> do
         index <- derive expr
         when (index /= tBool) $ report $ EArrayIndex var index
@@ -166,7 +182,6 @@ run = mapM_ $ \case
                 -- TODO: refactor copy-pasta with binary derive
                 when (not $ binCompat (BNum op) varT exprT) $
                     report (EBadBinary (BNum op) varT exprT)
-            _ -> return ()
 
     SExpression expr ->
         -- If the expression returns anything, the result is actually lost

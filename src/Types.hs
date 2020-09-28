@@ -39,12 +39,18 @@ instance Semigroup Type where
 instance Monoid Type where
     mempty = TUnknown []
 
-tBool, tInstance, tSprite, tObject, tRoom, tUnknown :: Type
+tBool, tColor, tPercent :: Type
 tBool = TReal
+tColor = TReal --TODO: more static
+tPercent = TReal --TODO: more static
+
+tInstance, tSprite, tObject, tRoom :: Type
 tInstance = TReal
 tSprite = TId RSprite
 tObject = TId RObject
 tRoom = TId RRoom
+
+tUnknown :: Type
 tUnknown = mempty
 
 tCombine :: Type -> Type -> Type

@@ -18,15 +18,35 @@ type VarDict = M.Map VarName Type
 mkReal var = (var, TReal)
 
 -- |Instance variables
-instanceVars :: VarDict
-instanceVars = M.fromList $
-    map mkReal ["x", "y", "speed", "direction", "hspeed", "vspeed", "gravity", "depth"] ++
-    [ ("alarm", TArray TReal)
+instanceVar :: VarDict
+instanceVar = M.fromList $
+    map mkReal
+        [ "x", "y", "xstart", "ystart", "xprevious", "yprevious"
+        , "speed", "direction", "hspeed", "vspeed", "gravity", "gravity_direction", "friction"
+        , "depth", "image_index", "image_angle", "image_xscale", "image_yscale"
+        ] ++
+    [ ("persistent", tBool)
+    , ("solid", tBool)
+    , ("visible", tBool)
+    , ("alarm", TArray TReal)
+    , ("sprite_index", tSprite)
+    , ("image_blend", tColor)
+    , ("image_alpha", tPercent)
+    ]
+
+-- |Instance constants
+instanceConst :: VarDict
+instanceConst = M.fromList $
+    map mkReal
+        [ "id", "image_number"
+        , "bbox_left", "bbox_right", "bbox_top", "bbox_bottom"
+        ] ++
+    [ ("object_index", tObject)
     ]
 
 -- |Global variables
-globalVars :: VarDict
-globalVars = M.fromList $
+globalVar :: VarDict
+globalVar = M.fromList $
     [ ("view_xview", TArray TReal)
     , ("view_yview", TArray TReal) 
     ] ++ map mkReal
@@ -40,9 +60,17 @@ globalConst = M.fromList $
     , ("room_first", tRoom)
     , ("room_last", tRoom)
     ] ++ map mkReal
-    [ "instance_count", "keyboard_key"
-    , "mouse_button" --FIXME: enum
-    , "game_id"
+        [ "instance_count", "keyboard_key"
+        , "mouse_button" --FIXME: enum
+        , "game_id"
+        ]
+
+-- TODO: keywords 'self', 'all', 'noone' here?
+
+builtinVar :: VarDict
+builtinVar = M.unions
+    [ instanceVar, instanceConst
+    , globalVar, globalConst
     ]
 
 -- $functions
@@ -63,9 +91,12 @@ stringFn = M.fromList
     [ ("chr", [TReal] :-> TString)
     , ("ord", [TString] :-> TReal)
     , ("string_char_at", [TReal] :-> TString)
-    , ("real", [TString] :-> TReal)
+    , ("real",   [TString] :-> TReal)
     , ("string", [TReal] :-> TString)
     ]
+
+-- |TODO: Array functions
+arrayFn = M.empty
 
 -- |Mouse function
 mouseFn = M.fromList
@@ -81,8 +112,17 @@ keyboardFn = M.fromList
 drawFn = M.fromList
     [ ("draw_self", [] :-> TVoid)
     , ("draw_sprite", [tSprite, TReal, TReal, TReal] :-> TVoid)
-    , ("draw_text", [TReal, TReal, TString] :-> TVoid)
+    , ("draw_sprite_ext", [tSprite, TReal, TReal, TReal, TReal, TReal, TReal, tColor, tPercent] :-> TVoid)
+    , ("draw_text",   [TReal, TReal, TString] :-> TVoid)
     , ("draw_circle", [TReal, TReal, TReal, tBool] :-> TVoid)
+    , ("draw_set_colour", [tColor] :-> TVoid)
+    , ("draw_get_colour", [] :-> tColor)
+    , ("make_colour_rgb", [TReal, TReal, TReal] :-> tColor)
+    , ("make_colour_hsv", [TReal, TReal, TReal] :-> tColor)
+    , ("merge_colour",    [tColor, tColor, tPercent] :-> tColor)
+    , ("colour_get_red",   [tColor] :-> TReal)
+    , ("colour_get_green", [tColor] :-> TReal)
+    , ("colour_get_blue",  [tColor] :-> TReal)
     ]
 
 -- |Collision functions
@@ -101,8 +141,11 @@ movementFn = M.fromList
 
 -- |Instance functions
 instanceFn = M.fromList
-    [ ("instance_destroy", [] :-> TVoid)
-    , ("instance_find", [tObject, TReal] :-> tInstance)
+    [ ("instance_destroy",  [] :-> TVoid)
+    , ("instance_find",     [tObject, TReal] :-> tInstance)
+    , ("instance_number",   [tObject] :-> TReal)
+    , ("instance_place",    [TReal, TReal, tObject] :-> tInstance)
+    , ("instance_position", [TReal, TReal, tObject] :-> tInstance)
     ]
 
 -- |Events

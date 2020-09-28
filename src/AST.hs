@@ -87,10 +87,10 @@ instance Binary NumOp where
     toBin = BNum
 
 instance Binary CompOp where
-    toBin =  BComp
+    toBin = BComp
 
 instance Binary BitOp where
-    toBin =  BBit
+    toBin = BBit
 
 eBinary :: Binary a => a -> Expr -> Expr -> Expr
 eBinary = EBinary . toBin
