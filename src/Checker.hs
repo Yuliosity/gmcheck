@@ -25,10 +25,10 @@ import Project
 import Types
 import Errors
 
-type Memory = M.Map VarName Type
+type Memory = M.Map Name Type
 
 data Env = Env
-    { eVars    :: M.Map VarName Type
+    { eVars    :: M.Map Name Type
     --, eScope   :: [Memory] -- TODO: stack
     --, eGlobals :: Memory -- TODO: globals
     , eObjects :: M.Map String Memory
@@ -178,7 +178,7 @@ run = mapM_ $ \case
                 when (varT /= tUnknown && varT /= exprT) $
                     report $ WChangeType var varT exprT
                 setVar var exprT
-            AMod op -> do
+            AModify op -> do
                 -- TODO: refactor copy-pasta with binary derive
                 when (not $ binCompat (BNum op) varT exprT) $
                     report (EBadBinary (BNum op) varT exprT)

@@ -9,30 +9,24 @@ module AST where
 
 import Data.Text
 
-{-| Statement (instruction). -}
-data Stmt
-    = SEmpty
-    | SExpression Expr -- ^ Calling an expression (typically a function/script with side effects)
-    | SDeclare VarName (Maybe Expr) -- ^ Declaring a local variable
-    | SAssign Variable AssignOp Expr -- ^ Assigning or modifying an existing variable
-    | SWith VarName Block -- ^ Switchig the execution context to an another instance
-    | SIf Expr Block Block -- ^ Conditional. If the `else` branch is missing, the second block is simply empty
-    | SRepeat Expr Block -- ^ Repeating some instructions several times
-    | SWhile Expr Block -- ^ Loop with a pre-condition
-    | SDoUntil Block Expr -- ^ Loop with a post-condition
-    | SFor Stmt Expr Expr Block {-TODO: limit to assign/declare -}
-    | SSwitch Expr [([Expr], Block)]
-    | SBreak -- ^ Break from a loop or switch-case
-    | SContinue 
-    | SExit -- ^ Exit from a script/event
-    | SReturn Expr -- ^ Return the result from a script
+-- * GML values
+
+{-| Literal constant in a source. -}
+data Literal = LNumeric Double | LString String
     deriving (Eq, Show)
 
-{-| Any GML source is a list of statements. -}
-type Source = [Stmt]
+{-| Identifier (name. -}
+type Name = String
 
-{-| A code sub-block is a bracketed list of statements. -}
-type Block = Source
+{-| Variables that hold a value and may be read or changed. -}
+data Variable
+    = VVar    Name              -- ^ Local, self or global variable
+    | VField  Name Variable     -- ^ Field/instance variable (possibly chained)
+    | VArray  Name Expr         -- ^ One-dimensional array, indexed by a number
+    | VArray2 Name (Expr, Expr) -- ^ Two-dimensional array, indexed by two numbers
+    deriving (Eq, Show)
+
+-- * Operators
 
 {-| Arithetical and logical operations, used in both modification assignment and binary operations. -}
 data NumOp
@@ -46,11 +40,6 @@ data CompOp
     = Eq | NotEq | Less | Greater | LessEq | GreaterEq
     deriving (Eq, Show)
 
-{-| Assigning operations, possibly with arithmetical/boolean modification. -}
-data AssignOp
-    = AAssign | AMod NumOp
-    deriving (Eq, Show)
-
 {-| Bitwise operations. -}
 data BitOp
     = Shr | Shl | BitAnd | BitOr | BitXor
@@ -59,23 +48,27 @@ data BitOp
 {-| Unary operators, in order of precedence. -}
 data UnOp
     = UBitNeg | UNeg | UNot
-    | UPreInc | UPreDec
+    | UPreInc  | UPreDec
     | UPostInc | UPostDec
     deriving (Eq, Show)
 
-{-| Binary operators. -}
+{-| Any binary operator. -}
 data BinOp
-    = BNum NumOp
+    = BNum  NumOp
     | BComp CompOp
-    | BBit BitOp
+    | BBit  BitOp
     deriving (Eq, Show)
 
-{-| Expressions which can be evaluated to a value. -}
+-- * Expressions
+
+type FunName = String
+
+{-| Expression which can be evaluated to a value. -}
 data Expr
-    = EUnary UnOp Expr
-    | EBinary BinOp Expr Expr
+    = EUnary UnOp Expr        -- ^ Unary expression
+    | EBinary BinOp Expr Expr -- ^ Binary expression
     | ETernary Expr Expr Expr -- ^ Ternary conditional [cond ? t : f]
-    | EFuncall FunName [Expr] -- ^ Function/script call with arguments
+    | EFuncall Name [Expr]    -- ^ Function/script call with arguments
     | EVar Variable
     | ELit Literal
     deriving (Eq, Show)
@@ -95,18 +88,36 @@ instance Binary BitOp where
 eBinary :: Binary a => a -> Expr -> Expr -> Expr
 eBinary = EBinary . toBin
 
-{-| Variables that hold a value and may be read or changed. -}
-data Variable
-    = VVar VarName -- ^ Local, self or global variable
-    | VField VarName Variable -- ^ Field/instance variable
-    | VArray VarName Expr -- ^ One-dimensional array, indexed by a number
-    | VArray2 VarName (Expr, Expr) -- ^ Two-dimensional array, indexed by two numbers
+-- * Statements
+
+{-| Assigning operations, possibly with arithmetical/boolean modification. -}
+data AssignOp
+    = AAssign | AModify NumOp
     deriving (Eq, Show)
 
-type FunName = String
-
-type VarName = String
-
-{-| Literal constant in a source. -}
-data Literal = LNumeric Double | LString String
+{-| Statement (instruction). -}
+data Stmt
+    = SExpression Expr -- ^ Calling an expression (typically a function/script with side effects)
+    -- Variable declaration and modification
+    | SDeclare Name (Maybe Expr)  -- ^ Declaring a local variable
+    | SAssign Variable AssignOp Expr -- ^ Assigning or modifying an existing variable
+    -- Control flow structures
+    | SWith Variable Block  -- ^ Switchig the execution context to an another instance
+    | SIf Expr Block Block -- ^ Conditional. If the `else` branch is missing, the second block is simply empty
+    | SRepeat Expr Block   -- ^ Repeating some instructions several times
+    | SWhile Expr Block    -- ^ Loop with a pre-condition
+    | SDoUntil Block Expr  -- ^ Loop with a post-condition
+    | SFor Stmt Expr Expr Block -- ^ For loop. TODO: limit stmt to assign/declare only
+    | SSwitch Expr [([Expr], Block)]
+    -- Control flow redirection
+    | SBreak    -- ^ Break from a loop or switch-case
+    | SContinue -- ^ Continue to the next loop iteration
+    | SExit        -- ^ Exit from a script/event without a result
+    | SReturn Expr -- ^ Return the result from a script
     deriving (Eq, Show)
+
+{-| Any GML source is a list of statements. -}
+type Source = [Stmt]
+
+{-| A code sub-block is a bracketed list of statements. -}
+type Block = Source

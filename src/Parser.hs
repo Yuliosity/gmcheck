@@ -37,10 +37,13 @@ brackets = between (symbol "[") (symbol "]")
 
 semicolon = symbol ";"
 
+ident :: Parser Name
 ident = lexeme $ (:) <$> letterChar <*> many alphaNumChar
 
 varName = ident <?> "variable"
 funName = ident <?> "function or script"
+
+-- $values
 
 {-| Number literal.-}
 lNumeric :: Parser Literal
@@ -54,9 +57,6 @@ lString = LString <$> (char '\"' *> manyTill L.charLiteral (char '\"'))
 
 literal = lNumeric <|> lString
 
--- $expr
--- Expressions
-
 variable = do
     name <- varName
     choice
@@ -65,6 +65,8 @@ variable = do
         , VArray2 name <$> brackets ((,) <$> expr <*> (symbol "," *> expr))
         , pure $ VVar name
         ]
+
+-- $expr
 
 funcall = EFuncall <$> funName <*> parens (sepBy expr $ symbol ",")
 
@@ -121,15 +123,12 @@ eTerm = choice [parens expr, ELit <$> literal, try funcall, EVar <$> variable]
 expr :: Parser Expr
 expr = makeExprParser eTerm opTable <?> "expression"
 
--- $stmt
--- Statements
-
 assignOp = choice (map (\(c, s) -> c <$ symbol s) ops) <?> "assignment" where
     ops =
         [ (AAssign, "="), (AAssign, ":=")
-        , (AMod Add, "+="), (AMod Sub, "-=")
-        , (AMod Mul, "*="), (AMod Div, "/=")
-        , (AMod Or, "|="), (AMod And, "&="), (AMod Xor, "^=")
+        , (AModify Add, "+="), (AModify Sub, "-=")
+        , (AModify Mul, "*="), (AModify Div, "/=")
+        , (AModify Or,  "|="), (AModify And, "&="), (AModify Xor, "^=")
         ]
 
 block = ((symbol "{" <|> keyword "begin") *> manyTill stmt (symbol "}" <|> keyword "end"))
@@ -138,16 +137,15 @@ block = ((symbol "{" <|> keyword "begin") *> manyTill stmt (symbol "}" <|> keywo
 stmt :: Parser Stmt
 stmt = choice
     [ SDeclare <$> (keyword "var" *> varName) <*> optional (assignOp *> expr)
-    , SWith <$> (keyword "with" *> varName) <*> block
-    , SIf <$> (keyword "if" *> expr) <*> block <*> option [] (keyword "else" *> block)
-    , SRepeat <$> (keyword "repeat" *> expr) <*> block
-    , SWhile <$> (keyword "while" *> expr) <*> block
+    , SWith    <$> (keyword "with" *> variable) <*> block
+    , SIf      <$> (keyword "if" *> expr) <*> block <*> option [] (keyword "else" *> block)
+    , SRepeat  <$> (keyword "repeat" *> expr) <*> block
+    , SWhile   <$> (keyword "while" *> expr) <*> block
     , SDoUntil <$> (keyword "do" *> block) <*> (keyword "until" *> expr)
-    , SBreak <$ keyword "break", SContinue <$ keyword "continue", SExit <$ keyword "exit"
+    , SBreak  <$ keyword "break", SContinue <$ keyword "continue", SExit <$ keyword "exit"
     , SReturn <$> (keyword "return" *> expr)
     , SAssign <$> variable <*> assignOp <*> expr
     ] <?> "statement"
-
 
 type Result = Either Error Source
 

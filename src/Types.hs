@@ -24,6 +24,7 @@ data Type
     = TVoid -- ^ Should be used only as a return type
     | TReal | TString
     | TArray Type | TArray2 Type
+    | TColor
     | TId Resource -- ^ Resource descriptor
     | TUnknown [Type] -- ^ Unknown type with possibilities, if any
     deriving (Eq, Show)
@@ -39,23 +40,39 @@ instance Semigroup Type where
 instance Monoid Type where
     mempty = TUnknown []
 
-tBool, tColor, tPercent :: Type
+{-| Boolean. In GML, `true` is just any real value which is greater than 0.5.
+    Maybe some more typechecking will be added to that later. -}
+tBool :: Type
 tBool = TReal
-tColor = TReal --TODO: more static
-tPercent = TReal --TODO: more static
 
+{-| Integer. In GML, there is no separate type for integral values.
+    Reserved for future typechecking. -}
+tInt :: Type
+tInt = TReal
+
+{-| Real value between 0 and 1. Reserved for future typechecking. -}
+tPercent :: Type
+tPercent = TReal
+
+{- |Resource descriptors. -}
 tInstance, tSprite, tObject, tRoom :: Type
 tInstance = TReal
 tSprite = TId RSprite
 tObject = TId RObject
 tRoom = TId RRoom
 
+{- |Unknown type. -}
 tUnknown :: Type
 tUnknown = mempty
 
+{- |Combine possibilities of two unknown types. -}
 tCombine :: Type -> Type -> Type
 tCombine = (<>)
 
 {-| Function or script signature. -}
-data Signature = [Type] :-> Type --TODO: variadic and optional arguments
+data Signature =
+    [Type] -- ^ Argument types
+    :-> 
+    Type -- ^ Return type
+    --TODO: variadic and optional arguments
     deriving (Eq, Show)

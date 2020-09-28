@@ -26,7 +26,6 @@ data Error
     | EUnknownFunction FunName
     -- | Wrong type of function argument
     | EWrongArgument FunName Int Type Type
-    -- | Non-boolean type of a conditional expression
     deriving Show
 
 pretty :: Error -> String
@@ -40,7 +39,6 @@ pretty = \case
 {-
 
 WARN
-Variable type change
 N arguments in a script call, but it uses only K<N
 Using a deprecated function/variable
 Unspecified arguments evaluation order

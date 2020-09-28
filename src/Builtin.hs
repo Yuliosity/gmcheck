@@ -9,11 +9,13 @@ module Builtin where
 
 import qualified Data.Map.Strict as M
 
-import AST (VarName, FunName)
+import AST (Name)
 import Types
 
--- $vars
-type VarDict = M.Map VarName Type
+-- * Variables
+
+-- | Dictionary for holding variable types.
+type VarDict = M.Map Name Type
 
 mkReal var = (var, TReal)
 
@@ -30,7 +32,7 @@ instanceVar = M.fromList $
     , ("visible", tBool)
     , ("alarm", TArray TReal)
     , ("sprite_index", tSprite)
-    , ("image_blend", tColor)
+    , ("image_blend", TColor)
     , ("image_alpha", tPercent)
     ]
 
@@ -73,8 +75,10 @@ builtinVar = M.unions
     , globalVar, globalConst
     ]
 
--- $functions
-type FunDict = M.Map FunName Signature
+-- * Functions
+
+-- | Dictionary for holding function signatures.
+type FunDict = M.Map Name Signature
 
 mkRtoR fn = (fn, [TReal] :-> TReal)
 mkRRtoR fn = (fn, [TReal, TReal] :-> TReal)
@@ -98,12 +102,12 @@ stringFn = M.fromList
 -- |TODO: Array functions
 arrayFn = M.empty
 
--- |Mouse function
+-- |Mouse functions
 mouseFn = M.fromList
     [ ("mouse_check_button", [TReal] :-> tBool)
     ]
 
--- |Keyboard function
+-- |Keyboard functions
 keyboardFn = M.fromList
     [ ("keyboard_check", [TReal] :-> tBool)
     ]
@@ -112,17 +116,17 @@ keyboardFn = M.fromList
 drawFn = M.fromList
     [ ("draw_self", [] :-> TVoid)
     , ("draw_sprite", [tSprite, TReal, TReal, TReal] :-> TVoid)
-    , ("draw_sprite_ext", [tSprite, TReal, TReal, TReal, TReal, TReal, TReal, tColor, tPercent] :-> TVoid)
+    , ("draw_sprite_ext", [tSprite, TReal, TReal, TReal, TReal, TReal, TReal, TColor, tPercent] :-> TVoid)
     , ("draw_text",   [TReal, TReal, TString] :-> TVoid)
     , ("draw_circle", [TReal, TReal, TReal, tBool] :-> TVoid)
-    , ("draw_set_colour", [tColor] :-> TVoid)
-    , ("draw_get_colour", [] :-> tColor)
-    , ("make_colour_rgb", [TReal, TReal, TReal] :-> tColor)
-    , ("make_colour_hsv", [TReal, TReal, TReal] :-> tColor)
-    , ("merge_colour",    [tColor, tColor, tPercent] :-> tColor)
-    , ("colour_get_red",   [tColor] :-> TReal)
-    , ("colour_get_green", [tColor] :-> TReal)
-    , ("colour_get_blue",  [tColor] :-> TReal)
+    , ("draw_set_colour", [TColor] :-> TVoid)
+    , ("draw_get_colour", [] :-> TColor)
+    , ("make_colour_rgb", [TReal, TReal, TReal] :-> TColor)
+    , ("make_colour_hsv", [TReal, TReal, TReal] :-> TColor)
+    , ("merge_colour",    [TColor, TColor, tPercent] :-> TColor)
+    , ("colour_get_red",   [TColor] :-> TReal)
+    , ("colour_get_green", [TColor] :-> TReal)
+    , ("colour_get_blue",  [TColor] :-> TReal)
     ]
 
 -- |Collision functions
