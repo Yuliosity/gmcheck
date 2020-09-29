@@ -149,8 +149,8 @@ derive = \case
             Just (needed :-> res) -> do
                 argsT <- mapM derive args
                 --FIXME: check the arguments number
-                forM_ (zip3 [1..] needed argsT) $ \(i, a, b) ->
-                    when (a /= b) $ report (EWrongArgument fn i a b)
+                forM_ (zip needed argsT) $ \((name, a), b) ->
+                    when (a /= b) $ report (EWrongArgument fn name a b)
                 return res
 
 {-| Deriving the script signature. -}

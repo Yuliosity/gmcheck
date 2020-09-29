@@ -1,0 +1,4 @@
+id : id
+image_number : int
+bbox_left, bbox_right, bbox_top, bbox_bottom : int
+object_index : object

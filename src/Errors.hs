@@ -25,16 +25,17 @@ data Error
     -- | No such function or script
     | EUnknownFunction FunName
     -- | Wrong type of function argument
-    | EWrongArgument FunName Int Type Type
+    | EWrongArgument FunName Name Type Type
     deriving Show
 
 pretty :: Error -> String
 pretty = \case
     WChangeType var from to -> "Type of " ++ show var ++ " might be changed from " ++ show from ++ " to " ++ show to
-    EWrongExprType descr need real -> "Type of " ++ descr ++ "should be " ++ show need ++ ", but is derived to be " ++ show real 
-    EWrongVarType var need real -> "Type of " ++ show var ++ "should be " ++ show need ++ ", but is derived to be " ++ show real 
+    EWrongExprType descr need ty -> "Type of " ++ descr ++ "should be " ++ show need ++ ", but seems to be " ++ show ty 
+    EWrongVarType var need ty -> "Type of " ++ show var ++ "should be " ++ show need ++ ", but seems to be " ++ show ty 
     EBadUnary op ty -> "Unary operation " ++ show op ++ " cannot be applied to the type " ++ show ty
     EArrayIndex var ty -> "Trying to index the array " ++ show var ++ " with not a number, but " ++ show ty
+    EWrongArgument fun name need ty -> "Argument " ++ name ++ " of function " ++ fun ++ " should be " ++ show need ++ ", but seems to be " ++ show ty
     err -> "Raw error: " ++ show err
 {-
 

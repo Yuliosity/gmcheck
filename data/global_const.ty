@@ -1,0 +1,8 @@
+room       : room
+room_first : room
+room_last  : room
+instance_count : int
+instance_id : array<id>
+keyboard_key : vkey
+mouse_button : mbutton
+game_id : int

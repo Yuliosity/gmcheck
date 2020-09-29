@@ -1,19 +1,74 @@
 #math
-sin, cos, tan, abs, floor, ceil, sqr, srt : real -> real
+sin, cos, tan, abs, sqr, srt, random : real -> real
+round, floor, ceil : real -> int
 lengthdir_x, lengthdir_y : [len] real, [dir] real -> real
 point_distance : [x1] real, [y1] real, [x2] real, [y2] real -> real
 
 #draw
 draw_self : void -> void
 draw_sprite : sprite, [subimg] int, [x] real, [y] real -> void
-draw_sprite_ext : sprite, [subimg] int, [x] real, [y] real, [xscale] real, [yscale] real, [rot] real, color, [alpha] percent -> void
+draw_sprite_ext : sprite, [subimg] int, [x] real, [y] real, [xscale] real, [yscale] real, [rot] real, color, [alpha] alpha -> void
 draw_text : [x] real, [y] real, string -> void
 draw_circle : [x] real, [y] real, [radius] real, [outline] bool -> void
 draw_set_colour : color -> void
 draw_get_colour : void -> color
 make_colour_rgb : [r] real, [g] real, [b] real -> color
 make_colour_hsv : [h] real, [s] real, [v] real -> color
-merge_colour : color, color, percent -> color
+merge_colour : color, color, alpha -> color
 colour_get_red   : color -> real
 colour_get_green : color -> real
 colour_get_blue  : color -> real
+
+#string
+chr : real -> string
+ord : string -> real
+string_char_at : int -> string
+real   : string -> real
+string : real -> string
+string_copy : string, [index] int, [count] int -> string
+
+#mouse
+mouse_check_button : mbutton -> bool
+
+#keyboard
+keyboard_check : vkey -> bool
+
+#collision
+place_free : [x] real, [y] real -> bool
+position_meeting : [x] real, [y] real, object -> bool //FIXME: object OR instance!
+collision_line : [x1] real, [y1] real, [x2] real, [y2] real, object, [prec] bool, [notme] bool -> bool
+
+#movement
+move_contact_solid : [x] real, [y] real -> void
+move_contact_all :   [x] real, [y] real -> void
+motion_add : [dir] real, [speed] real -> void
+motion_set : [dir] real, [speed] real -> void
+
+#instance
+instance_create_depth : [x] real, [y] real, [depth] int, object -> id
+instance_destroy :  void -> void
+instance_find :     object, [n] int -> id
+instance_number :   object -> int
+instance_place :    [x] real, [y] real, object -> id
+instance_position : [x] real, [y] real, object -> id
+instance_id_get : int -> id
+
+#events
+event_inherited : void -> void
+event_perform : event, [n] int -> void
+
+#rooms
+room_goto : room -> void
+room_next : room -> room
+room_goto_next :     void -> void
+room_goto_previous : void -> void
+room_add : void -> room
+room_set_height :     room, [height] real -> void
+room_set_width :      room, [width]  real -> void
+room_set_persistent : room, bool -> void
+
+#game
+game_save : [filename] string -> void
+game_load : [filename] string -> void
+game_end :      void -> void
+game_restart :  void -> void

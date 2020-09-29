@@ -8,6 +8,7 @@ Type system of GML values.
 module Types where
 
 import Data.Monoid
+import AST (Name)
 
 {-| Resource type. In GML it's actually just a number, but here we want to differ. -}
 data Resource
@@ -69,9 +70,12 @@ tUnknown = mempty
 tCombine :: Type -> Type -> Type
 tCombine = (<>)
 
+{-| Possibly named function argument. -}
+type Argument = (Name, Type)
+
 {-| Function or script signature. -}
 data Signature =
-    [Type] -- ^ Argument types
+    [Argument] -- ^ Argument types
     :-> 
     Type -- ^ Return type
     --TODO: variadic and optional arguments
