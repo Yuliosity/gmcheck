@@ -1,0 +1,4 @@
+x, y, xstart, ystart, xprevious, yprevious : real
+speed, direction, hspeed, vspeed, gravity, gravity_direction, friction : real
+image_angle, image_xscale, image_yscale : real
+depth, image_index : int

@@ -1,0 +1,19 @@
+#math
+sin, cos, tan, abs, floor, ceil, sqr, srt : real -> real
+lengthdir_x, lengthdir_y : [len] real, [dir] real -> real
+point_distance : [x1] real, [y1] real, [x2] real, [y2] real -> real
+
+#draw
+draw_self : void -> void
+draw_sprite : sprite, [subimg] int, [x] real, [y] real -> void
+draw_sprite_ext : sprite, [subimg] int, [x] real, [y] real, [xscale] real, [yscale] real, [rot] real, color, [alpha] percent -> void
+draw_text : [x] real, [y] real, string -> void
+draw_circle : [x] real, [y] real, [radius] real, [outline] bool -> void
+draw_set_colour : color -> void
+draw_get_colour : void -> color
+make_colour_rgb : [r] real, [g] real, [b] real -> color
+make_colour_hsv : [h] real, [s] real, [v] real -> color
+merge_colour : color, color, percent -> color
+colour_get_red   : color -> real
+colour_get_green : color -> real
+colour_get_blue  : color -> real
