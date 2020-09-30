@@ -3,7 +3,7 @@
 module TypeParser where
 
 import Data.Maybe (fromMaybe)
-import Data.Text hiding (empty, map)
+import Data.Text (Text)
 import Data.Void (Void)
 import qualified Data.Map.Strict as M
 
@@ -59,28 +59,44 @@ parens, brackets :: Parser a -> Parser a
 parens = between (symbol "(") (symbol ")")
 brackets = between (symbol "[") (symbol "]")
 
+-- * Parsing variable types
+
+vartype :: Parser (Name, Type)
+vartype = do
+    name <- ident
+    symbol ":"
+    (_, ty) <- nametype
+    return (name, ty)
+
+-- | Dictionary for holding variable types.
+type VarDict = M.Map Name Type
+
+parseVars :: String -> Text -> Either Error VarDict
+parseVars name src = M.fromList <$>
+    parse (sc *> many vartype <* eof) name src
+
+-- * Parsing function signatures
+
 arg :: Parser Argument
 arg = do
     name <- optional $ brackets ident
     (tyName, ty) <- nametype
     return $ (fromMaybe tyName name, ty)
 
-sig :: Parser (Name, Signature)
-sig = do
-    name <- ident
+sigs :: Parser ([Name], Signature)
+sigs = do
+    name <- sepBy1 ident (symbol ",")
     args <- sepBy1 arg (symbol ",")
     symbol "->"
     (_, ret) <- nametype
     return (name, args :-> ret)
 
--- | Dictionary for holding variable types.
-type VarDict = M.Map Name Type
-
-parseVars :: String -> Text -> Either Error VarDict
-parseVars = undefined
-
 -- | Dictionary for holding function signatures.
 type FunDict = M.Map Name Signature
 
+unpack :: ([a], b) -> [(a, b)]
+unpack (xs, y) = [(x, y) | x <- xs]
+
 parseFun :: String -> Text -> Either Error FunDict
-parseFun = undefined
+parseFun name src = M.fromList . concatMap unpack <$>
+    parse (sc *> many sigs <* eof) name src
