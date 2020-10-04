@@ -30,7 +30,10 @@ symbol = L.symbol sc
 nametype :: Parser (Name, Type)
 nametype = do
     tyName <- ident
-    case M.lookup tyName types of
+    if tyName == "array" then do
+        (subname, subtype) <- between (symbol "<") (symbol ">") nametype
+        return ("array of" ++ subname, TArray subtype)
+    else case M.lookup tyName types of
         Just res -> return (tyName, res)
         Nothing -> fail $ "unknown type: " ++ tyName
     where
@@ -53,7 +56,10 @@ nametype = do
             ]
 
 ident :: Parser Name
-ident = lexeme $ (:) <$> letterChar <*> many alphaNumChar
+ident = lexeme $ (:) <$> letterChar <*> many (alphaNumChar <|> char '_')
+
+names :: Parser [Name]
+names = sepBy1 ident (symbol ",")
 
 parens, brackets :: Parser a -> Parser a
 parens = between (symbol "(") (symbol ")")
@@ -61,19 +67,18 @@ brackets = between (symbol "[") (symbol "]")
 
 -- * Parsing variable types
 
-vartype :: Parser (Name, Type)
-vartype = do
-    name <- ident
-    symbol ":"
+vars :: Parser ([Name], Type)
+vars = do
+    names <- names <* symbol ":"
     (_, ty) <- nametype
-    return (name, ty)
+    return (names, ty)
 
 -- | Dictionary for holding variable types.
 type VarDict = M.Map Name Type
 
 parseVars :: String -> Text -> Either Error VarDict
-parseVars name src = M.fromList <$>
-    parse (sc *> many vartype <* eof) name src
+parseVars name src = M.fromList . concatMap unpack <$>
+    parse (sc *> many vars <* eof) name src
 
 -- * Parsing function signatures
 
@@ -85,11 +90,14 @@ arg = do
 
 sigs :: Parser ([Name], Signature)
 sigs = do
-    name <- sepBy1 ident (symbol ",")
-    args <- sepBy1 arg (symbol ",")
+    names <- names <* symbol ":"
+    rawArgs <- sepBy1 arg (symbol ",")
+    let args = case rawArgs of
+                    [(_, TVoid)] -> []
+                    xs -> xs
     symbol "->"
     (_, ret) <- nametype
-    return (name, args :-> ret)
+    return (names, args :-> ret)
 
 -- | Dictionary for holding function signatures.
 type FunDict = M.Map Name Signature
