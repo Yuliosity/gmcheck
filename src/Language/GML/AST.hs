@@ -5,7 +5,7 @@ Description : GML AST
 Everything representing the Game Maker Language source tree.
 -}
 
-module AST where
+module Language.GML.AST where
 
 import Data.Text
 

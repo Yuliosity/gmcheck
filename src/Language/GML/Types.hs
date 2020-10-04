@@ -5,10 +5,11 @@ Description : GML Types
 Type system of GML values.
 -}
 
-module Types where
+module Language.GML.Types where
 
 import Data.Monoid
-import AST (Name)
+
+import Language.GML.AST (Name)
 
 {-| Resource type. In GML it's actually just a number, but here we want to differ. -}
 data Resource

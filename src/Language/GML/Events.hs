@@ -5,7 +5,7 @@ Description : GM object events
 Events in Game Maker objects.
 -}
 
-module Events where
+module Language.GML.Events where
 
 import Data.Char (isAlpha, isDigit)
 import Text.Read (Read (..))

@@ -1,6 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Parser where
+module Language.GML.Parser.AST
+    ( Source, Result
+    , parseSource
+    ) where
 
 import Text.Megaparsec
 import Text.Megaparsec.Char
@@ -9,36 +12,16 @@ import Control.Monad.Combinators.Expr
 import Data.Text hiding (empty, map)
 import Data.Void (Void)
 
-import AST
-
-type Parser = Parsec Void Text
-type Error = ParseErrorBundle Text Void
+import Language.GML.AST
+import Language.GML.Parser.Common
 
 -- $token
 -- Basic tokens
 
-{-| Spaces and comments skipper. -}
-sc :: Parser ()
-sc = L.space space1 (L.skipLineComment "//") (L.skipBlockComment "/*" "*/")
-
-lexeme :: Parser a -> Parser a
-lexeme = L.lexeme sc
-
-symbol :: Text -> Parser Text
-symbol = L.symbol sc
+semicolon = symbol ";"
 
 keyword :: Text -> Parser Text
 keyword kw = lexeme (string kw <* notFollowedBy alphaNumChar)
-
-parens, braces, brackets :: Parser a -> Parser a
-parens = between (symbol "(") (symbol ")")
-braces = between (symbol "{") (symbol "}")
-brackets = between (symbol "[") (symbol "]")
-
-semicolon = symbol ";"
-
-ident :: Parser Name
-ident = lexeme $ (:) <$> letterChar <*> many alphaNumChar
 
 varName = ident <?> "variable"
 funName = ident <?> "function or script"
@@ -147,7 +130,5 @@ stmt = choice
     , SAssign <$> variable <*> assignOp <*> expr
     ] <?> "statement"
 
-type Result = Either Error Source
-
-parseSource :: String -> Text -> Result
-parseSource = parse (sc *> many stmt <* eof)
+parseSource :: String -> Text -> Result Source
+parseSource = parseMany stmt

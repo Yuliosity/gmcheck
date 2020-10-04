@@ -8,7 +8,7 @@ It tries to derive types of variables and expressions based on their assignment 
 
 {-# LANGUAGE LambdaCase #-}
 
-module Checker where
+module Language.GML.Checker where
 
 import Prelude hiding (lookup)
 
@@ -19,11 +19,12 @@ import Data.Maybe (fromMaybe)
 import Data.Void (Void)
 import qualified Data.Map as M
 
-import AST
-import Builtin
-import Project
-import Types
-import Errors
+import Language.GML.AST
+import Language.GML.Project
+import Language.GML.Types
+
+import Language.GML.Checker.Errors
+import Language.GML.Checker.Builtin
 
 type Memory = M.Map Name Type
 
@@ -32,7 +33,7 @@ data Env = Env
     --, eScope   :: [Memory] -- TODO: stack
     --, eGlobals :: Memory -- TODO: globals
     , eObjects :: M.Map String Memory
-    }
+    } deriving Show
 
 emptyEnv :: Env
 emptyEnv = Env
@@ -42,8 +43,6 @@ emptyEnv = Env
     }
 
 -- annotate :: Source -> Memory -> 
-
-type Log = [Error]
 
 report err = tell [err]
 
@@ -164,7 +163,7 @@ run :: Source -> Checker ()
 run = mapM_ $ \case
     SDeclare var mExpr -> do
         exprT <- case mExpr of
-            Nothing -> return tUnknown -- tEmpty?
+            Nothing -> return TVoid
             Just expr -> derive expr
         setVar (VVar var) exprT
 
@@ -179,6 +178,7 @@ run = mapM_ $ \case
                     report $ WChangeType var varT exprT
                 setVar var exprT
             AModify op -> do
+                
                 -- TODO: refactor copy-pasta with binary derive
                 when (not $ binCompat (BNum op) varT exprT) $
                     report (EBadBinary (BNum op) varT exprT)
@@ -207,3 +207,6 @@ run = mapM_ $ \case
     --TODO: for break/continue/exit/return, check that it's the last statement in a block
 
     _ -> return ()
+
+runProject :: Project -> (Env, Log)
+runProject proj = execRWS undefined proj emptyEnv where

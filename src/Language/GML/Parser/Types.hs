@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module TypeParser where
+module Language.GML.Parser.Types where
 
 import Data.Maybe (fromMaybe)
 import Data.Text (Text)
@@ -11,21 +11,8 @@ import Text.Megaparsec
 import Text.Megaparsec.Char
 import qualified Text.Megaparsec.Char.Lexer as L
 
-import AST (Name)
-import Types
-
-type Parser = Parsec Void Text
-type Error = ParseErrorBundle Text Void
-
-{-| Spaces and comments skipper. -}
-sc :: Parser ()
-sc = L.space space1 (L.skipLineComment "//") (L.skipBlockComment "/*" "*/")
-
-lexeme :: Parser a -> Parser a
-lexeme = L.lexeme sc
-
-symbol :: Text -> Parser Text
-symbol = L.symbol sc
+import Language.GML.Types
+import Language.GML.Parser.Common
 
 nametype :: Parser (Name, Type)
 nametype = do
@@ -55,15 +42,8 @@ nametype = do
             , ("event",   TReal) --FIXME: enum
             ]
 
-ident :: Parser Name
-ident = lexeme $ (:) <$> letterChar <*> many (alphaNumChar <|> char '_')
-
 names :: Parser [Name]
 names = sepBy1 ident (symbol ",")
-
-parens, brackets :: Parser a -> Parser a
-parens = between (symbol "(") (symbol ")")
-brackets = between (symbol "[") (symbol "]")
 
 -- * Parsing variable types
 
@@ -76,9 +56,9 @@ vars = do
 -- | Dictionary for holding variable types.
 type VarDict = M.Map Name Type
 
-parseVars :: String -> Text -> Either Error VarDict
+parseVars :: String -> Text -> Result VarDict
 parseVars name src = M.fromList . concatMap unpack <$>
-    parse (sc *> many vars <* eof) name src
+    parseMany vars name src
 
 -- * Parsing function signatures
 
@@ -105,6 +85,6 @@ type FunDict = M.Map Name Signature
 unpack :: ([a], b) -> [(a, b)]
 unpack (xs, y) = [(x, y) | x <- xs]
 
-parseFun :: String -> Text -> Either Error FunDict
+parseFun :: String -> Text -> Result FunDict
 parseFun name src = M.fromList . concatMap unpack <$>
-    parse (sc *> many sigs <* eof) name src
+    parseMany sigs name src

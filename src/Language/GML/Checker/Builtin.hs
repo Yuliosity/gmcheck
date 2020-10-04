@@ -5,7 +5,7 @@ Description : Built-in GML functions
 Types of built-in instance variables and signatures of library functions.
 -}
 
-module Builtin where
+module Language.GML.Checker.Builtin where
 
 import qualified Data.Map.Strict as M
 import qualified Data.Text.IO as T (readFile)
@@ -13,8 +13,7 @@ import Text.Megaparsec (errorBundlePretty)
 
 import System.IO.Unsafe
 
-import AST (Name)
-import TypeParser
+import Language.GML.Parser.Types
 
 unsafeLoad parser file = unsafePerformIO $ do
     src <- T.readFile file

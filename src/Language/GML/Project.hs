@@ -7,7 +7,7 @@ Facilities for representing the whole Game Maker project and loading its codebas
 
 {-# LANGUAGE LambdaCase #-}
 
-module Project
+module Language.GML.Project
     ( Script (..)
     , Object (..)
     , Project (..)
@@ -22,27 +22,29 @@ import System.Directory
 import System.FilePath
 import System.IO
 
-import Parser (Result, parseSource)
-import Types (Resource (..))
-import Events
+import Language.GML.Parser.AST
+import Language.GML.Types (Resource (..))
+import Language.GML.Events
+
+type RSource = Result Source --FIXME: report errors, not store them in the project
 
 {-| Executable script. -}
 data Script = Script
     { sName :: String
-    , sSource :: Result
+    , sSource :: RSource
     }
     deriving Show
 
 {-| Object with callable events. -}
 data Object = Object
     { {- oName :: OName
-    , -} oEvents :: M.Map Event Result
+    , -} oEvents :: M.Map Event RSource
     }
     deriving Show
 
 data Project = Project
     { pResources :: M.Map String Resource
-    , pScripts   :: M.Map String Result
+    , pScripts   :: M.Map String RSource
     , pObjects   :: M.Map String Object
     }
     deriving Show

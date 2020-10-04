@@ -1,9 +1,12 @@
 {-# LANGUAGE LambdaCase #-}
 
-module Errors where
+module Language.GML.Checker.Errors where
 
-import AST
-import Types
+import qualified Data.Map.Strict as M
+
+import Language.GML.AST
+import Language.GML.Events (Event) 
+import Language.GML.Types (Type)
 
 data Error
     -- | Changing the variable type
@@ -28,6 +31,14 @@ data Error
     | EWrongArgument FunName Name Type Type
     deriving Show
 
+type Log = [Error]
+
+{-| Errors report. -}
+data Report = Report
+    { rScripts :: M.Map Name Log
+    , rObjects :: M.Map Name [(Event, Log)]
+    }
+
 pretty :: Error -> String
 pretty = \case
     WChangeType var from to -> "Type of " ++ show var ++ " might be changed from " ++ show from ++ " to " ++ show to
@@ -37,6 +48,8 @@ pretty = \case
     EArrayIndex var ty -> "Trying to index the array " ++ show var ++ " with not a number, but " ++ show ty
     EWrongArgument fun name need ty -> "Argument " ++ name ++ " of function " ++ fun ++ " should be " ++ show need ++ ", but seems to be " ++ show ty
     err -> "Raw error: " ++ show err
+
+
 {-
 
 WARN
