@@ -11,6 +11,8 @@ import Language.GML.Types (Type)
 data Error
     -- | Changing the variable type
     = WChangeType Variable Type Type
+    -- | Different types of array elements
+    | WHeteroArray Variable Type Type
     -- | Different types of the ternary operator
     | WTernaryDiff Type Type
     -- | Function doesn't return anything
@@ -29,6 +31,8 @@ data Error
     | EUnknownFunction FunName
     -- | Wrong type of function argument
     | EWrongArgument FunName Name Type Type
+    -- | Data structure is not destroyed
+    | EDataStructureLeak Variable
     deriving Show
 
 type Log = [Error]

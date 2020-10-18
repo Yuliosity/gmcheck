@@ -16,7 +16,6 @@ import Control.Applicative (Alternative, (<|>))
 import Control.Monad
 import Control.Monad.Trans.RWS
 import Data.Maybe (fromMaybe)
-import Data.Void (Void)
 import qualified Data.Map as M
 
 import Language.GML.AST
@@ -171,6 +170,7 @@ run = mapM_ $ \case
         varT <- lookup var
         exprT <- derive expr
 
+        -- Check if the assigned expression doesn't return a value
         when (exprT == TVoid) $ report (ENoResult var)
         case ass of
             AAssign -> do

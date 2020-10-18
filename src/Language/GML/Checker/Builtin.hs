@@ -7,7 +7,6 @@ Types of built-in instance variables and signatures of library functions.
 
 module Language.GML.Checker.Builtin where
 
-import qualified Data.Map.Strict as M
 import qualified Data.Text.IO as T (readFile)
 import Text.Megaparsec (errorBundlePretty) 
 

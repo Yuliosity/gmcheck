@@ -10,15 +10,11 @@ import Text.Megaparsec.Char
 import qualified Text.Megaparsec.Char.Lexer as L
 import Control.Monad.Combinators.Expr
 import Data.Text hiding (empty, map)
-import Data.Void (Void)
 
 import Language.GML.AST
 import Language.GML.Parser.Common
 
--- $token
--- Basic tokens
-
-semicolon = symbol ";"
+-- * Basic tokens
 
 keyword :: Text -> Parser Text
 keyword kw = lexeme (string kw <* notFollowedBy alphaNumChar)
@@ -26,15 +22,15 @@ keyword kw = lexeme (string kw <* notFollowedBy alphaNumChar)
 varName = ident <?> "variable"
 funName = ident <?> "function or script"
 
--- $values
+-- * Values
 
-{-| Number literal.-}
+-- |Number literal.
 lNumeric :: Parser Literal
 lNumeric = LNumeric <$>
     (try (lexeme (L.signed empty L.float))
     <|> fromIntegral <$> lexeme (L.signed empty L.decimal))
 
-{-| String literal.-}
+-- |String literal.
 lString :: Parser Literal
 lString = LString <$> (char '\"' *> manyTill L.charLiteral (char '\"'))
 
@@ -49,7 +45,7 @@ variable = do
         , pure $ VVar name
         ]
 
--- $expr
+-- * Expressions
 
 funcall = EFuncall <$> funName <*> parens (sepBy expr $ symbol ",")
 
@@ -114,11 +110,11 @@ assignOp = choice (map (\(c, s) -> c <$ symbol s) ops) <?> "assignment" where
         , (AModify Or,  "|="), (AModify And, "&="), (AModify Xor, "^=")
         ]
 
-block = ((symbol "{" <|> keyword "begin") *> manyTill stmt (symbol "}" <|> keyword "end"))
-    <|> (:[]) <$> stmt
+-- * Statements
 
+-- | A single statement, optionally ended with a semicolon.
 stmt :: Parser Stmt
-stmt = choice
+stmt = (choice
     [ SDeclare <$> (keyword "var" *> varName) <*> optional (assignOp *> expr)
     , SWith    <$> (keyword "with" *> variable) <*> block
     , SIf      <$> (keyword "if" *> expr) <*> block <*> option [] (keyword "else" *> block)
@@ -128,7 +124,12 @@ stmt = choice
     , SBreak  <$ keyword "break", SContinue <$ keyword "continue", SExit <$ keyword "exit"
     , SReturn <$> (keyword "return" *> expr)
     , SAssign <$> variable <*> assignOp <*> expr
-    ] <?> "statement"
+    ] <?> "statement")
+    <* optional semicolon
+
+-- | A block of multiple statements.
+block = ((symbol "{" <|> keyword "begin") *> manyTill stmt (symbol "}" <|> keyword "end"))
+    <|> (:[]) <$> stmt
 
 parseSource :: String -> Text -> Result Source
 parseSource = parseMany stmt

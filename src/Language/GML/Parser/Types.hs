@@ -17,18 +17,21 @@ import Language.GML.Parser.Common
 nametype :: Parser (Name, Type)
 nametype = do
     tyName <- ident
-    if tyName == "array" then do
-        (subname, subtype) <- between (symbol "<") (symbol ">") nametype
-        return ("array of" ++ subname, TArray subtype)
-    else case M.lookup tyName types of
-        Just res -> return (tyName, res)
-        Nothing -> fail $ "unknown type: " ++ tyName
+    -- TODO: flatten
+    case M.lookup tyName paramTypes of
+        Just res -> do
+            (subname, subtype) <- between (symbol "<") (symbol ">") nametype
+            return (tyName ++ " of " ++ subname, res subtype)
+        Nothing -> case M.lookup tyName types of
+            Just res -> return (tyName, res)
+            Nothing -> fail $ "unknown type: " ++ tyName
     where
         types = M.fromList
             [ ("void",    TVoid)
+            , ("any",     tUnknown)
             , ("real",    TReal)
             , ("int",     TReal)
-            , ("alpha",   TReal) --between 0 and 1
+            , ("alpha",   tAlpha) --between 0 and 1
             , ("bool",    TReal)
             , ("string",  TString)
             , ("color",   TColor)
@@ -40,6 +43,17 @@ nametype = do
             , ("mbutton", TReal) --FIXME: enum
             , ("vkey",    TReal) --FIXME: enum
             , ("event",   TReal) --FIXME: enum
+            ]
+
+        paramTypes = M.fromList
+            [ ("array",   TArray)
+            , ("array2",  TArray2)
+            , ("grid",    TStructure SGrid)
+            , ("list",    TStructure SList)
+            , ("map",     TStructure SMap)
+            , ("pqueue",  TStructure SPriorityQueue)
+            , ("queue",   TStructure SQueue)
+            , ("stack",   TStructure SStack)
             ]
 
 names :: Parser [Name]

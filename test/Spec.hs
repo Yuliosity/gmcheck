@@ -38,7 +38,6 @@ simpleExpr = describe "expressions parser" $ do
         parse' expr "sin(42)" `shouldParse` EFuncall "sin" [lit42]
         parse' expr "cat(foo, bar)" `shouldParse` EFuncall "cat" [EVar foo, EVar bar]
 
-
 simpleStmt = describe "statements parser" $ do
     it "can parse variable declarations" $ do
         parse' stmt "var foo" `shouldParse` SDeclare "foo" Nothing
@@ -56,6 +55,7 @@ simpleStmt = describe "statements parser" $ do
             SIf (EBinary BLess (EVar foo) lit42) [SAssign foo AAdd lit42, SExit] []
     it "can parse multi-lines" $ do
         parse' block "{var foo\nfoo = 42}" `shouldParse` [SDeclare "foo" Nothing, SAssign foo AAssign lit42]
+
 main :: IO ()
 main = hspec $ do
     vars

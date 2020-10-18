@@ -28,6 +28,13 @@ real   : string -> real
 string : real -> string
 string_copy : string, [index] int, [count] int -> string
 
+//data
+ds_list_create : void -> list<void>
+ds_list_destroy : list<any> -> void
+ds_list_size : list<any> -> int
+ds_list_add : list<any>, any -> void //TODO: vararg
+ds_list_sort : list<any>, bool -> void
+
 //mouse
 mouse_check_button : mbutton -> bool
 

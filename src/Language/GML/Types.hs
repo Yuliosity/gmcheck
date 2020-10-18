@@ -11,7 +11,7 @@ import Data.Monoid
 
 import Language.GML.AST (Name)
 
-{-| Resource type. In GML it's actually just a number, but here we want to differ. -}
+{-| Resource type. In GML any resource descriptor actually just a number, but here we want to differ. -}
 data Resource
     = RSprite
     | RBackground
@@ -21,13 +21,24 @@ data Resource
     -- TODO: paths, etc.
     deriving (Eq, Show)
 
+{-| Data structure type. In GML any structure descriptor is also just a number, but here we want to differ. -}
+data Structure
+    = SStack
+    | SList
+    | SGrid
+    | SMap --TODO: polymorphic by key?
+    | SQueue
+    | SPriorityQueue
+    deriving (Eq, Show)
+
 {-| Value type. -}
 data Type
-    = TVoid -- ^ Should be used only as a return type
+    = TVoid -- ^ GML 'undefined'
     | TReal | TString
     | TArray Type | TArray2 Type
     | TColor
     | TId Resource -- ^ Resource descriptor
+    | TStructure Structure Type -- ^ Data structure descriptor
     | TUnknown [Type] -- ^ Unknown type with possibilities, if any
     deriving (Eq, Show)
 
@@ -53,15 +64,24 @@ tInt :: Type
 tInt = TReal
 
 {-| Real value between 0 and 1. Reserved for future typechecking. -}
-tPercent :: Type
-tPercent = TReal
+tAlpha :: Type
+tAlpha = TReal
 
 {- |Resource descriptors. -}
 tInstance, tSprite, tObject, tRoom :: Type
 tInstance = TReal
-tSprite = TId RSprite
-tObject = TId RObject
-tRoom = TId RRoom
+tObject   = TId RObject
+tRoom     = TId RRoom
+tSprite   = TId RSprite
+
+{- |Data structure descriptors. -}
+tGrid, tList, tMap, tPriorityQueue, tQueue, tStack :: Type -> Type
+tGrid          = TStructure SGrid
+tList          = TStructure SList
+tMap           = TStructure SMap
+tPriorityQueue = TStructure SPriorityQueue
+tQueue         = TStructure SQueue
+tStack         = TStructure SStack
 
 {- |Unknown type. -}
 tUnknown :: Type
