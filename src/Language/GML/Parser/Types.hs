@@ -4,12 +4,9 @@ module Language.GML.Parser.Types where
 
 import Data.Maybe (fromMaybe)
 import Data.Text (Text)
-import Data.Void (Void)
 import qualified Data.Map.Strict as M
 
 import Text.Megaparsec
-import Text.Megaparsec.Char
-import qualified Text.Megaparsec.Char.Lexer as L
 
 import Language.GML.Types
 import Language.GML.Parser.Common
@@ -46,14 +43,14 @@ nametype = do
             ]
 
         paramTypes = M.fromList
-            [ ("array",   TArray)
-            , ("array2",  TArray2)
-            , ("grid",    TStructure SGrid)
-            , ("list",    TStructure SList)
-            , ("map",     TStructure SMap)
-            , ("pqueue",  TStructure SPriorityQueue)
-            , ("queue",   TStructure SQueue)
-            , ("stack",   TStructure SStack)
+            [ ("array",   tArray)
+            , ("array2",  tArray2)
+            , ("grid",    tGrid)
+            , ("list",    tList)
+            , ("map",     tMap)
+            , ("pqueue",  tPriorityQueue)
+            , ("queue",   tQueue)
+            , ("stack",   tStack)
             ]
 
 names :: Parser [Name]

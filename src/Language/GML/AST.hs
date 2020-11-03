@@ -5,9 +5,11 @@ Description : GML AST
 Everything representing the Game Maker Language source tree.
 -}
 
+{-# LANGUAGE PatternSynonyms #-}
+
 module Language.GML.AST where
 
-import Data.Text
+import Language.GML.Types
 
 -- * GML values
 
@@ -15,16 +17,20 @@ import Data.Text
 data Literal = LNumeric Double | LString String
     deriving (Eq, Show)
 
-{-| Identifier (name. -}
-type Name = String
-
 {-| Variables that hold a value and may be read or changed. -}
 data Variable
     = VVar    Name              -- ^ Local, self or global variable
     | VField  Name Variable     -- ^ Field/instance variable (possibly chained)
-    | VArray  Name Expr         -- ^ One-dimensional array, indexed by a number
-    | VArray2 Name (Expr, Expr) -- ^ Two-dimensional array, indexed by two numbers
+    | VContainer  Container  Name Expr -- ^ Data structure accessor. Arrays are a special case.
+    | VContainer2 Container2 Name (Expr, Expr) -- ^ 2D data structure accessor
+    | VAcc    Name 
     deriving (Eq, Show)
+
+{-| One-dimensional array, indexed by a number. -}
+pattern VArray n e = VContainer SArray n e
+
+{-| Two-dimensional array, indexed by two numbers. Legacy in GMS 2.3. -}
+pattern VArray2 n e = VContainer2 SArray2 n e
 
 -- * Operators
 

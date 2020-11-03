@@ -6,7 +6,7 @@ import qualified Data.Map.Strict as M
 
 import Language.GML.AST
 import Language.GML.Events (Event) 
-import Language.GML.Types (Type)
+import Language.GML.Types (Name, Type)
 
 data Error
     -- | Changing the variable type
@@ -15,6 +15,8 @@ data Error
     | WHeteroArray Variable Type Type
     -- | Different types of the ternary operator
     | WTernaryDiff Type Type
+    -- | Referencing an unknown variable
+    | EUnknownVar Variable
     -- | Function doesn't return anything
     | ENoResult Variable
     -- | Wrong expression type

@@ -4,8 +4,8 @@ import Test.Hspec
 import Test.Hspec.Megaparsec
 import Text.Megaparsec
 
-import AST
-import Parser
+import Language.GML.AST
+import Language.GML.Parser.AST
 
 lit42 = ELit (LNumeric 42)
 litString = ELit (LString "string")
@@ -32,7 +32,7 @@ simpleExpr = describe "expressions parser" $ do
         parse' expr "foo" `shouldParse` EVar foo
         parse' expr "foo[42]" `shouldParse` EVar (VArray "foo" lit42)
     it "can parse binary operators" $ do
-        parse' expr "42+foo" `shouldParse` (EBinary BAdd lit42 $ EVar foo)
+        parse' expr "42+foo" `shouldParse` (EBinary (BNum Add) lit42 $ EVar foo)
     it "can parse function calls" $ do
         parse' expr "rand()" `shouldParse` EFuncall "rand" []
         parse' expr "sin(42)" `shouldParse` EFuncall "sin" [lit42]
@@ -44,15 +44,16 @@ simpleStmt = describe "statements parser" $ do
         parse' stmt "var foo=42" `shouldParse` SDeclare "foo" (Just lit42)
     it "can parse variable assignments" $ do
         parse' stmt "foo=42" `shouldParse` SAssign foo AAssign lit42
-        parse' stmt "foo+=\"string\"" `shouldParse` SAssign foo AAdd litString
+        parse' stmt "foo+=\"string\"" `shouldParse` SAssign foo (AModify Add) litString
     it "can parse conditionals" $ do
-        parse' stmt "if foo==42 exit" `shouldParse` SIf (EBinary BEq (EVar foo) lit42) [SExit] []
+        parse' stmt "if foo==42 exit" `shouldParse` SIf (EBinary (BComp Eq) (EVar foo) lit42) [SExit] []
         parse' stmt "if foo bar=42 else exit" `shouldParse` SIf (EVar foo) [SAssign bar AAssign lit42] [SExit]
+    let foo_lt_42 = EBinary (BComp Less) (EVar foo) lit42
     it "can parse parens" $ do
-        parse' stmt "if (foo < 42) exit" `shouldParse` SIf (EBinary BLess (EVar foo) lit42) [SExit] []
+        parse' stmt "if (foo < 42) exit" `shouldParse` SIf foo_lt_42 [SExit] []
     it "can parse blocks" $ do
         parse' stmt "if (foo < 42) {foo += 42 exit}" `shouldParse`
-            SIf (EBinary BLess (EVar foo) lit42) [SAssign foo AAdd lit42, SExit] []
+            SIf foo_lt_42 [SAssign foo (AModify Add) lit42, SExit] []
     it "can parse multi-lines" $ do
         parse' block "{var foo\nfoo = 42}" `shouldParse` [SDeclare "foo" Nothing, SAssign foo AAssign lit42]
 

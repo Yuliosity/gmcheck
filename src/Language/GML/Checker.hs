@@ -71,14 +71,15 @@ lookup var = case var of
         objects <- asks pObjects
         M.lookup name objects
     -}
+    -- TODO: check the same for other containers
     VArray name expr -> do
         index <- derive expr
-        when (index /= tBool) $ report $ EArrayIndex var index
+        when (index /= tInt) $ report $ EArrayIndex var index
         ty <- lookup (VVar name)
         case ty of
             TArray res -> return res
             res -> do
-                report $ EWrongVarType var res (TArray TVoid)
+                report $ EWrongVarType var res (tArray TVoid)
                 return tUnknown
     _ -> return tUnknown
 

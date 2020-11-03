@@ -2,6 +2,7 @@
 
 module Language.GML.Parser.AST
     ( Source, Result
+    , variable, expr, stmt, block
     , parseSource
     ) where
 
@@ -12,6 +13,7 @@ import Control.Monad.Combinators.Expr
 import Data.Text hiding (empty, map)
 
 import Language.GML.AST
+import Language.GML.Types
 import Language.GML.Parser.Common
 
 -- * Basic tokens
@@ -36,12 +38,38 @@ lString = LString <$> (char '\"' *> manyTill L.charLiteral (char '\"'))
 
 literal = lNumeric <|> lString
 
+accessor1 name = do
+    char '['
+    spec <- optional $ oneOf ['|', '?', '@'] <* spaces
+    let cons = case spec of
+            Nothing -> SArray
+            Just c -> case c of
+                '|' -> SList
+                '?' -> SMap
+                '@' -> SArray
+    arg <- expr
+    char ']'
+    return $ VContainer cons name arg
+
+accessor2 name = do
+    char '['
+    spec <- optional $ char '#' <* spaces
+    let cons = case spec of
+            Nothing -> SArray2
+            Just c -> case c of
+                '#' -> SGrid
+    arg1 <- expr
+    arg2 <- symbol "," *> expr
+    char ']'
+    return $ VContainer2 cons name (arg1, arg2)
+
+
 variable = do
     name <- varName
     choice
         [ VField name <$> (symbol "." *> variable)
-        , try $ VArray name <$> brackets expr
-        , VArray2 name <$> brackets ((,) <$> expr <*> (symbol "," *> expr))
+        , try $ accessor1 name
+        , accessor2 name
         , pure $ VVar name
         ]
 

@@ -5,11 +5,12 @@ Description : GML Types
 Type system of GML values.
 -}
 
+{-# LANGUAGE PatternSynonyms #-}
+
 module Language.GML.Types where
 
-import Data.Monoid
-
-import Language.GML.AST (Name)
+{-| Identifier (name). -}
+type Name = String
 
 {-| Resource type. In GML any resource descriptor actually just a number, but here we want to differ. -}
 data Resource
@@ -22,25 +23,37 @@ data Resource
     deriving (Eq, Show)
 
 {-| Data structure type. In GML any structure descriptor is also just a number, but here we want to differ. -}
-data Structure
-    = SStack
+data Container
+    = SArray
+    | SStack
     | SList
-    | SGrid
-    | SMap --TODO: polymorphic by key?
+    | SMap --CHECKME: polymorphic by key?
     | SQueue
     | SPriorityQueue
+    deriving (Eq, Show)
+
+{-| 2D data container type. -}
+data Container2
+    = SArray2 -- ^ Deprecated in GMS 2.3.
+    | SGrid
     deriving (Eq, Show)
 
 {-| Value type. -}
 data Type
     = TVoid -- ^ GML 'undefined'
     | TReal | TString
-    | TArray Type | TArray2 Type
+    | TContainer Container Type
+    | TContainer2 Container2 Type
     | TColor
     | TId Resource -- ^ Resource descriptor
-    | TStructure Structure Type -- ^ Data structure descriptor
     | TUnknown [Type] -- ^ Unknown type with possibilities, if any
     deriving (Eq, Show)
+
+{-| One-dimensional array of values. -}
+pattern TArray t = TContainer SArray t
+
+{-| Two-dimensional array of values. Legacy in GMS 2.3+. -}
+pattern TArray2 t = TContainer2 SArray2 t
 
 instance Semigroup Type where
     TUnknown [] <> t2 = t2
@@ -75,13 +88,18 @@ tRoom     = TId RRoom
 tSprite   = TId RSprite
 
 {- |Data structure descriptors. -}
-tGrid, tList, tMap, tPriorityQueue, tQueue, tStack :: Type -> Type
-tGrid          = TStructure SGrid
-tList          = TStructure SList
-tMap           = TStructure SMap
-tPriorityQueue = TStructure SPriorityQueue
-tQueue         = TStructure SQueue
-tStack         = TStructure SStack
+tArray, tList, tMap, tPriorityQueue, tQueue, tStack :: Type -> Type
+tArray         = TContainer SArray
+tList          = TContainer SList
+tMap           = TContainer SMap
+tPriorityQueue = TContainer SPriorityQueue
+tQueue         = TContainer SQueue
+tStack         = TContainer SStack
+
+{- |2D data structure descriptors. -}
+tArray2, tGrid :: Type -> Type
+tArray2        = TContainer2 SArray2
+tGrid          = TContainer2 SGrid
 
 {- |Unknown type. -}
 tUnknown :: Type

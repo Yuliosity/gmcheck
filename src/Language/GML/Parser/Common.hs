@@ -3,7 +3,7 @@
 module Language.GML.Parser.Common
     ( Parser, Error, Result
     , Name
-    , parens, braces, brackets, semicolon
+    , spaces, parens, braces, brackets, semicolon
     , lexeme, symbol, ident
     , parseMany
     ) where
@@ -16,21 +16,21 @@ import Text.Megaparsec.Char
     ( alphaNumChar, char, letterChar, space1 )
 import qualified Text.Megaparsec.Char.Lexer as L
 
-import Language.GML.AST (Name)
+import Language.GML.Types (Name)
 
 type Parser = Parsec Void Text
 type Error = ParseErrorBundle Text Void
 type Result a = Either Error a
 
 {-| Spaces and comments skipper. -}
-sc :: Parser ()
-sc = L.space space1 (L.skipLineComment "//") (L.skipBlockComment "/*" "*/")
+spaces :: Parser ()
+spaces = L.space space1 (L.skipLineComment "//") (L.skipBlockComment "/*" "*/")
 
 lexeme :: Parser a -> Parser a
-lexeme = L.lexeme sc
+lexeme = L.lexeme spaces
 
 symbol :: Text -> Parser Text
-symbol = L.symbol sc
+symbol = L.symbol spaces
 
 parens, braces, brackets :: Parser a -> Parser a
 parens = between (symbol "(") (symbol ")")
@@ -45,4 +45,4 @@ ident :: Parser Name
 ident = lexeme $ (:) <$> letterChar <*> many (alphaNumChar <|> char '_')
 
 parseMany :: Parser a -> String -> Text -> Result [a]
-parseMany p = parse (sc *> many p <* eof)
+parseMany p = parse (spaces *> many p <* eof)
