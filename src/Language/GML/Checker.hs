@@ -1,5 +1,5 @@
 {-|
-Module      : Checker
+Module      : Language.GML.Checker
 Description : GML typecheck
 
 A rudimentary and conservative typechecker for the GML project codebase.

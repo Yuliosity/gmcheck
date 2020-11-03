@@ -1,5 +1,5 @@
 {-|
-Module      : Events
+Module      : Language.GML.Events
 Description : GM object events
 
 Events in Game Maker objects.

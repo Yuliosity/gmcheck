@@ -1,5 +1,5 @@
 {-|
-Module      : Types
+Module      : Language.GML.Types
 Description : GML Types
 
 Type system of GML values.

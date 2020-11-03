@@ -1,8 +1,8 @@
 {-|
-Module      : Project
+Module      : Language.GML.Project
 Description : GM Project
 
-Facilities for representing the whole Game Maker project and loading its codebase.
+Datatypes representing the whole Game Maker project and functions for loading its codebase.
 -}
 
 {-# LANGUAGE LambdaCase #-}

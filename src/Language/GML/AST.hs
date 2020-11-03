@@ -1,5 +1,5 @@
 {-|
-Module      : AST
+Module      : Language.GML.AST
 Description : GML AST
 
 Everything representing the Game Maker Language source tree.

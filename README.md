@@ -1,6 +1,6 @@
 # GMCheck
 
-Static verification tools for Game Maker Studio projects. In early stages of development.
+Static verification tools for Game Maker Studio 2 projects. Currently provides a mostly complete parser of the pre-2.3 GML; the checker itself is on early stages of the development.
 
 ## Plans
 
@@ -10,5 +10,6 @@ Static verification tools for Game Maker Studio projects. In early stages of dev
 - "Extending" the GML type system to distinguish booleans, integers, colors, resource identifiers and so on, which are just ordinary numbers in GML.
 - Detecting unreachable code, premature `break`s and `exit`s, and so on.
 - Colorful, friendly and readable reports.
+- Maybe pretty-pritting.
 - ...
-- and many more! Send your ideas and use-cases to the author ar add them as proposal issues.
+- and many more! Send your ideas and use-cases to the author or add them as proposal issues.

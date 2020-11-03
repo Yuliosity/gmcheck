@@ -1,3 +1,10 @@
+{-|
+Module      : Language.GML.Parser.Types
+Description : GML builtin types parser
+
+A parser for signatures of built-in function and variables. See the self-descriptive format in `data/%filename%.ty`.
+-}
+
 {-# LANGUAGE OverloadedStrings #-}
 
 module Language.GML.Parser.Types where
@@ -43,8 +50,8 @@ nametype = do
             ]
 
         paramTypes = M.fromList
-            [ ("array",   tArray)
-            , ("array2",  tArray2)
+            [ ("array",   TArray)
+            , ("array2",  TArray2)
             , ("grid",    tGrid)
             , ("list",    tList)
             , ("map",     tMap)

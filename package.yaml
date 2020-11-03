@@ -2,9 +2,9 @@ name:                gmcheck
 version:             0.0.1.0
 github:              "yuuri/gmcheck"
 license:             BSD3
-author:              "Yuri Gorshkov"
-maintainer:          "y.s.gorshkov@gmail.com"
-copyright:           "2020 Yuri Gorshkov"
+author:              "Yulia Gorshkova"
+maintainer:          "yuuri.sumiren@gmail.com"
+copyright:           "2020 Yulia Gorshkova"
 
 extra-source-files:
 - README.md
