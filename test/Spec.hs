@@ -5,6 +5,7 @@ import Test.Hspec.Megaparsec
 import Text.Megaparsec
 
 import Language.GML.AST
+import Language.GML.Types
 import Language.GML.Parser.AST
 
 lit42 = ELit (LNumeric 42)
@@ -20,9 +21,13 @@ vars = describe "variables parser" $ do
         parse' variable "bar.foo" `shouldParse` (VField "bar" foo)
     it "can parse arrays" $ do
         parse' variable "foo[42]" `shouldParse` (VArray "foo" lit42)
+        parse' variable "foo[42, 42]" `shouldParse` (VArray2 "foo" (lit42, lit42))
         parse' variable "baz.bar[foo]" `shouldParse` (VField "baz" $ VArray "bar" $ EVar foo)
     it "can parse nested fields" $ do
         parse' variable "baz[bar[foo]]" `shouldParse` (VArray "baz" $ EVar $ VArray "bar" $ EVar foo)
+    it "can parse accessors" $ do
+        parse' variable "foo[| 42]" `shouldParse` (VContainer SList "foo" lit42)
+        parse' variable "foo[# 42, 42]" `shouldParse` (VContainer2 SGrid "foo" (lit42, lit42))
 
 simpleExpr = describe "expressions parser" $ do
     it "can parse a single literal" $ do
