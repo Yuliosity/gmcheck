@@ -9,6 +9,7 @@ Type system of GML values.
 
 module Language.GML.Types where
 
+import Data.List (union)
 {-| Identifier (name). -}
 type Name = String
 
@@ -57,11 +58,11 @@ pattern TAny :: Type
 pattern TAny = TUnknown []
 
 instance Semigroup Type where
-    TAny <> t2 = t2
-    t1 <> TAny = t1
-    TUnknown t1 <> TUnknown t2 = TUnknown $ t1 ++ t2
-    TUnknown t1 <> t2 = TUnknown $ t2 : t1
-    t1 <> TUnknown t2 = TUnknown $ t1 : t2
+    TAny <> t2   = t2
+    t1   <> TAny = t1
+    TUnknown t1 <> TUnknown t2 = TUnknown $  t1  `union` t2
+    TUnknown t1 <> t2          = TUnknown $ [t2] `union` t1
+    t1          <> TUnknown t2 = TUnknown $ [t1] `union` t2
     t1 <> t2 = TUnknown [t1, t2]
 
 instance Monoid Type where

@@ -15,7 +15,7 @@ import Prelude hiding (lookup)
 import Control.Applicative (Alternative, (<|>))
 import Control.Monad
 import Control.Monad.Trans.RWS
-import Data.Maybe (fromMaybe)
+import Data.Maybe (isJust, fromMaybe)
 import qualified Data.Map as M
 
 import Language.GML.AST
@@ -104,10 +104,13 @@ lookupFn name = do
     -- TODO: derive and store script types
     return $ M.lookup name builtinFn
 
-binCompat :: BinOp -> Type -> Type -> Bool
-binCompat (BNum Add) TString TString = True
-binCompat _ TReal TReal = True
-binCompat _ _ _ = False
+deriveOp :: BinOp -> Type -> Type -> Maybe Type
+deriveOp (BNum Add) TString TString = Just TString
+deriveOp (BComp _)  _       _       = Just TBool
+deriveOp (BNum Div) TInt    TInt    = Just TReal
+deriveOp _          TInt    TInt    = Just TInt
+deriveOp (BNum _)   TReal   TReal   = Just TReal
+deriveOp _          _       _       = Nothing
 
 checkType descr ty expr = do
     varT <- derive expr
@@ -133,11 +136,11 @@ derive = \case
         e1T <- derive e1
         e2T <- derive e2
 
-        if binCompat op e1T e2T then
-            return e2T
-        else do
-            report (EBadBinary op e1T e2T)
-            return $ e1T <> e2T
+        case deriveOp op e1T e2T of
+            Just res -> return res
+            Nothing  -> do
+                report (EBadBinary op e1T e2T)
+                return $ e1T <> e2T --FIXME: what should be here?
 
     ETernary cond e1 e2 -> do
         checkCond cond
@@ -187,9 +190,8 @@ run = mapM_ $ \case
                     report $ WChangeType var varT exprT
                 setVar var exprT
             AModify op -> do
-                
                 -- TODO: refactor copy-pasta with binary derive
-                when (not $ binCompat (BNum op) varT exprT) $
+                when (isJust $ deriveOp (BNum op) varT exprT) $
                     report (EBadBinary (BNum op) varT exprT)
 
     SExpression expr ->
