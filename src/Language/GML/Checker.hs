@@ -110,10 +110,10 @@ checkCond = checkType "conditional" tBool
 {-| Deriving the expression type. -}
 derive :: Expr -> Checker Type
 derive = \case
-    ELit (LNumeric _) -> return TReal
-    ELit (LString _) -> return TString
+    ELiteral (LNumeric _) -> return TReal
+    ELiteral (LString  _) -> return TString
 
-    EVar var -> lookup var
+    EVariable var -> lookup var
 
     EUnary op expr -> do
         exprT <- derive expr

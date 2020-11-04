@@ -125,7 +125,12 @@ prefix, postfix :: Text -> (Expr -> Expr) -> Operator Parser Expr
 prefix  name f = Prefix  (f <$ symbol name)
 postfix name f = Postfix (f <$ symbol name)
 
-eTerm = choice [parens expr, ELit <$> literal, try funcall, EVar <$> variable]
+eTerm = choice
+    [ parens expr
+    , ELiteral <$> literal
+    , try funcall
+    , EVariable <$> variable
+    ]
 
 expr :: Parser Expr
 expr = makeExprParser eTerm opTable <?> "expression"
@@ -143,15 +148,16 @@ assignOp = choice (map (\(c, s) -> c <$ symbol s) ops) <?> "assignment" where
 -- | A single statement, optionally ended with a semicolon.
 stmt :: Parser Stmt
 stmt = (choice
-    [ SDeclare <$> (keyword "var" *> varName) <*> optional (assignOp *> expr)
-    , SWith    <$> (keyword "with" *> variable) <*> block
-    , SIf      <$> (keyword "if" *> expr) <*> block <*> option [] (keyword "else" *> block)
-    , SRepeat  <$> (keyword "repeat" *> expr) <*> block
-    , SWhile   <$> (keyword "while" *> expr) <*> block
-    , SDoUntil <$> (keyword "do" *> block) <*> (keyword "until" *> expr)
-    , SBreak  <$ keyword "break", SContinue <$ keyword "continue", SExit <$ keyword "exit"
-    , SReturn <$> (keyword "return" *> expr)
-    , SAssign <$> variable <*> assignOp <*> expr
+    [ SBreak <$ keyword "break", SContinue <$ keyword "continue", SExit <$ keyword "exit"
+    , SDeclare      <$> (keyword "var" *> varName) <*> optional (assignOp *> expr)
+    , SWith         <$> (keyword "with" *> variable) <*> block
+    , SIf           <$> (keyword "if" *> expr) <*> block <*> option [] (keyword "else" *> block)
+    , SRepeat       <$> (keyword "repeat" *> expr) <*> block
+    , SWhile        <$> (keyword "while" *> expr) <*> block
+    , SDoUntil      <$> (keyword "do" *> block) <*> (keyword "until" *> expr)
+    , SReturn       <$> (keyword "return" *> expr)
+    , try $ SAssign <$> variable <*> assignOp <*> expr
+    , SExpression   <$> expr
     ] <?> "statement")
     <* optional semicolon
 

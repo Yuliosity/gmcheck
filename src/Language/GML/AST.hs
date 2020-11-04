@@ -9,6 +9,8 @@ Everything representing the Game Maker Language source tree.
 
 module Language.GML.AST where
 
+import Data.String
+
 import Language.GML.Types
 
 -- * GML values
@@ -25,6 +27,9 @@ data Variable
     | VContainer2 Container2 Name (Expr, Expr) -- ^ 2D data structure accessor
     | VAcc    Name 
     deriving (Eq, Show)
+
+instance IsString Variable where
+    fromString = VVar
 
 {-| One-dimensional array, indexed by a number. -}
 pattern VArray n e = VContainer SArray n e
@@ -71,12 +76,12 @@ type FunName = String
 
 {-| Expression which can be evaluated to a value. -}
 data Expr
-    = EUnary UnOp Expr        -- ^ Unary expression
-    | EBinary BinOp Expr Expr -- ^ Binary expression
-    | ETernary Expr Expr Expr -- ^ Ternary conditional [cond ? t : f]
-    | EFuncall Name [Expr]    -- ^ Function/script call with arguments
-    | EVar Variable
-    | ELit Literal
+    = EUnary    UnOp Expr       -- ^ Unary expression
+    | EBinary   BinOp Expr Expr -- ^ Binary expression
+    | ETernary  Expr Expr Expr  -- ^ Ternary conditional [cond ? t : f]
+    | EFuncall  Name [Expr]     -- ^ Function/script call with arguments
+    | EVariable Variable
+    | ELiteral  Literal
     deriving (Eq, Show)
 
 class Binary a where
@@ -108,7 +113,7 @@ data Stmt
     | SDeclare Name (Maybe Expr)  -- ^ Declaring a local variable
     | SAssign Variable AssignOp Expr -- ^ Assigning or modifying an existing variable
     -- Control flow structures
-    | SWith Variable Block  -- ^ Switchig the execution context to an another instance
+    | SWith Variable Block -- ^ Switchig the execution context to an another instance
     | SIf Expr Block Block -- ^ Conditional. If the `else` branch is missing, the second block is simply empty
     | SRepeat Expr Block   -- ^ Repeating some instructions several times
     | SWhile Expr Block    -- ^ Loop with a pre-condition
