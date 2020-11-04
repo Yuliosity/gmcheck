@@ -27,6 +27,11 @@ import Language.GML.Checker.Builtin
 
 type Memory = M.Map Name Type
 
+data Settings = Settings
+    { sBuiltin :: !Builtin
+    , sProject :: Project
+    }
+
 data Env = Env
     { eVars    :: M.Map Name Type
     --, eScope   :: [Memory] -- TODO: stack
@@ -49,7 +54,7 @@ report err = tell [err]
     Reader environment: all of the project data.
     Writer output: errors/warnings log.
     State: all derived data about the codebase at the moment. -}
-type Checker = RWS Project Log Env
+type Checker = RWS Settings Log Env
 
 choice :: (Foldable f, Alternative a) => f (a t) -> (a t)
 choice = foldl1 (<|>)
@@ -58,14 +63,16 @@ choice = foldl1 (<|>)
 lookup :: Variable -> Checker Type
 lookup var = case var of
     VVar name -> do
-        resources <- asks pResources
+        -- Look for resources
+        resources <- asks (pResources . sProject)
+        bVar <- asks (lookupBuiltin name . sBuiltin)
         vars <- gets eVars
         return $ fromMaybe TAny $ choice
-            [ M.lookup name builtinVar
-            , TId <$> M.lookup name resources
-            , M.lookup name vars
+            [ (\(t, _, _) -> t) <$> bVar      -- Check #1: built-in variables/constants
+            , TId <$> M.lookup name resources -- Check #2: project resources
+            , M.lookup name vars              -- Check #3: previously derived variables
             ]
-        --report a warning if not found?
+        --TODO: report a warning if not found
     {-
     VField name var -> do
         objects <- asks pObjects
@@ -93,6 +100,7 @@ setVar var ty = do
 {-| Lookup for a function signature. -}
 lookupFn :: FunName -> Checker (Maybe Signature)
 lookupFn name = do
+    builtinFn <- asks (bFunctions . sBuiltin)
     -- TODO: derive and store script types
     return $ M.lookup name builtinFn
 
