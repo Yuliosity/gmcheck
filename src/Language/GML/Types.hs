@@ -12,17 +12,19 @@ module Language.GML.Types where
 {-| Identifier (name). -}
 type Name = String
 
-{-| Resource type. In GML any resource descriptor actually just a number, but here we want to differ. -}
+{-| Resource type. In GML any resource descriptor is actually
+    just a number, but here we want to differ. -}
 data Resource
-    = RSprite
-    | RBackground
-    | RSound
+    = RBackground
     | RObject
     | RRoom
+    | RSound
+    | RSprite
     -- TODO: paths, etc.
     deriving (Eq, Show)
 
-{-| Data structure type. In GML any structure descriptor is also just a number, but here we want to differ. -}
+{-| Linear data structure type. In GML any structure descriptor
+    is also just a number, but here we want to differ. -}
 data Container
     = SArray
     | SStack
@@ -41,73 +43,68 @@ data Container2
 {-| Value type. -}
 data Type
     = TVoid -- ^ GML 'undefined'
-    | TReal | TString
-    | TContainer Container Type
-    | TContainer2 Container2 Type
-    | TColor
-    | TId Resource -- ^ Resource descriptor
+    | TReal -- ^ GML number, a primitive type
+    | TString -- ^ GML string, a primitive type
+    | TContainer  Container  Type -- ^ Linear container of typed values.
+    | TContainer2 Container2 Type -- ^ Two-dimensional container of typed values.
+    | TColor -- ^ Color. Represented as just a number in GML.
+    | TId Resource -- ^ Resource descriptor. Represented as just a number in GML.
     | TUnknown [Type] -- ^ Unknown type with possibilities, if any
     deriving (Eq, Show)
 
-{-| One-dimensional array of values. -}
-pattern TArray t = TContainer SArray t
-
-{-| Two-dimensional array of values. Legacy in GMS 2.3+. -}
-pattern TArray2 t = TContainer2 SArray2 t
+{- |Unknown type. -}
+pattern TAny :: Type
+pattern TAny = TUnknown []
 
 instance Semigroup Type where
-    TUnknown [] <> t2 = t2
-    t1 <> TUnknown [] = t1
+    TAny <> t2 = t2
+    t1 <> TAny = t1
     TUnknown t1 <> TUnknown t2 = TUnknown $ t1 ++ t2
     TUnknown t1 <> t2 = TUnknown $ t2 : t1
     t1 <> TUnknown t2 = TUnknown $ t1 : t2
     t1 <> t2 = TUnknown [t1, t2]
 
 instance Monoid Type where
-    mempty = TUnknown []
+    mempty = TAny
 
 {-| Boolean. In GML, `true` is just any real value which is greater than 0.5.
     Maybe some more typechecking will be added to that later. -}
-tBool :: Type
-tBool = TReal
+pattern TBool :: Type
+pattern TBool = TReal
 
 {-| Integer. In GML, there is no separate type for integral values.
     Reserved for future typechecking. -}
-tInt :: Type
-tInt = TReal
+pattern TInt :: Type
+pattern TInt = TReal
 
 {-| Real value between 0 and 1. Reserved for future typechecking. -}
-tAlpha :: Type
-tAlpha = TReal
+pattern TAlpha :: Type
+pattern TAlpha = TReal
 
-{- |Resource descriptors. -}
-tInstance, tSprite, tObject, tRoom :: Type
-tInstance = TReal
-tObject   = TId RObject
-tRoom     = TId RRoom
-tSprite   = TId RSprite
+{-| Instance descriptor. Reserved for future typechecking. -}
+pattern TInstance :: Type 
+pattern TInstance = TReal
 
-{- |Data structure descriptors. -}
-tArray, tList, tMap, tPriorityQueue, tQueue, tStack :: Type -> Type
-tArray         = TContainer SArray
-tList          = TContainer SList
-tMap           = TContainer SMap
-tPriorityQueue = TContainer SPriorityQueue
-tQueue         = TContainer SQueue
-tStack         = TContainer SStack
+{-| Resource descriptors. -}
+pattern TObject, TRoom, TSound, TSprite :: Type
+pattern TObject = TId RObject
+pattern TRoom = TId RRoom
+pattern TSound = TId RSound
+pattern TSprite = TId RSprite
 
-{- |2D data structure descriptors. -}
-tArray2, tGrid :: Type -> Type
-tArray2        = TContainer2 SArray2
-tGrid          = TContainer2 SGrid
+pattern TArray, TList, TMap, TPriorityQueue, TQueue, TStack :: Type -> Type
+{-| One-dimensional array of values. -}
+pattern TArray t = TContainer SArray t
+pattern TList  t = TContainer SList t
+pattern TMap   t = TContainer SMap t
+pattern TPriorityQueue t = TContainer SPriorityQueue t
+pattern TQueue t = TContainer SQueue t
+pattern TStack t = TContainer SStack t
 
-{- |Unknown type. -}
-tUnknown :: Type
-tUnknown = mempty
-
-{- |Combine possibilities of two unknown types. -}
-tCombine :: Type -> Type -> Type
-tCombine = (<>)
+pattern TArray2, TGrid :: Type -> Type
+{-| Two-dimensional array of values. Legacy in GMS 2.3+. -}
+pattern TArray2 t = TContainer2 SArray2 t
+pattern TGrid t = TContainer2 SGrid t
 
 {-| Possibly named function argument. -}
 type Argument = (Name, Type)

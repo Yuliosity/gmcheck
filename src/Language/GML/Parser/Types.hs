@@ -32,18 +32,18 @@ nametype = do
     where
         types = M.fromList
             [ ("void",    TVoid)
-            , ("any",     tUnknown)
+            , ("any",     TAny)
             , ("real",    TReal)
             , ("int",     TReal)
-            , ("alpha",   tAlpha) --between 0 and 1
+            , ("alpha",   TAlpha) --between 0 and 1
             , ("bool",    TReal)
             , ("string",  TString)
             , ("color",   TColor)
             , ("id",      TReal)
-            , ("sprite",  TId RSprite)
-            , ("sound",   TId RSound)
-            , ("object",  TId RObject)
-            , ("room",    TId RRoom)
+            , ("sprite",  TSprite)
+            , ("sound",   TSound)
+            , ("object",  TObject)
+            , ("room",    TRoom)
             , ("mbutton", TReal) --FIXME: enum
             , ("vkey",    TReal) --FIXME: enum
             , ("event",   TReal) --FIXME: enum
@@ -52,12 +52,12 @@ nametype = do
         paramTypes = M.fromList
             [ ("array",   TArray)
             , ("array2",  TArray2)
-            , ("grid",    tGrid)
-            , ("list",    tList)
-            , ("map",     tMap)
-            , ("pqueue",  tPriorityQueue)
-            , ("queue",   tQueue)
-            , ("stack",   tStack)
+            , ("grid",    TGrid)
+            , ("list",    TList)
+            , ("map",     TMap)
+            , ("pqueue",  TPriorityQueue)
+            , ("queue",   TQueue)
+            , ("stack",   TStack)
             ]
 
 names :: Parser [Name]

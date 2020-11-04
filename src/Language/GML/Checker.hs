@@ -60,7 +60,7 @@ lookup var = case var of
     VVar name -> do
         resources <- asks pResources
         vars <- gets eVars
-        return $ fromMaybe tUnknown $ choice
+        return $ fromMaybe TAny $ choice
             [ M.lookup name builtinVar
             , TId <$> M.lookup name resources
             , M.lookup name vars
@@ -74,14 +74,14 @@ lookup var = case var of
     -- TODO: check the same for other containers
     VArray name expr -> do
         index <- derive expr
-        when (index /= tInt) $ report $ EArrayIndex var index
+        when (index /= TInt) $ report $ EArrayIndex var index
         ty <- lookup (VVar name)
         case ty of
             TArray res -> return res
             res -> do
-                report $ EWrongVarType var res (tArray TVoid)
-                return tUnknown
-    _ -> return tUnknown
+                report $ EWrongVarType var res (TArray TVoid)
+                return TAny
+    _ -> return TAny
 
 setVar :: Variable -> Type -> Checker ()
 setVar var ty = do
@@ -105,7 +105,7 @@ checkType descr ty expr = do
     varT <- derive expr
     when (varT /= ty) $ report $ EWrongExprType descr ty varT
 
-checkCond = checkType "conditional" tBool
+checkCond = checkType "conditional" TBool
 
 {-| Deriving the expression type. -}
 derive :: Expr -> Checker Type
@@ -129,7 +129,7 @@ derive = \case
             return e2T
         else do
             report (EBadBinary op e1T e2T)
-            return $ e1T `tCombine` e2T
+            return $ e1T <> e2T
 
     ETernary cond e1 e2 -> do
         checkCond cond
@@ -139,12 +139,12 @@ derive = \case
             return e1T
         else do
             report (WTernaryDiff e1T e2T)
-            return $ e1T `tCombine` e2T
+            return $ e1T <> e2T
 
     EFuncall fn args -> do
         sig <- lookupFn fn
         case sig of
-            Nothing -> report (EUnknownFunction fn) >> return tUnknown
+            Nothing -> report (EUnknownFunction fn) >> return TAny
             Just (needed :-> res) -> do
                 argsT <- mapM derive args
                 --FIXME: check the arguments number
@@ -175,7 +175,7 @@ run = mapM_ $ \case
         when (exprT == TVoid) $ report (ENoResult var)
         case ass of
             AAssign -> do
-                when (varT /= tUnknown && varT /= exprT) $
+                when (varT /= TAny && varT /= exprT) $
                     report $ WChangeType var varT exprT
                 setVar var exprT
             AModify op -> do
