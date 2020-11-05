@@ -1,0 +1,2 @@
+:set prompt "\ESC[33m\STX\x03BB> \ESC[m\STX"
+:set prompt-cont " > "

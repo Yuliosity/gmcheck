@@ -1,41 +1,101 @@
-//math
-sin, cos, tan, abs, sqr, srt : real -> real
-random : [range] real -> real
+/*--Math [MOSTLY DONE]--*/
+//Arithmetics
+abs, sqr, sqrt, exp, frac : real -> real
+sign : real -> int
 round, floor, ceil : real -> int
+ln, log10, log2 : real -> real //TODO: check range
+logn : [base] real, real -> real //TODO: check range
+power : real, [power] real -> real //TODO: check range
+lerp : real, real, real -> real
+clamp : real, [min] real, [max] real -> real
+//Epsilon
+math_get_epsilon : void -> real
+math_set_epsilon : real -> void
+//Conversions
+//int64 : real -> int //TODO
+//TODO: Variadic
+//max, min, mean, median, choose : *real -> real //TODO: for ints also
+//Trigonometry. TODO: units and range for angles
+sin, cos, tan : real -> real
+dsin, dcos, dtan : real -> real
+arccos, arcsin, arctan : real -> real
+darccos, darcsin, darctan : real -> real
+arctan2, darctan2 : [y] real, [x] real -> real
+degtorad, radtodeg : real -> real
+//Random
+random : [high] real -> real
+random_range : [low] real, [high] real -> real
+irandom : [high] int -> int
+irandom_range : [low] int, [high] int -> int
+random_get_seed, randomise : void -> int
+random_set_seed : int -> void
+//Vector
+angle_difference : real, real -> real //TODO: units
 lengthdir_x, lengthdir_y : [len] real, [dir] real -> real
-point_distance : [x1] real, [y1] real, [x2] real, [y2] real -> real
+dot_product, point_direction, point_distance : [x1] real, [y1] real, [x2] real, [y2] real -> real
+distance_to_object : object -> real
+distance_to_point : [x] real, [y] real -> real
+//TODO: 3D stuff
 
-//draw
-draw_self : void -> void
-draw_sprite : sprite, [subimg] int, [x] real, [y] real -> void
-draw_sprite_ext : sprite, [subimg] int, [x] real, [y] real, [xscale] real, [yscale] real, [rot] real, color, [alpha] alpha -> void
-draw_text : [x] real, [y] real, string -> void
-draw_circle : [x] real, [y] real, [radius] real, [outline] bool -> void
-draw_set_colour : color -> void
-draw_get_colour : void -> color
-make_colour_rgb : [r] real, [g] real, [b] real -> color
-make_colour_hsv : [h] real, [s] real, [v] real -> color
-merge_colour : color, color, alpha -> color
-colour_get_red   : color -> real
-colour_get_green : color -> real
-colour_get_blue  : color -> real
+/*--Matrix--*/
+//TODO
 
-//string
+/*--String--*/
+//Access
+string_char_at : string, int -> char
+string_byte_at : string, int -> int
+string_ord_at  : string, int -> keycode
+string_length : string -> int
+//Transform
 chr : keycode -> char
 ord : char -> keycode
-string_char_at : int -> char
 real   : string -> real
+string_format : real, [tot] int, [dec] int -> string
 string : real -> string
-string_copy : string, [index] int, [count] int -> string
+string_copy, string_delete : string, [index] int, [count] int -> string
+string_count : [substr] string, string -> int
+string_replace, string_replace_all : string, [substr] string, [newstr] string -> string
+string_lower, string_upper, string_letters, string_digits : string -> string
+string_repeat : string, [count] int -> string
+//Drawing
+string_width, string_height : string -> int
+string_width_ext, string_height_ext : string, [sep] int, [max] int -> int
 
-//data
+/*--Draw--*/
+//Draw sprite [DONE]
+draw_self : void -> void
+draw_sprite : sprite, [subimg] int, [x] real, [y] real -> void
+draw_sprite_pos : sprite, [subimg] real, [x1] real, [y1] real, [x2] real, [y2] real, [x3] real, [y3] real, [x4] real, [y4] real, alpha -> void
+draw_sprite_ext : sprite, [subimg] int, [x] real, [y] real, [xscale] real, [yscale] real, [rot] real, color, [alpha] alpha -> void
+draw_sprite_part : sprite, [subimg] real, [left] real, [top] real, [width] real, [height] real, [x] real, [y] real -> void
+draw_sprite_part_ext : sprite, [subimg] real, [left] real, [top] real, [width] real, [height] real, [x] real, [y] real, [xscale] real, [yscale] real, color, alpha -> void
+//Draw primitives
+draw_text : [x] real, [y] real, string -> void
+draw_circle : [x] real, [y] real, [radius] real, [outline] bool -> void
+//Colors [DONE]
+draw_getpixel : [x] int, [y] int -> color
+draw_getpixel_ext : [x] int, [y] int -> real //TODO: RGBA?
+draw_get_alpha : void -> alpha
+draw_set_alpha : alpha -> void
+draw_get_color : void -> color
+draw_set_color, draw_clear_color : color -> void
+make_color_rgb : [r] real, [g] real, [b] real -> color
+make_color_hsv : [h] real, [s] real, [v] real -> color
+merge_color : color, color, alpha -> color
+color_get_red, color_get_green, color_get_blue : color -> real
+color_get_hue, color_get_saturation, color_get_value : color -> real
+
+/*--Data structures--*/
+ds_exists : [id] int, [type] int -> bool //TODO: dstype
+ds_set_precision : real -> void
+//Lists
 ds_list_create : void -> list<void>
 ds_list_destroy : list<any> -> void
 ds_list_size : list<any> -> int
 ds_list_add : list<any>, any -> void //TODO: vararg
-ds_list_sort : list<any>, bool -> void
+ds_list_sort : list<any>, [ascend] bool -> void
 
-//[DONE] mouse
+/*--Mouse [DONE]--*/
 mouse_check_button : mbutton -> bool
 mouse_check_button_pressed : mbutton -> bool
 mouse_check_button_released : mbutton -> bool
@@ -43,7 +103,7 @@ mouse_clear : mbutton -> void //'bool' in the documentation, a mistake probably
 mouse_wheel_up : void -> bool
 mouse_wheel_down : void -> bool
 
-//[DONE] keyboard
+/*--Keyboard [DONE]--*/
 io_clear : void -> void
 keyboard_check : keycode -> bool
 keyboard_check_direct : keycode -> bool
@@ -58,29 +118,64 @@ keyboard_unset_map : keycode -> void
 keyboard_get_numlock : void -> bool
 keyboard_set_numlock : bool -> void
 
-//collision
+/*--Collision [MOSTLY DONE]--*/
 place_free : [x] real, [y] real -> bool
 position_meeting : [x] real, [y] real, object -> bool //FIXME: object OR instance!
+position_change : [x] real, [y] real, object, [perf] bool -> void
+position_destroy : [x] real, [y] real -> void
+//Primitive collistions
+collision_point : [x] real, [y] real, object, [prec] bool, [notme] bool -> bool
 collision_line : [x1] real, [y1] real, [x2] real, [y2] real, object, [prec] bool, [notme] bool -> bool
+collision_circle : [x] real, [y] real, [radius] real, object, [prec] bool, [notme] bool -> bool
+collision_ellipse, collision_rectangle : [x1] real, [y1] real, [x2] real, [y2] real, [radius] real, object, [prec] bool, [notme] bool -> bool
+//TODO: list versions
+//TODO: prim in prim
 
-//movement
-move_contact_solid : [x] real, [y] real -> void
-move_contact_all :   [x] real, [y] real -> void
-motion_add : [dir] real, [speed] real -> void
-motion_set : [dir] real, [speed] real -> void
+/*--Movement [DONE]--*/
+motion_add, motion_set : [dir] real, [speed] real -> void
+move_bounce_all, move_bounce_solid : [adv] bool -> void
+move_contact_all, move_contact_solid, move_outside_all, move_outside_solid : [dir] real, [maxdist] real -> void
+move_random, move_snap : [hsnap] real, [vsnap] real -> void
+place_snapped : [hsnap] real, [vsnap] real -> bool
+move_towards_point : [x] real, [y] real, [speed] real -> void
+move_wrap : [hor] bool, [vert] bool, [margin] real -> void
 
-//instance
-instance_create_depth : [x] real, [y] real, [depth] int, object -> id
-instance_destroy :  void -> void
-instance_find :     object, [n] int -> id
-instance_number :   object -> int
-instance_place :    [x] real, [y] real, object -> id
-instance_position : [x] real, [y] real, object -> id
-instance_id_get : int -> id
+/*--Instance [MOSTLY DONE]--*/
+//Create, transform, destroy [DONE]
+instance_create_depth : [x] real, [y] real, [depth] int, object -> instance
+instance_create_layer : [x] real, [y] real, [layer] int, object -> instance //TODO: layer
+instance_destroy : void -> void
+instance_change : object, [perf] bool -> void
+instance_copy : [perf] bool -> void
+//Activating [DONE]
+instance_activate_all : void -> void
+instance_activate_layer,  instance_deactivate_layer  : int    -> void //TODO: layer
+instance_activate_object, instance_deactivate_object : object -> void
+instance_activate_region   : [left] real, [top] real, [width] real, [height] real, [inside] bool -> void
+instance_deactivate_region : [left] real, [top] real, [width] real, [height] real, [inside] bool, [notme] bool -> void
+//Search
+instance_find : object, [n] int -> instance
+instance_furthest, instance_nearest : [x] real, [y] real, object -> instance
+instance_number : object -> int
+//instance_exists : object -> bool //TODO: or instance
+instance_id_get : int -> instance
+//Collision check [DONE]
+instance_place, instance_position : [x] real, [y] real, object -> instance
+instance_place_list, instance_position_list : [x] real, [y] real, list<instance>, [ordered] bool -> int
 
-//events
+/*--Objects [DONE]--*/
+object_exists     : object -> bool
+object_get_mask   : object -> sprite
+object_get_name   : object -> string
+object_get_parent : object -> object //TODO: -100, lol
+object_get_persistent, object_get_physics, object_get_solid, object_get_visible : object -> bool
+object_is_ancestor : object, [parent] object -> bool
+object_set_mask : object, sprite -> void
+object_set_persistent, object_set_solid, object_set_visible : object, bool -> void
+
+/*--Events [DONE]--*/
 event_inherited : void -> void
-event_perform : event, [n] int -> void
+event_perform : event, [sub] int -> void
 
 //rooms
 room_goto : room -> void

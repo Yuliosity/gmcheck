@@ -5,10 +5,12 @@ module Main where
 import Options.Applicative
 
 import Language.GML.Project
+import Language.GML.Checker.Builtin (loadBuiltin)
 
 data Options = Options
-    { output :: FilePath
-    , target :: FilePath
+    { oOutput  :: !FilePath
+    , oBuiltin :: !FilePath
+    , oProject :: !FilePath
     }
 
 optParser :: Parser Options
@@ -17,9 +19,14 @@ optParser = Options
         (  long "output"
         <> short 'o'
         <> help "Output report" )
+    <*> strOption
+        (  long "builtin"
+        <> short 'b'
+        <> value "data"
+        <> help "Path to the builtin signatures" )
     <*> argument str
-        (  help "Path to the GMS project"
-        <> metavar "TARGET" )
+        (  help "Path to the GMS project directory"
+        <> metavar "PROJECT" )
 
 options :: ParserInfo Options
 options = info (helper <*> optParser)
@@ -29,6 +36,7 @@ options = info (helper <*> optParser)
 
 main :: IO ()
 main = do
-    Options { output, target } <- execParser options
-    project <- loadProject target
-    writeFile output $ show project
+    Options { oOutput, oBuiltin, oProject } <- execParser options
+    project <- loadProject oProject
+    builtin <- loadBuiltin oBuiltin
+    writeFile oOutput $ show project

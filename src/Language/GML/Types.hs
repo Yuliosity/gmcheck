@@ -48,7 +48,7 @@ data Type
     | TString -- ^ GML string, a primitive type
     | TContainer  Container  Type -- ^ Linear container of typed values.
     | TContainer2 Container2 Type -- ^ Two-dimensional container of typed values.
-    | TColor -- ^ Color. Represented as just a number in GML.
+    | TColor -- ^ RGB color. Represented as just a number in GML.
     | TId Resource -- ^ Resource descriptor. Represented as just a number in GML.
     | TUnknown [Type] -- ^ Unknown type with possibilities, if any
     deriving (Eq, Show)

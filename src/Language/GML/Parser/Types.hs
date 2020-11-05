@@ -42,7 +42,7 @@ nametype = do
             , ("bool",    TReal)
             , ("string",  TString)
             , ("color",   TColor)
-            , ("id",      TReal)
+            , ("instance",TInstance)
             , ("sprite",  TSprite)
             , ("sound",   TSound)
             , ("object",  TObject)

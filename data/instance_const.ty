@@ -1,4 +1,12 @@
-id : id
+//Common [DONE]
+id : instance
 image_number : int
 bbox_left, bbox_right, bbox_top, bbox_bottom : int
 object_index : object
+event_action : event //TODO: event
+event_number : int
+//Graphics [DONE]
+sprite_height, sprite_width, sprite_xoffset, sprite_yoffset : int
+//Paths [TODO]
+//path_index : path
+//Timelines [TODO]

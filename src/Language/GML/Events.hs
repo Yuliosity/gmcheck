@@ -54,17 +54,52 @@ instance Enum KeyCode where
 
 type Guid = String
 
+data Stage = Normal | Begin | End
+    deriving (Eq, Ord, Show)
+
+instance Enum Stage where
+    toEnum = \case
+        0 -> Normal
+        1 -> Begin
+        2 -> End
+    fromEnum = \case
+        Normal -> 0
+        Begin  -> 1
+        End    -> 2
+
+data OtherEvent
+    = Outside | Boundary
+    | Game !Stage --TODO: just bool?
+    | Room !Stage --TODO: just bool?
+    | NoMoreLives | NoMoreHealth
+    | AnimationEnd | PathEnd
+    | CloseButton
+    | User !Int -- ^ Custom user event
+    deriving (Eq, Ord, Show)
+
+instance Enum OtherEvent where
+    toEnum = \case
+        n -> User $ n - 10
+    fromEnum = \case
+        User n -> n + 10
+
 {-| Object event. -}
 data Event
     = Create
     | Destroy
-    | Step
-    | Alarm Int
-    | Draw
-    | Collision Guid
-    | User Int -- ^ Custom user event
-    | Mouse KeyState MouseButton
-    | Key KeyState KeyCode
+    | Cleanup
+    | Step !Stage
+    | Alarm !Int
+    | Draw !Stage | DrawPre | DrawPost --TODO: simplify
+    | DrawGui !Stage
+    | Collision !Guid
+    | Mouse       !KeyState !MouseButton
+    | MouseGlobal !KeyState !MouseButton
+    | MousePos !Bool -- ^ Entering (True) and leaving (False). TODO: enum
+    | MouseWheel !Bool -- ^ Mouse wheel up (True) and leaving (False). TODO: enum
+    | Keyboard !KeyState !KeyCode
+    | Other !OtherEvent
+    --TODO: gesture
     deriving (Eq, Ord, Show)
 
 instance Read Event where
@@ -79,11 +114,11 @@ pEvent = do
     return $ case event of
         "Create"     -> Create
         "Destroy"    -> Destroy
-        "Step"       -> Step
+        "Step"       -> Step $ toEnum code
         "Alarm"      -> Alarm code
         "Collision"  -> Collision arg
-        "Draw"       -> Draw
-        "Other"      -> User (code - 10) --FIXME
-        "KeyPress"   -> Key Press   keycode
-        "Keyboard"   -> Key Hold    keycode
-        "KeyRelease" -> Key Release keycode
+        "Draw"       -> Draw $ toEnum code
+        "Other"      -> Other $ toEnum code
+        "KeyPress"   -> Keyboard Press   keycode
+        "Keyboard"   -> Keyboard Hold    keycode
+        "KeyRelease" -> Keyboard Release keycode
