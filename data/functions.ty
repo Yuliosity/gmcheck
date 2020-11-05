@@ -21,9 +21,9 @@ colour_get_green : color -> real
 colour_get_blue  : color -> real
 
 //string
-chr : real -> string
-ord : string -> real
-string_char_at : int -> string
+chr : keycode -> char
+ord : char -> keycode
+string_char_at : int -> char
 real   : string -> real
 string : real -> string
 string_copy : string, [index] int, [count] int -> string
@@ -35,11 +35,28 @@ ds_list_size : list<any> -> int
 ds_list_add : list<any>, any -> void //TODO: vararg
 ds_list_sort : list<any>, bool -> void
 
-//mouse
+//[DONE] mouse
 mouse_check_button : mbutton -> bool
+mouse_check_button_pressed : mbutton -> bool
+mouse_check_button_released : mbutton -> bool
+mouse_clear : mbutton -> void //'bool' in the documentation, a mistake probably
+mouse_wheel_up : void -> bool
+mouse_wheel_down : void -> bool
 
-//keyboard
-keyboard_check : vkey -> bool
+//[DONE] keyboard
+io_clear : void -> void
+keyboard_check : keycode -> bool
+keyboard_check_direct : keycode -> bool
+keyboard_check_pressed : keycode -> bool
+keyboard_check_released : keycode -> bool
+keyboard_clear : keycode -> void
+keyboard_key_press : keycode -> void
+keyboard_key_release : keycode -> void
+keyboard_get_map : keycode -> keycode
+keyboard_set_map : [dst] keycode, [src] keycode -> void
+keyboard_unset_map : keycode -> void
+keyboard_get_numlock : void -> bool
+keyboard_set_numlock : bool -> void
 
 //collision
 place_free : [x] real, [y] real -> bool

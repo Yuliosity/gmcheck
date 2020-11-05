@@ -22,20 +22,23 @@ nametype :: Parser (Name, Type)
 nametype = do
     tyName <- ident
     -- TODO: flatten
-    case M.lookup tyName paramTypes of
+    case M.lookup tyName vectorTypes of
         Just res -> do
             (subname, subtype) <- between (symbol "<") (symbol ">") nametype
-            return (tyName ++ " of " ++ subname, res subtype)
-        Nothing -> case M.lookup tyName types of
+            return (tyName ++ "<" ++ subname ++ ">", res subtype)
+        Nothing -> case M.lookup tyName scalarTypes of
             Just res -> return (tyName, res)
             Nothing -> fail $ "unknown type: " ++ tyName
     where
-        types = M.fromList
+        scalarTypes = M.fromList
             [ ("void",    TVoid)
             , ("any",     TAny)
             , ("real",    TReal)
             , ("int",     TReal)
-            , ("alpha",   TAlpha) --between 0 and 1
+            , ("char",    TChar)
+            , ("alpha",   TAlpha)
+            , ("keycode", TKeyCode)
+            , ("mbutton", TMouseButton)
             , ("bool",    TReal)
             , ("string",  TString)
             , ("color",   TColor)
@@ -44,12 +47,10 @@ nametype = do
             , ("sound",   TSound)
             , ("object",  TObject)
             , ("room",    TRoom)
-            , ("mbutton", TReal) --FIXME: enum
-            , ("vkey",    TReal) --FIXME: enum
             , ("event",   TReal) --FIXME: enum
             ]
 
-        paramTypes = M.fromList
+        vectorTypes = M.fromList
             [ ("array",   TArray)
             , ("array2",  TArray2)
             , ("grid",    TGrid)

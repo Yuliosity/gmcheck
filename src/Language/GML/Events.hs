@@ -5,6 +5,8 @@ Description : GM object events
 Events in Game Maker objects.
 -}
 
+{-# LANGUAGE LambdaCase #-}
+
 module Language.GML.Events where
 
 import Data.Char (isAlpha, isHexDigit)
@@ -17,18 +19,36 @@ data KeyState = Press | Hold | Release
     deriving (Eq, Ord, Show)
 
 {-| Button code of mouse events. -}
-data MouseButton = MLeft | MMiddle | MRight
+data MouseButton = MNone | MAny | MLeft | MMiddle | MRight
     deriving (Eq, Ord, Show)
 
+instance Enum MouseButton where
+    toEnum = undefined
+    fromEnum = undefined
+
 {-| Keycode of keyboard events. -}
-data KeyCode = KUp | KDown | KLeft | KRight | KChar Char
+data KeyCode
+    = KNone | KAny
+    | KUp | KDown | KLeft | KRight
+    | KEsc | KEnter | KTab
+    | KSpace | KBackspace
+    | KShift | KControl | KAlt -- both left and right
+    -- TODO: separate left/alt
+    | KInsert | KDelete | KHome | KEnd | KPageUp | KPageDown
+    | KPause | KPrintScreen
+    | KChar Char
+    | KFun Int    -- ^ Functional key
+    | KNumpad Int -- ^ Numpad digit
+    | KNumAdd | KNumSub | KNumMul | KNumDiv | KNumDot
     deriving (Eq, Ord, Show)
 
 instance Enum KeyCode where
-    toEnum x = case x of
+    toEnum = \case
+        0  -> KNone
         37 -> KLeft
         39 -> KRight
-    fromEnum x = case x of
+    fromEnum = \case
+        KNone -> 0
         KLeft -> 37
         KRight -> 39
 

@@ -3,6 +3,7 @@ room_first : room
 room_last  : room
 instance_count : int
 instance_id : array<id>
-keyboard_key : vkey
+keyboard_key : keycode
 mouse_button : mbutton
+mouse_x, mouse_y : int
 game_id : int

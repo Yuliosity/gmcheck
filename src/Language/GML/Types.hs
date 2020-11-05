@@ -68,19 +68,32 @@ instance Semigroup Type where
 instance Monoid Type where
     mempty = TAny
 
-{-| Boolean. In GML, `true` is just any real value which is greater than 0.5.
+{-| Boolean. In GML VM, `true` is just any real value which is greater than 0.5.
     Maybe some more typechecking will be added to that later. -}
 pattern TBool :: Type
 pattern TBool = TReal
 
-{-| Integer. In GML, there is no separate type for integral values.
+{-| Integer. In GML VM, there is no separate type for integral values.
     Reserved for future typechecking. -}
 pattern TInt :: Type
 pattern TInt = TReal
 
+{-| Character. In GML, single-character strings are used for that.
+    Reserved for future typechecking. -}
+pattern TChar :: Type
+pattern TChar = TString
+
 {-| Real value between 0 and 1. Reserved for future typechecking. -}
 pattern TAlpha :: Type
 pattern TAlpha = TReal
+
+{-| Keyboard key code enum. Reserved for future typechecking. -}
+pattern TKeyCode :: Type
+pattern TKeyCode = TInt
+
+{-| Mouse button enum. Reserved for future typechecking. -}
+pattern TMouseButton :: Type
+pattern TMouseButton = TInt
 
 {-| Instance descriptor. Reserved for future typechecking. -}
 pattern TInstance :: Type 
