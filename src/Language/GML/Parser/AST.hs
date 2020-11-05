@@ -22,7 +22,7 @@ keyword :: Text -> Parser Text
 keyword kw = lexeme (string kw <* notFollowedBy alphaNumChar)
 
 varName = ident <?> "variable"
-funName = ident <?> "function or script"
+funName = ident <?> "function"
 
 -- * Values
 
@@ -107,12 +107,12 @@ opTable =
     ,   [ binary "+"  (eBinary Add)
         , binary "-"  (eBinary Sub)
         ]
-    ,   [ binary "<"  (eBinary Less)
-        , binary "==" (eBinary Eq)
+    ,   [ binary "==" (eBinary Eq)
         , binary "!=" (eBinary NotEq)
-        , binary ">"  (eBinary Greater)
         , binary "<=" (eBinary LessEq)
+        , binary "<"  (eBinary Less)
         , binary ">=" (eBinary GreaterEq)
+        , binary ">"  (eBinary Greater)
         ]
     ,   [ binary "&&" (eBinary And)
         , binary "||" (eBinary Or)
@@ -157,6 +157,7 @@ stmt = (choice
     , SRepeat       <$> (keyword "repeat" *> expr) <*> stmt
     , SWhile        <$> (keyword "while"  *> expr) <*> stmt
     , SDoUntil      <$> (keyword "do" *> stmt) <*> (keyword "until" *> expr)
+    , SFor          <$> (keyword "for" *> symbol "(" *> stmt) <*> (expr <* semicolon) <*> (stmt <* symbol ")") <*> stmt
     , SIf           <$> (keyword "if" *> expr) <*> stmt <*> optional (keyword "else" *> stmt)
     , SReturn       <$> (keyword "return" *> expr)
     , try $ SAssign <$> variable <*> assignOp <*> expr

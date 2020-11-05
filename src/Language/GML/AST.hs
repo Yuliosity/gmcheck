@@ -113,12 +113,12 @@ data Stmt
     | SDeclare [(Name, Maybe Expr)]  -- ^ Declaring local variable(s)
     | SAssign Variable AssignOp Expr -- ^ Assigning or modifying an existing variable
     -- Control flow structures
+    | SBlock   [Stmt]          -- ^ Nested sequence of statements
     | SWith    Expr Stmt       -- ^ Switching the execution context into an another instance
     | SRepeat  Expr Stmt       -- ^ Repeating some instructions several times
     | SWhile   Expr Stmt       -- ^ Loop with a pre-condition
     | SDoUntil Stmt Expr       -- ^ Loop with a post-condition
-    | SBlock   [Stmt]          -- ^ Nested sequence of statements
-    | SFor Stmt Expr Expr Stmt -- ^ For loop. TODO: limit stmt to assign/declare only
+    | SFor    Stmt Expr Stmt Stmt    -- ^ For loop. TODO: limit the first header stmt to assign or declare, and the second one to assign
     | SIf     Expr Stmt (Maybe Stmt) -- ^ Conditional. If the `else` branch is missing, the second statement is [Nothing].
     | SSwitch Expr [([Expr], Stmt)]  -- ^ Switch-case
     -- Control flow redirection
