@@ -59,7 +59,7 @@ accessor2 name = do
             Just c -> case c of
                 '#' -> SGrid
     arg1 <- expr
-    arg2 <- symbol "," *> expr
+    arg2 <- comma *> expr
     char ']'
     return $ VContainer2 cons name (arg1, arg2)
 
@@ -75,7 +75,7 @@ variable = do
 
 -- * Expressions
 
-funcall = EFuncall <$> funName <*> parens (sepBy expr $ symbol ",")
+funcall = EFuncall <$> funName <*> parens (expr `sepBy` comma)
 
 opTable :: [[Operator Parser Expr]]
 opTable =
@@ -149,7 +149,7 @@ assignOp = choice (map (\(c, s) -> c <$ symbol s) ops) <?> "assignment" where
 stmt :: Parser Stmt
 stmt = (choice
     [ SBreak <$ keyword "break", SContinue <$ keyword "continue", SExit <$ keyword "exit"
-    , SDeclare      <$> (keyword "var" *> varName) <*> optional (assignOp *> expr)
+    , SDeclare      <$> (keyword "var" *> ((,) <$> varName <*> optional (assignOp *> expr)) `sepBy1` comma)
     , SWith         <$> (keyword "with" *> variable) <*> block
     , SIf           <$> (keyword "if" *> expr) <*> block <*> option [] (keyword "else" *> block)
     , SRepeat       <$> (keyword "repeat" *> expr) <*> block

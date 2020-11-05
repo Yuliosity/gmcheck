@@ -172,7 +172,7 @@ scriptDerive = go where
 
 run :: Source -> Checker ()
 run = mapM_ $ \case
-    SDeclare var mExpr -> do
+    SDeclare vexp -> forM_ vexp $ \(var, mExpr) -> do
         exprT <- case mExpr of
             Nothing -> return TVoid
             Just expr -> derive expr

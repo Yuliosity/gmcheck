@@ -110,7 +110,7 @@ data AssignOp
 data Stmt
     = SExpression Expr -- ^ Calling an expression (typically a function/script with side effects)
     -- Variable declaration and modification
-    | SDeclare Name (Maybe Expr)  -- ^ Declaring a local variable
+    | SDeclare [(Name, Maybe Expr)]  -- ^ Declaring local variable(s)
     | SAssign Variable AssignOp Expr -- ^ Assigning or modifying an existing variable
     -- Control flow structures
     | SWith Variable Block -- ^ Switchig the execution context to an another instance

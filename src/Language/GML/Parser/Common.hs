@@ -3,7 +3,7 @@
 module Language.GML.Parser.Common
     ( Parser, Error, Result
     , Name
-    , spaces, parens, braces, brackets, semicolon
+    , spaces, parens, braces, brackets, comma, semicolon
     , lexeme, symbol, ident
     , parseMany
     ) where
@@ -37,7 +37,8 @@ parens = between (symbol "(") (symbol ")")
 braces = between (symbol "{") (symbol "}")
 brackets = between (symbol "[") (symbol "]")
 
-semicolon :: Parser ()
+comma, semicolon :: Parser ()
+comma     = symbol "," *> return ()
 semicolon = symbol ";" *> return ()
 
 {-| Identifier -}

@@ -49,14 +49,15 @@ simpleExpr = describe "expressions parser" $ do
 
 simpleStmt = describe "statements parser" $ do
     it "can parse variable declarations" $ do
-        parse' stmt "var foo" `shouldParse` SDeclare "foo" Nothing
-        parse' stmt "var foo=42" `shouldParse` SDeclare "foo" (Just lit42)
+        parse' stmt "var foo" `shouldParse` SDeclare [("foo", Nothing)]
+        parse' stmt "var foo, bar" `shouldParse` SDeclare [("foo", Nothing), ("bar", Nothing)]
+        parse' stmt "var foo=42" `shouldParse` SDeclare [("foo", Just lit42)]
     it "can parse variable assignments" $ do
         parse' stmt "foo=42" `shouldParse` SAssign "foo" AAssign lit42
         parse' stmt "foo+=\"string\"" `shouldParse` SAssign "foo" (AModify Add) litString
     it "can parse function calls" $ do
         parse' stmt "write(\"string\")" `shouldParse` SExpression write_string
-        parse' stmt "var foo = sin(3.14)" `shouldParse` SDeclare "foo" (Just sin_pi)
+        parse' stmt "var foo = sin(3.14)" `shouldParse` SDeclare [("foo", Just sin_pi)]
     it "can parse conditionals" $ do
         parse' stmt "if foo==42 exit" `shouldParse` SIf (EBinary (BComp Eq) foo lit42) [SExit] []
         parse' stmt "if (foo < 42) exit" `shouldParse` SIf foo_lt_42 [SExit] []
@@ -68,7 +69,7 @@ simpleStmt = describe "statements parser" $ do
         parse' stmt "while(foo) {foo -= 42; write(\"string\")}" `shouldParse`
             SWhile foo [SAssign "foo" (AModify Sub) lit42, SExpression write_string]
     it "can parse multi-lines" $ do
-        parse' block "{var foo\nfoo = 42}" `shouldParse` [SDeclare "foo" Nothing, SAssign "foo" AAssign lit42]
+        parse' block "{var foo\nfoo = 42}" `shouldParse` [SDeclare [("foo", Nothing)], SAssign "foo" AAssign lit42]
 
 complexStmt = describe "complex script parser" $ do
     it "can parse nested loops" $ do
