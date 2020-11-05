@@ -25,26 +25,25 @@ import System.IO
 import Language.GML.Parser.AST
 import Language.GML.Types (Resource (..))
 import Language.GML.Events
-
-type RProgram = Result Program --FIXME: report errors, not store them in the project
+import Text.Megaparsec (errorBundlePretty)
 
 {-| Executable script. -}
 data Script = Script
     { sName :: String
-    , sSource :: RProgram
+    , sSource :: Program
     }
     deriving Show
 
 {-| Object with callable events. -}
 data Object = Object
     { {- oName :: OName
-    , -} oEvents :: M.Map Event RProgram
+    , -} oEvents :: M.Map Event Program
     }
     deriving Show
 
 data Project = Project
     { pResources :: M.Map String Resource
-    , pScripts   :: M.Map String RProgram
+    , pScripts   :: M.Map String Program
     , pObjects   :: M.Map String Object
     }
     deriving Show
@@ -68,6 +67,14 @@ loadResources path ty = do
     <|>
     return M.empty
 
+loadProgram :: String -> FilePath -> IO Program
+loadProgram what path = do
+    logTrace $ "Loading " ++ what ++ " from " ++ path
+    src <- T.readFile path
+    case parseProgram path src of
+        Left err -> putStrLn (errorBundlePretty err) >> return []
+        Right err -> return err
+
 {-| Loads the project from a directory. -}
 loadProject :: FilePath -> IO Project
 loadProject path = do
@@ -82,19 +89,15 @@ loadProject path = do
     let sDir = path </> "scripts"
     sNames <- listDirectory sDir
     scripts <- forM sNames $ \name -> do
-        let sPath = sDir </> name </> name <.> "gml"
-        logTrace $ "Loading a script from " ++ sPath
-        src <- T.readFile sPath
-        return (name, parseProgram name src)
+        pr <- loadProgram "script" $ sDir </> name </> name <.> "gml"
+        return (name, pr)
     -- Load objects
     let oDir = path </> "objects"
     oNames <- listDirectory oDir
     objects <- forM oNames $ \name -> do
         eNames <- filter ((== ".gml") . takeExtension) <$> (listDirectory $ oDir </> name)
         events <- forM eNames $ \eName -> do
-            let ePath = oDir </> name </> eName
-            logTrace $ "Loading an event from " ++ ePath
-            src <- T.readFile ePath
-            return (read $ dropExtension eName, parseProgram eName src)
+            pr <- loadProgram "event" $ oDir </> name </> eName
+            return (read $ dropExtension eName, pr)
         return (name, Object (M.fromList events))
     return $ Project (M.unions resources) (M.fromList scripts) (M.fromList objects)

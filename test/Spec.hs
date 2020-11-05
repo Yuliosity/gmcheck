@@ -69,6 +69,8 @@ stmts = describe "statements parser" $ do
         parse' stmt "while(foo) write(\"string\")" `shouldParse` SWhile foo (SExpression write_string)
         parse' stmt "while(foo) {foo -= 42; write(\"string\")}" `shouldParse`
             SWhile foo (SBlock [SAssign "foo" (AModify Sub) lit42, SExpression write_string])
+        parse' stmt "for(var foo=42; foo < bar; foo+=42) write(\"string\")"  `shouldParse`
+            SFor (SDeclare [("foo", Just lit42)]) (EBinary (BComp Less) foo bar) (SAssign "foo" (AModify Add) lit42) (SExpression write_string)
 
 programs = describe "complex script parser" $ do
     it "can parse multi-lines" $ do

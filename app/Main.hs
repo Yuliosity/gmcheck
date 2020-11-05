@@ -5,7 +5,9 @@ module Main where
 import Options.Applicative
 
 import Language.GML.Project
+import Language.GML.Checker (runChecker)
 import Language.GML.Checker.Builtin (loadBuiltin)
+import Language.GML.Checker.Errors (prettyAll)
 
 data Options = Options
     { oOutput  :: !FilePath
@@ -40,3 +42,5 @@ main = do
     project <- loadProject oProject
     builtin <- loadBuiltin oBuiltin
     writeFile oOutput $ show project
+    let log = runChecker builtin project
+    putStrLn $ prettyAll log

@@ -1,3 +1,4 @@
+{-# LANGUAGE NamedFieldPuns #-}
 {-|
 Module      : Language.GML.Checker
 Description : GML typecheck
@@ -8,14 +9,16 @@ It tries to derive types of variables and expressions based on their assignment 
 
 {-# LANGUAGE LambdaCase #-}
 
-module Language.GML.Checker where
+module Language.GML.Checker
+    ( runChecker
+    ) where
 
 import Prelude hiding (lookup)
 
-import Control.Applicative (Alternative, (<|>))
 import Control.Monad
 import Control.Monad.Trans.RWS
-import Data.Maybe (isJust, fromMaybe)
+import Data.Foldable (asum)
+import Data.Maybe (catMaybes, isJust, fromMaybe)
 import qualified Data.Map as M
 
 import Language.GML.AST
@@ -24,19 +27,21 @@ import Language.GML.Types
 
 import Language.GML.Checker.Errors
 import Language.GML.Checker.Builtin
+import Language.GML.Events
+import Debug.Trace
 
 type Memory = M.Map Name Type
 
 data Settings = Settings
     { sBuiltin :: !Builtin
-    , sProject :: Project
+    , sProject :: !Project
     }
 
 data Env = Env
-    { eVars    :: M.Map Name Type
+    { eVars    :: !VarDict
     --, eScope   :: [Memory] -- TODO: stack
     --, eGlobals :: Memory -- TODO: globals
-    , eObjects :: M.Map String Memory
+    , eObjects :: !(M.Map Name Memory)
     } deriving Show
 
 emptyEnv :: Env
@@ -46,18 +51,13 @@ emptyEnv = Env
     , eObjects = M.empty
     }
 
--- annotate :: Source -> Memory -> 
-
 report err = tell [err]
 
 {-| Typechecking monad.
-    Reader environment: all of the project data.
+    Reader environment: all of the project and built-in engine data.
     Writer output: errors/warnings log.
     State: all derived data about the codebase at the moment. -}
 type Checker = RWS Settings Log Env
-
-choice :: (Foldable f, Alternative a) => f (a t) -> (a t)
-choice = foldl1 (<|>)
 
 {-| Lookup for a variable type. -}
 lookup :: Variable -> Checker Type
@@ -67,7 +67,7 @@ lookup var = case var of
         resources <- asks (pResources . sProject)
         bVar <- asks (lookupBuiltin name . sBuiltin)
         vars <- gets eVars
-        return $ fromMaybe TAny $ choice
+        return $ fromMaybe TAny $ asum
             [ (\(t, _, _) -> t) <$> bVar      -- Check #1: built-in variables/constants
             , TId <$> M.lookup name resources -- Check #2: project resources
             , M.lookup name vars              -- Check #3: previously derived variables
@@ -105,8 +105,8 @@ lookupFn name = do
     return $ M.lookup name builtinFn
 
 deriveOp :: BinOp -> Type -> Type -> Maybe Type
+deriveOp (BComp _) t1 t2 | t1 == t2 = Just TBool
 deriveOp (BNum Add) TString TString = Just TString
-deriveOp (BComp _)  _       _       = Just TBool
 deriveOp (BNum Div) TInt    TInt    = Just TReal
 deriveOp _          TInt    TInt    = Just TInt
 deriveOp (BNum _)   TReal   TReal   = Just TReal
@@ -158,9 +158,11 @@ derive = \case
             Nothing -> report (EUnknownFunction fn) >> return TAny
             Just (needed :-> res) -> do
                 argsT <- mapM derive args
+                let nn = length needed; na = length argsT
+                when (nn /= na) $ report $ EWrongArgNum fn nn na
                 --FIXME: check the arguments number
                 forM_ (zip needed argsT) $ \((name, a), b) ->
-                    when (a /= b) $ report (EWrongArgument fn name a b)
+                    when (a /= b) $ report $ EWrongArgument fn name a b
                 return res
 
 {-| Deriving the script signature. -}
@@ -234,6 +236,12 @@ exec = \case
         checkType "count" TReal count
         exec stmt
 
+    SFor init cond stmt body -> do
+        exec init
+        checkCond cond
+        exec stmt
+        exec body
+
     SBlock stmts -> run stmts
 
     --TODO: for break/continue/exit/return, check that it's the last statement in a block
@@ -243,5 +251,16 @@ exec = \case
 run :: Program -> Checker ()
 run = mapM_ exec
 
-runProject :: Project -> (Env, Log)
-runProject proj = execRWS undefined proj emptyEnv where
+runObject :: Object -> Checker ()
+runObject (Object {oEvents}) = do
+    forM_ (M.toList oEvents) $ \(event, pr) ->
+        trace ("Checking " ++ show event) $ run pr
+
+runProject :: Checker ()
+runProject = do
+    objects <- asks $ pObjects . sProject
+    forM_ objects runObject
+
+runChecker :: Builtin -> Project -> Log
+runChecker builtin project = snd $ execRWS runProject settings emptyEnv where
+    settings = Settings builtin project

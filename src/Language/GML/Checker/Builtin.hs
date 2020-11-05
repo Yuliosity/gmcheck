@@ -7,7 +7,12 @@ Types of built-in instance variables and signatures of library functions.
 
 {-# LANGUAGE NamedFieldPuns, TupleSections #-}
 
-module Language.GML.Checker.Builtin where
+module Language.GML.Checker.Builtin
+    ( Builtin (..)
+    , VarDict, FunDict
+    , loadBuiltin
+    , lookupBuiltin, testBuiltin
+    ) where
 
 import qualified Data.Text.IO as T (readFile)
 import Text.Megaparsec (errorBundlePretty) 

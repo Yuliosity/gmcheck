@@ -1,4 +1,4 @@
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE LambdaCase, StrictData #-}
 
 module Language.GML.Checker.Errors where
 
@@ -35,6 +35,8 @@ data Error
     | EArrayIndex Variable Type
     -- | No such function or script
     | EUnknownFunction FunName
+    -- | Wrong argument count
+    | EWrongArgNum FunName Int Int
     -- | Wrong type of function argument
     | EWrongArgument FunName Name Type Type
     -- | Data structure is not destroyed
@@ -59,6 +61,8 @@ pretty = \case
     EWrongArgument fun name need ty -> "Argument " ++ name ++ " of function " ++ fun ++ " should be " ++ show need ++ ", but seems to be " ++ show ty
     err -> "Raw error: " ++ show err
 
+prettyAll :: Log -> String
+prettyAll = unlines . map pretty
 
 {-
 
