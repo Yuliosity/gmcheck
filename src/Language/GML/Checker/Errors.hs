@@ -19,6 +19,10 @@ data Error
     | EUnknownVar Variable
     -- | Function doesn't return anything
     | ENoResult Variable
+    -- | Assigning to a constant
+    | EAssignConst Variable
+    -- | Argument of `with` is not an instance
+    | EWithInstance
     -- | Wrong expression type
     | EWrongExprType String Type Type
     -- | Wrong variable type

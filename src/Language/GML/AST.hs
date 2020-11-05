@@ -113,22 +113,20 @@ data Stmt
     | SDeclare [(Name, Maybe Expr)]  -- ^ Declaring local variable(s)
     | SAssign Variable AssignOp Expr -- ^ Assigning or modifying an existing variable
     -- Control flow structures
-    | SWith Variable Block -- ^ Switchig the execution context to an another instance
-    | SIf Expr Block Block -- ^ Conditional. If the `else` branch is missing, the second block is simply empty
-    | SRepeat Expr Block   -- ^ Repeating some instructions several times
-    | SWhile Expr Block    -- ^ Loop with a pre-condition
-    | SDoUntil Block Expr  -- ^ Loop with a post-condition
-    | SFor Stmt Expr Expr Block -- ^ For loop. TODO: limit stmt to assign/declare only
-    | SSwitch Expr [([Expr], Block)]
+    | SWith    Expr Stmt       -- ^ Switching the execution context into an another instance
+    | SRepeat  Expr Stmt       -- ^ Repeating some instructions several times
+    | SWhile   Expr Stmt       -- ^ Loop with a pre-condition
+    | SDoUntil Stmt Expr       -- ^ Loop with a post-condition
+    | SBlock   [Stmt]          -- ^ Nested sequence of statements
+    | SFor Stmt Expr Expr Stmt -- ^ For loop. TODO: limit stmt to assign/declare only
+    | SIf     Expr Stmt (Maybe Stmt) -- ^ Conditional. If the `else` branch is missing, the second statement is [Nothing].
+    | SSwitch Expr [([Expr], Stmt)]  -- ^ Switch-case
     -- Control flow redirection
-    | SBreak    -- ^ Break from a loop or switch-case
-    | SContinue -- ^ Continue to the next loop iteration
+    | SBreak       -- ^ Break from a loop or switch-case
+    | SContinue    -- ^ Continue to the next loop iteration
     | SExit        -- ^ Exit from a script/event without a result
     | SReturn Expr -- ^ Return the result from a script
     deriving (Eq, Show)
 
 {-| Any GML source is a list of statements. -}
-type Source = [Stmt]
-
-{-| A code sub-block is a bracketed list of statements. -}
-type Block = Source
+type Program = [Stmt]

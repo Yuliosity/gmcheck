@@ -170,8 +170,8 @@ scriptDerive = go where
     go (stmt:rest) = case stmt of
 -}
 
-run :: Source -> Checker ()
-run = mapM_ $ \case
+exec :: Stmt -> Checker ()
+exec = \case
     SDeclare vexp -> forM_ vexp $ \(var, mExpr) -> do
         exprT <- case mExpr of
             Nothing -> return TVoid
@@ -181,6 +181,16 @@ run = mapM_ $ \case
     SAssign var ass expr -> do
         varT <- lookup var
         exprT <- derive expr
+
+        -- Check if this is not the constant
+        -- TODO: simplify using MonadFail
+        case var of
+            VVar name -> do
+                builtin <- asks sBuiltin
+                case lookupBuiltin name builtin of
+                    Just (_, _, True) -> report (EAssignConst var)
+                    _ -> return ()
+            _ -> return ()
 
         -- Check if the assigned expression doesn't return a value
         when (exprT == TVoid) $ report (ENoResult var)
@@ -193,31 +203,45 @@ run = mapM_ $ \case
                 -- TODO: refactor copy-pasta with binary derive
                 when (isJust $ deriveOp (BNum op) varT exprT) $
                     report (EBadBinary (BNum op) varT exprT)
-
+        -- Check if the assigned expression doesn't return a value
+        
     SExpression expr ->
         -- If the expression returns anything, the result is actually lost
         checkType "expression statement" TVoid expr
 
+    SWith expr stmt -> do
+        varT <- derive expr
+        when (varT /= TInstance) $ report EWithInstance
+        -- TODO: switch the context
+        exec stmt
+
     SIf cond true false -> do
         checkCond cond
-        run true
-        run false
+        exec true
+        case false of
+            Nothing -> return ()
+            Just stmt -> exec stmt
 
-    SWhile cond block -> do
+    SWhile cond stmt -> do
         checkCond cond
-        run block
+        exec stmt
 
-    SDoUntil block cond -> do 
-        run block
+    SDoUntil stmt cond -> do 
+        exec stmt
         checkCond cond
 
-    SRepeat count block -> do
+    SRepeat count stmt -> do
         checkType "count" TReal count
-        run block
+        exec stmt
+
+    SBlock stmts -> run stmts
 
     --TODO: for break/continue/exit/return, check that it's the last statement in a block
 
     _ -> return ()
+
+run :: Program -> Checker ()
+run = mapM_ exec
 
 runProject :: Project -> (Env, Log)
 runProject proj = execRWS undefined proj emptyEnv where

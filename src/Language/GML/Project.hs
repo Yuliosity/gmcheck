@@ -26,25 +26,25 @@ import Language.GML.Parser.AST
 import Language.GML.Types (Resource (..))
 import Language.GML.Events
 
-type RSource = Result Source --FIXME: report errors, not store them in the project
+type RProgram = Result Program --FIXME: report errors, not store them in the project
 
 {-| Executable script. -}
 data Script = Script
     { sName :: String
-    , sSource :: RSource
+    , sSource :: RProgram
     }
     deriving Show
 
 {-| Object with callable events. -}
 data Object = Object
     { {- oName :: OName
-    , -} oEvents :: M.Map Event RSource
+    , -} oEvents :: M.Map Event RProgram
     }
     deriving Show
 
 data Project = Project
     { pResources :: M.Map String Resource
-    , pScripts   :: M.Map String RSource
+    , pScripts   :: M.Map String RProgram
     , pObjects   :: M.Map String Object
     }
     deriving Show
@@ -85,7 +85,7 @@ loadProject path = do
         let sPath = sDir </> name </> name <.> "gml"
         logTrace $ "Loading a script from " ++ sPath
         src <- T.readFile sPath
-        return (name, parseSource name src)
+        return (name, parseProgram name src)
     -- Load objects
     let oDir = path </> "objects"
     oNames <- listDirectory oDir
@@ -95,6 +95,6 @@ loadProject path = do
             let ePath = oDir </> name </> eName
             logTrace $ "Loading an event from " ++ ePath
             src <- T.readFile ePath
-            return (read $ dropExtension eName, parseSource eName src)
+            return (read $ dropExtension eName, parseProgram eName src)
         return (name, Object (M.fromList events))
     return $ Project (M.unions resources) (M.fromList scripts) (M.fromList objects)
