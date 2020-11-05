@@ -14,6 +14,7 @@ litString = ELiteral (LString "string")
 sin_pi = EFuncall "sin" [litPi]
 write_string = EFuncall "write" [litString]
 foo = EVariable "foo"
+foo_42 = VArray "foo" lit42
 foo_lt_42 = EBinary (BComp Less) foo lit42
 bar = EVariable "bar"
 
@@ -24,13 +25,13 @@ vars = describe "variables parser" $ do
         parse' variable "foo" `shouldParse` "foo"
         parse' variable "bar.foo" `shouldParse` (VField "bar" "foo")
     it "can parse arrays" $ do
-        parse' variable "foo[42]" `shouldParse` (VArray "foo" lit42)
+        parse' variable "foo[42]" `shouldParse` foo_42
         parse' variable "foo[42, 42]" `shouldParse` (VArray2 "foo" (lit42, lit42))
         parse' variable "baz.bar[foo]" `shouldParse` (VField "baz" $ VArray "bar" foo)
     it "can parse nested fields" $ do
         parse' variable "baz[bar[foo]]" `shouldParse` (VArray "baz" $ EVariable $ VArray "bar" foo)
     it "can parse accessors" $ do
-        parse' variable "foo[| 42]" `shouldParse` (VContainer SList "foo" lit42)
+        parse' variable "foo[|42]" `shouldParse` (VContainer SList "foo" lit42)
         parse' variable "foo[# 42, 42]" `shouldParse` (VContainer2 SGrid "foo" (lit42, lit42))
 
 simpleExpr = describe "expressions parser" $ do
@@ -39,7 +40,7 @@ simpleExpr = describe "expressions parser" $ do
         parse' expr "\"string\"" `shouldParse` litString
     it "can parse a variable as an expression" $ do
         parse' expr "foo" `shouldParse` foo
-        parse' expr "foo[42]" `shouldParse` EVariable (VArray "foo" lit42)
+        parse' expr "foo[42]" `shouldParse` (EVariable foo_42)
     it "can parse binary operators" $ do
         parse' expr "42+foo" `shouldParse` (EBinary (BNum Add) lit42  foo)
     it "can parse function calls" $ do
@@ -55,6 +56,7 @@ simpleStmt = describe "statements parser" $ do
     it "can parse variable assignments" $ do
         parse' stmt "foo=42" `shouldParse` SAssign "foo" AAssign lit42
         parse' stmt "foo+=\"string\"" `shouldParse` SAssign "foo" (AModify Add) litString
+        parse' stmt "foo[42] -= 42" `shouldParse` SAssign foo_42 (AModify Sub) lit42
     it "can parse function calls" $ do
         parse' stmt "write(\"string\")" `shouldParse` SExpression write_string
         parse' stmt "var foo = sin(3.14)" `shouldParse` SDeclare [("foo", Just sin_pi)]

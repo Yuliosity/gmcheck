@@ -40,7 +40,8 @@ literal = lNumeric <|> lString
 
 accessor1 name = do
     char '['
-    spec <- optional $ oneOf ['|', '?', '@'] <* spaces
+    spec <- optional $ oneOf ['|', '?', '@']
+    spaces
     let cons = case spec of
             Nothing -> SArray
             Just c -> case c of
@@ -48,19 +49,20 @@ accessor1 name = do
                 '?' -> SMap
                 '@' -> SArray
     arg <- expr
-    char ']'
+    symbol "]"
     return $ VContainer cons name arg
 
 accessor2 name = do
     char '['
-    spec <- optional $ char '#' <* spaces
+    spec <- optional $ char '#'
+    spaces
     let cons = case spec of
             Nothing -> SArray2
             Just c -> case c of
                 '#' -> SGrid
     arg1 <- expr
     arg2 <- comma *> expr
-    char ']'
+    symbol "]"
     return $ VContainer2 cons name (arg1, arg2)
 
 
