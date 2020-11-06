@@ -24,6 +24,7 @@ dependencies:
 - containers
 - directory
 - filepath
+- keycode
 - megaparsec
 - parser-combinators
 - text

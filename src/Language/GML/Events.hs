@@ -7,12 +7,17 @@ Events in Game Maker objects.
 
 {-# LANGUAGE LambdaCase #-}
 
-module Language.GML.Events where
+module Language.GML.Events
+    ( Key (..), KeyState (..), MouseButton (..)
+    , Guid, Stage (..)
+    , OtherEvent (..), GestureEvent (..), Event (..)
+    ) where
 
 import Data.Char (isAlpha, isHexDigit)
 import Text.Read (Read (..))
 import Text.ParserCombinators.ReadP
 import Text.ParserCombinators.ReadPrec (lift)
+import Web.KeyCode
 
 {-| Key state of keyboard or mouse events. -}
 data KeyState = Press | Hold | Release
@@ -26,51 +31,17 @@ instance Enum MouseButton where
     toEnum = undefined
     fromEnum = undefined
 
-{-| Keycode of keyboard events. -}
-data KeyCode
-    = KNone | KAny
-    | KUp | KDown | KLeft | KRight
-    | KEsc | KEnter | KTab
-    | KSpace | KBackspace
-    | KShift | KControl | KAlt -- both left and right
-    -- TODO: separate left/alt
-    | KInsert | KDelete | KHome | KEnd | KPageUp | KPageDown
-    | KPause | KPrintScreen
-    | KChar Char
-    | KFun Int    -- ^ Functional key
-    | KNumpad Int -- ^ Numpad digit
-    | KNumAdd | KNumSub | KNumMul | KNumDiv | KNumDot
-    deriving (Eq, Ord, Show)
-
-instance Enum KeyCode where
-    toEnum = \case
-        0  -> KNone
-        37 -> KLeft
-        39 -> KRight
-    fromEnum = \case
-        KNone -> 0
-        KLeft -> 37
-        KRight -> 39
-
 type Guid = String
 
-data Stage = Normal | Begin | End
+data Stage = SBegin | SEnd
     deriving (Eq, Ord, Show)
-
-instance Enum Stage where
-    toEnum = \case
-        0 -> Normal
-        1 -> Begin
-        2 -> End
-    fromEnum = \case
-        Normal -> 0
-        Begin  -> 1
-        End    -> 2
 
 data OtherEvent
     = Outside | Boundary
-    | Game !Stage --TODO: just bool?
-    | Room !Stage --TODO: just bool?
+    | OutsideView  !Int -- ^ Outside view
+    | BoundaryView !Int -- ^ View boundary
+    | Game !Stage
+    | Room !Stage
     | NoMoreLives | NoMoreHealth
     | AnimationEnd | PathEnd
     | CloseButton
@@ -79,25 +50,58 @@ data OtherEvent
 
 instance Enum OtherEvent where
     toEnum = \case
-        n -> User $ n - 10
-    fromEnum = \case
-        User n -> n + 10
+        0  -> Outside
+        1  -> Boundary
+        2  -> Game SBegin
+        3  -> Game SEnd
+        4  -> Room SBegin
+        5  -> Room SEnd
+        6  -> NoMoreLives
+        7  -> AnimationEnd
+        8  -> PathEnd
+        9  -> NoMoreHealth
+        30 -> CloseButton
+        n  | n <= 25  -> User         $ n - 10
+        n  | n <= 47  -> OutsideView  $ n - 40
+        n  | n <= 57  -> BoundaryView $ n - 50
+    fromEnum = undefined
+
+data GestureEvent
+    = Tap
+    | DoubleTap
+    | DragStart
+    | Dragging
+    | DragEnd
+    | Flick
+    | PinchStart
+    | PinchIn
+    | PinchOut
+    | PinchEnd
+    | RotateStart
+    | Rotating
+    | RotateEnd
+    deriving (Eq, Ord, Show, Enum)
 
 {-| Object event. -}
 data Event
     = Create
     | Destroy
     | Cleanup
-    | Step !Stage
+    | Step | StepExt !Stage
     | Alarm !Int
-    | Draw !Stage | DrawPre | DrawPost --TODO: simplify
-    | DrawGui !Stage
+    | Draw | DrawExt !Stage
+    | DrawPre | DrawPost
+    | DrawResize
+    | DrawGui | DrawGuiExt !Stage
     | Collision !Guid
+    | NoMouse
     | Mouse       !KeyState !MouseButton
     | MouseGlobal !KeyState !MouseButton
-    | MousePos !Bool -- ^ Entering (True) and leaving (False). TODO: enum
-    | MouseWheel !Bool -- ^ Mouse wheel up (True) and leaving (False). TODO: enum
+    | MouseEnter !Stage -- ^ Entering and leaving
+    | MouseWheelUp | MouseWheelDown
+    | NoKeyboard
     | Keyboard !KeyState !KeyCode
+    | Gesture !GestureEvent
     | Other !OtherEvent
     --TODO: gesture
     deriving (Eq, Ord, Show)
@@ -114,11 +118,49 @@ pEvent = do
     return $ case event of
         "Create"     -> Create
         "Destroy"    -> Destroy
-        "Step"       -> Step $ toEnum code
+        "Cleanup"    -> Cleanup
+        "Step"       -> case code of
+            0  -> Step
+            1  -> StepExt SBegin
+            2  -> StepExt SEnd
         "Alarm"      -> Alarm code
         "Collision"  -> Collision arg
-        "Draw"       -> Draw $ toEnum code
+        "Draw"       -> case code of
+            0  -> Draw
+            72 -> DrawExt SBegin
+            73 -> DrawExt SEnd
+            64 -> DrawGui
+            74 -> DrawGuiExt SBegin
+            75 -> DrawGuiExt SEnd
+            65 -> DrawResize
+            76 -> DrawPre
+            77 -> DrawPost
         "Other"      -> Other $ toEnum code
         "KeyPress"   -> Keyboard Press   keycode
         "Keyboard"   -> Keyboard Hold    keycode
         "KeyRelease" -> Keyboard Release keycode
+        "Mouse"      -> case code of
+            3  -> NoMouse
+            0  -> Mouse       Hold    MLeft
+            1  -> Mouse       Hold    MRight
+            2  -> Mouse       Hold    MMiddle
+            4  -> Mouse       Press   MLeft
+            5  -> Mouse       Press   MRight
+            6  -> Mouse       Press   MMiddle
+            7  -> Mouse       Release MLeft
+            8  -> Mouse       Release MRight
+            9  -> Mouse       Release MMiddle            
+            10 -> MouseEnter  SBegin
+            11 -> MouseEnter  SEnd
+            50 -> MouseGlobal Hold    MLeft
+            51 -> MouseGlobal Hold    MRight
+            52 -> MouseGlobal Hold    MMiddle
+            53 -> MouseGlobal Press   MLeft
+            54 -> MouseGlobal Press   MRight
+            55 -> MouseGlobal Press   MMiddle
+            56 -> MouseGlobal Release MLeft
+            57 -> MouseGlobal Release MRight
+            58 -> MouseGlobal Release MMiddle
+            60 -> MouseWheelUp
+            61 -> MouseWheelDown
+        "Gesture"    -> Gesture $ toEnum code
