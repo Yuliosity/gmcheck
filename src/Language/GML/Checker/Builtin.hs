@@ -53,10 +53,10 @@ lookupBuiltin name (Builtin {bGlobalConst, bGlobalVar, bInstanceConst, bInstance
 {-| Loads a built-in bundle from a directory. TODO: report missing files. -}
 loadBuiltin :: FilePath -> IO Builtin
 loadBuiltin dir = do
-    fs <- load parseFun $ dir </> "functions.ty"
+    fs <- load parseFun $ dir </> "functions.gmli"
     let loadVars = load parseVars
     [gc, gv, ic, iv] <- forM
-        ["global_const.ty", "global_var.ty", "instance_const.ty", "instance_var.ty"] $
+        ["global_const.gmli", "global_var.gmli", "instance_const.gmli", "instance_var.gmli"] $
         \file -> loadVars (dir </> file)
     return $ Builtin fs gc gv ic iv
 

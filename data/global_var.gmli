@@ -1,4 +1,4 @@
-room_height, room_width : int
+//Input
 mouse_lastbutton : mbutton
 keyboard_key : keycode
 keyboard_lastchar : char
@@ -6,3 +6,7 @@ keyboard_string : string
 //Views
 view_xview, view_yview, view_hview, view_wview : array<int>
 view_xport, view_yport, view_hport, view_wport : array<int>
+//Rooms
+room : room
+room_height, room_width : int
+room_persistent : bool
