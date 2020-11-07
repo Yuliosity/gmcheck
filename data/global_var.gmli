@@ -3,6 +3,15 @@ mouse_lastbutton : mbutton
 keyboard_key : keycode
 keyboard_lastchar : char
 keyboard_string : string
+cursor_sprite : sprite
+//Backgrounds [DONE]
+background_color, background_showcolor : color
+background_visible : array<bool>
+background_index : array<background>
+background_x, background_y, background_xscale, background_yscale, background_hspeed, background_vspeed : array<real>
+background_htiled, background_vtiled : array<bool>
+background_blend : array<color>
+background_alpha : array<alpha>
 //Views
 view_xview, view_yview, view_hview, view_wview : array<int>
 view_xport, view_yport, view_hport, view_wport : array<int>

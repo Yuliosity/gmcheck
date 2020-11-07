@@ -17,7 +17,9 @@ type Name = String
     just a number, but here we want to differ. -}
 data Resource
     = RBackground
+    | RFont
     | RObject
+    | RPath
     | RRoom
     | RSound
     | RSprite
@@ -43,14 +45,18 @@ data Container2
 
 {-| Value type. -}
 data Type
-    = TVoid -- ^ GML 'undefined'
+    = TUnknown [Type] -- ^ Unknown type with possibilities, if any
+    -- Base types
+    | TVoid -- ^ GML 'undefined'
     | TReal -- ^ GML number, a primitive type
     | TString -- ^ GML string, a primitive type
+    -- Derived types
+    | TColor -- ^ RGB color. Represented as just a number in GML.
+    | TEnum String -- ^ Enumeration with a label
+    | TId Resource -- ^ Resource descriptor. Represented as just a number in GML.
+    -- Vector types
     | TContainer  Container  Type -- ^ Linear container of typed values.
     | TContainer2 Container2 Type -- ^ Two-dimensional container of typed values.
-    | TColor -- ^ RGB color. Represented as just a number in GML.
-    | TId Resource -- ^ Resource descriptor. Represented as just a number in GML.
-    | TUnknown [Type] -- ^ Unknown type with possibilities, if any
     deriving (Eq, Show)
 
 {- |Unknown type. -}
@@ -100,12 +106,16 @@ pattern TInstance :: Type
 pattern TInstance = TReal
 
 {-| Resource descriptors. -}
-pattern TObject, TRoom, TSound, TSprite :: Type
+pattern TBackground, TFont, TObject, TPath, TRoom, TSound, TSprite :: Type
+pattern TBackground = TId RBackground
+pattern TFont   = TId RFont
 pattern TObject = TId RObject
-pattern TRoom = TId RRoom
-pattern TSound = TId RSound
+pattern TPath   = TId RPath
+pattern TRoom   = TId RRoom
+pattern TSound  = TId RSound
 pattern TSprite = TId RSprite
 
+{-| Data structure descriptors. -}
 pattern TArray, TList, TMap, TPriorityQueue, TQueue, TStack :: Type -> Type
 {-| One-dimensional array of values. -}
 pattern TArray t = TContainer SArray t
@@ -130,3 +140,6 @@ data Signature =
     Type -- ^ Return type
     --TODO: variadic and optional arguments
     deriving (Eq, Show)
+
+{-| Enumeration of named constants. -}
+data Enum = Enum !String ![(String, Int)]

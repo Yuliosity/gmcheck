@@ -62,16 +62,35 @@ string_width, string_height : string -> int
 string_width_ext, string_height_ext : string, [sep] int, [max] int -> int
 
 /*--Draw--*/
-//Draw sprite [DONE]
+//Sprites [DONE]
 draw_self : void -> void
 draw_sprite : sprite, [subimg] int, [x] real, [y] real -> void
-draw_sprite_pos : sprite, [subimg] real, [x1] real, [y1] real, [x2] real, [y2] real, [x3] real, [y3] real, [x4] real, [y4] real, alpha -> void
+draw_sprite_pos : sprite, [subimg] int, [x1] real, [y1] real, [x2] real, [y2] real, [x3] real, [y3] real, [x4] real, [y4] real, alpha -> void
 draw_sprite_ext : sprite, [subimg] int, [x] real, [y] real, [xscale] real, [yscale] real, [rot] real, color, [alpha] alpha -> void
+draw_sprite_stretched : sprite, [subimg] int, [x] real, [y] real, [width] real, [height] real -> void
+draw_sprite_stretched_ext : sprite, [subimg] int, [x] real, [y] real, [width] real, [height] real, color, alpha -> void
+draw_sprite_tiled : sprite, [subimg] int, [x] real, [y] real -> void
+draw_sprite_tiled_ext : sprite, [subimg] int, [x] real, [y] real, [xscale] real, [yscale] real, color, alpha -> void
 draw_sprite_part : sprite, [subimg] real, [left] real, [top] real, [width] real, [height] real, [x] real, [y] real -> void
 draw_sprite_part_ext : sprite, [subimg] real, [left] real, [top] real, [width] real, [height] real, [x] real, [y] real, [xscale] real, [yscale] real, color, alpha -> void
-//Draw primitives
-draw_text : [x] real, [y] real, string -> void
+draw_sprite_general : sprite, [subimg] real, [left] real, [top] real, [width] real, [height] real, [x] real, [y] real, [xscale] real, [yscale] real, [c1] color, [c2] color, [c3] color, [c4] color, alpha -> void
+//Primitives [MOSTLY DONE]
+draw_point : [x] real, [y] real -> void
+draw_line : [x1] real, [y1] real, [x2] real, [y2] real -> void
+draw_line_width : [x1] real, [y1] real, [x2] real, [y2] real, [width] real -> void
+draw_rectangle, draw_roundrect, draw_ellipse : [x1] real, [y1] real, [x2] real, [y2] real, [outline] bool -> void
+draw_roundrect_ext : [x1] real, [y1] real, [x2] real, [y2] real, [radiusx] real, [radiusy] bool, [outline] bool -> void
+draw_triangle : [x1] real, [y1] real, [x2] real, [y2] real, [x3] real, [y3] real, [outline] bool -> void
 draw_circle : [x] real, [y] real, [radius] real, [outline] bool -> void
+draw_set_circle_precision : int -> void
+draw_arrow : [x1] real, [y1] real, [x2] real, [y2] real, [size] real -> void
+draw_button : [x1] real, [y1] real, [x2] real, [y2] real, [up] bool -> void
+draw_path : path, [x] real, [y] real, [absolute] bool -> void
+draw_healthbar : [x1] real, [y1] real, [x2] real, [y2] real, [amount] real, [backcol] color, [mincol] color, [maxcol] color, [direction] int, [showback] bool, [showborder] bool -> void
+//TODO: colored versions
+//Text
+draw_text : [x] real, [y] real, string -> void
+draw_highscore : [x1] real, [y1] real, [x2] real, [y2] real -> void
 //Colors [DONE]
 draw_getpixel : [x] int, [y] int -> color
 draw_getpixel_ext : [x] int, [y] int -> real //TODO: RGBA?

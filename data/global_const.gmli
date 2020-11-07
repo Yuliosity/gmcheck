@@ -11,9 +11,7 @@ mouse_button : mbutton
 mouse_x, mouse_y : int
 //Datetime
 current_day, current_month, current_year : int
+//Backgrounds
+background_width, background_height : array<int>
 //Rooms
 room_first, room_last : room
-/*--Enums--*/
-//Graphics
-c_white, c_black, c_gray, c_grey, c_yellow, c_red, c_blue, c_lime : color
-ds_type_map, ds_type_list, ds_type_stack, ds_type_grid, ds_type_queue, ds_type_priority : int //TODO: dstype
