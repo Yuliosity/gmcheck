@@ -8,6 +8,7 @@ import Language.GML.Project
 import Language.GML.Checker (runChecker)
 import Language.GML.Checker.Builtin (loadBuiltin)
 import Language.GML.Checker.Errors (prettyAll)
+import Language.GML.Checker.Report (htmlReport, save)
 
 data Options = Options
     { oOutput  :: !FilePath
@@ -41,6 +42,5 @@ main = do
     Options { oOutput, oBuiltin, oProject } <- execParser options
     project <- loadProject oProject
     builtin <- loadBuiltin oBuiltin
-    writeFile oOutput $ show project
     let log = runChecker builtin project
-    putStrLn $ prettyAll log
+    save oOutput $ htmlReport log

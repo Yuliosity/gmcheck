@@ -95,7 +95,7 @@ setVar var ty = do
     env <- get
     case var of
         VVar var -> put $ env { eVars = M.insert var ty (eVars env) } -- TODO: lens
-        _ -> error "changing non-local variables is not implemented yet"
+        _ -> return () --error "changing non-local variables is not implemented yet"
 
 {-| Lookup for a function signature. -}
 lookupFn :: FunName -> Checker (Maybe Signature)
