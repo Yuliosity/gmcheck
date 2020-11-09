@@ -37,27 +37,31 @@ data Settings = Settings
     , sProject :: !Project
     }
 
-data Env = Env
-    { eVars    :: !VarDict
+data Context = Context
+    { eSrc     :: !Source
+    , eVars    :: !VarDict
     --, eScope   :: [Memory] -- TODO: stack
     --, eGlobals :: Memory -- TODO: globals
     , eObjects :: !(M.Map Name Memory)
-    } deriving Show
+    }
 
-emptyEnv :: Env
-emptyEnv = Env
-    { eVars    = M.empty
+emptyContext :: Context
+emptyContext = Context
+    { eSrc     = SScript ""
+    , eVars    = M.empty
     -- , eScope   = []
     , eObjects = M.empty
     }
 
-report err = tell [err]
+report err = do
+    src <- gets eSrc
+    tell $ singleError src err
 
 {-| Typechecking monad.
     Reader environment: all of the project and built-in engine data.
-    Writer output: errors/warnings log.
+    Writer output: errors/warnings report.
     State: all derived data about the codebase at the moment. -}
-type Checker = RWS Settings Log Env
+type Checker = RWS Settings Report Context
 
 {-| Lookup for a variable type. -}
 lookup :: Variable -> Checker Type
@@ -251,16 +255,17 @@ exec = \case
 run :: Program -> Checker ()
 run = mapM_ exec
 
-runObject :: Object -> Checker ()
-runObject (Object {oEvents}) = do
-    forM_ (M.toList oEvents) $ \(event, pr) ->
+runObject :: (Name, Object) -> Checker ()
+runObject (name, Object {oEvents}) = do
+    forM_ (M.toList oEvents) $ \(event, pr) -> do
+        modify $ \ctx -> ctx {eSrc = SObject name event}
         trace ("Checking " ++ show event) $ run pr
 
 runProject :: Checker ()
 runProject = do
     objects <- asks $ pObjects . sProject
-    forM_ objects runObject
+    forM_ (M.toList objects) runObject
 
-runChecker :: Builtin -> Project -> Log
-runChecker builtin project = snd $ execRWS runProject settings emptyEnv where
+runChecker :: Builtin -> Project -> Report
+runChecker builtin project = snd $ execRWS runProject settings emptyContext where
     settings = Settings builtin project

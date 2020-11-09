@@ -3,8 +3,6 @@
 module Language.GML.Checker.Errors where
 
 import qualified Data.Map.Strict as M
-import Text.Blaze
-import Text.Blaze.Html5 as H
 
 import Language.GML.AST
 import Language.GML.Events (Event) 
@@ -50,119 +48,25 @@ data Error
 
 type Log = [Error]
 
+{-| Source script. -}
+data Source = SScript !Name | SObject !Name !Event
+    deriving (Eq, Ord)
+
 {-| Errors report. -}
-data Report = Report
-    { rScripts :: M.Map Name Log
-    , rObjects :: M.Map Name [(Event, Log)]
-    }
+newtype Report = Report (M.Map Source [Error])
 
-instance ToMarkup Variable where
-    toMarkup = \case
-        VVar name -> toMarkup name
-        VField name var -> do toMarkup name; "."; toMarkup var
-        VContainer  _con name _expr      -> do toMarkup name; "[..]" --TODO: show expr
-        VContainer2 _con name (_e1, _e2) -> do toMarkup name; "[..,..]" --TODO: show expr
+instance Semigroup Report where
+    (Report m1) <> (Report m2) = Report (M.unionWith (++) m1 m2)
 
-instance ToMarkup UnOp where
-    toMarkup = \case
-        UBitNeg  -> "~"
-        UNeg     -> "-"
-        UNot     -> "!"
-        UPreDec  -> "--"
-        UPreInc  -> "++"
-        UPostDec -> "--"
-        UPostInc -> "++"
+instance Monoid Report where
+    mempty = Report M.empty
 
-instance ToMarkup BinOp where
-    toMarkup = \case
-        BNum Add -> "+"
-        BNum Sub -> "-"
-        BNum Mul -> "*"
-        BNum Div -> "/"
-        BNum Mod -> "mod"
-        BNum IntDiv -> "div"
-        BNum BitAnd -> "&"
-        BNum BitOr  -> "|"
-        BNum BitXor -> "^"
-        BNum Shr    -> ">>"
-        BNum Shl    -> "<<"
-        BBool And -> "&&"
-        BBool Or  -> "||"
-        BBool Xor -> "^^"
-        BComp Eq        -> "=="
-        BComp NotEq     -> "!="
-        BComp Less      -> "<"
-        BComp LessEq    -> "<="
-        BComp Greater   -> ">"
-        BComp GreaterEq -> ">="
+singleError :: Source -> Error -> Report
+singleError src err = Report $ M.singleton src [err]
 
-instance ToMarkup NumOp where
-    toMarkup = \case
-        Add -> "+="
-        Sub -> "-="
-        Mul -> "*="
-        Div -> "/="
-        BitAnd -> "&="
-        BitOr  -> "|="
-        BitXor -> "^="
-        op  -> toMarkup $ show op --impossible
+addError :: Source -> Error -> Report -> Report
+addError src err (Report map) = Report $ M.insertWith (++) src [err] map
 
-instance ToMarkup Container where
-    toMarkup = \case
-        SArray -> "array"
-        SStack -> "stack"
-        SList  -> "list"
-        SMap   -> "map"
-        SQueue -> "queue"
-        SPriorityQueue -> "pqueue"
-
-instance ToMarkup Container2 where
-    toMarkup = \case
-        SArray2 -> "array2"
-        SGrid   -> "grid"
-
-instance ToMarkup Resource where
-    toMarkup = \case
-        RBackground -> "background"
-        RFont       -> "font"
-        RObject     -> "object"
-        RPath       -> "path"
-        RRoom       -> "room"
-        RSound      -> "sound"
-        RSprite     -> "sprite"
-
-instance ToMarkup Type where
-    toMarkup = \case
-        TUnknown opt -> do "{"; markupMany opt; "}"
-        TVoid   -> "void"
-        TReal   -> "real"
-        TString -> "string"
-        TColor  -> "color"
-        TId res -> toMarkup res
-        TEnum name -> toMarkup name
-        TContainer  con ty -> do toMarkup con; "<"; toMarkup ty; ">"
-        TContainer2 con ty -> do toMarkup con; "<"; toMarkup ty; ">"
-        where
-            markupMany [] = mempty
-            markupMany [x] = toMarkup x
-            markupMany (x:xs) = do toMarkup x; "|"; markupMany xs
-
-instance ToMarkup Error where
-    toMarkup = \case
-        WChangeType var from to -> do "Type of "; toMarkup var; " might be changed from "; toMarkup from; " to "; toMarkup to
-        EUndefinedVar var -> do "Referencing an undefined variable "; toMarkup var
-        EUndefinedFunction fun -> do "Calling an undefined variable "; toMarkup fun
-        ENoResult fun -> do "Function "; toMarkup fun; " doesn't return anything"
-        EWrongExprType descr need ty -> do "Type of "; toMarkup descr; " should be "; toMarkup need; ", but seems to be "; toMarkup ty
-        EWrongVarType  var   need ty -> do "Type of "; toMarkup var;   " should be "; toMarkup need; ", but seems to be "; toMarkup ty
-        EWrongArgNum fun n1 n2 -> do "Function "; toMarkup fun; " is expected to have "; toMarkup n1; " arguments, but got "; toMarkup n2
-        EBadUnary  op ty    -> do "Operator "; toMarkup op; " cannot be applied to "; toMarkup ty
-        EBadBinary op t1 t2 -> do "Operator "; toMarkup op; " cannot be applied to "; toMarkup t1; " and "; toMarkup t2
-        EBadModify op t1 t2 -> do "Operator "; toMarkup op; " cannot be applied to "; toMarkup t1; " and "; toMarkup t2
-        EAssignConst var -> do "Cannot assign to a constant "; toMarkup var
-        EArrayIndex var ty -> do "Trying to index the array "; toMarkup var; " with "; toMarkup ty; " instead of an int"
-        EWrongArgument fun name need ty -> do "Argument "; toMarkup name; " of function "; toMarkup fun; " should be "; toMarkup need; ", but seems to be "; toMarkup ty
-        err -> toMarkup $ show err
 {-
 
 WARN

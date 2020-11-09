@@ -7,7 +7,7 @@ import Options.Applicative
 import Language.GML.Project
 import Language.GML.Checker (runChecker)
 import Language.GML.Checker.Builtin (loadBuiltin)
-import Language.GML.Checker.Report (htmlReport, save)
+import Language.GML.Checker.Render (htmlReport, save)
 
 data Options = Options
     { oOutput  :: !FilePath
