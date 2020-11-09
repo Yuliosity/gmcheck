@@ -26,16 +26,16 @@ vars = describe "variables parser" $ do
         parse' variable "bar.foo" `shouldParse` VField "bar" "foo"
     it "can parse arrays" $ do
         parse' variable "foo[42]" `shouldParse` foo_42
-        parse' variable "foo[42, 42]" `shouldParse` (VArray2 "foo" (lit42, lit42))
-        parse' variable "baz.bar[foo]" `shouldParse` VArray (VField "baz" "bar") foo
+        parse' variable "foo[42, 42]" `shouldParse` "foo" `VArray` (lit42, lit42)
+        parse' variable "baz.bar[foo]" `shouldParse` "baz" `VField` "bar" `VArray` foo
     it "can parse nested indices" $ do
-        parse' variable "baz[bar[foo]]" `shouldParse` (VArray "baz" $ EVariable $ VArray "bar" foo)
+        parse' variable "baz[bar[foo]]" `shouldParse` "baz" `VArray` EVariable ("bar" `VArray` foo)
     it "can parse accessors" $ do
         parse' variable "foo[|42]" `shouldParse` (VContainer SList "foo" lit42)
         parse' variable "foo[# 42, 42]" `shouldParse` (VContainer2 SGrid "foo" (lit42, lit42))
     it "can parse chained stuff for future" $ do
-        parse' variable "baz.bar.foo" `shouldParse` VField (VField "baz" "bar") "foo"
-        parse' variable "foo[42][42][42]" `shouldParse` (VArray (VArray (VArray "foo" lit42) lit42) lit42)
+        parse' variable "baz.bar.foo" `shouldParse` "baz" `VField` "bar" `VField` "foo"
+        parse' variable "foo[42][42][42]" `shouldParse` "foo" `VArray` lit42 `VArray` lit42 `VArray` lit42
 
 exprs = describe "expressions parser" $ do
     it "can parse a single literal" $ do
