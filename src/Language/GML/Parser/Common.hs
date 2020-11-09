@@ -3,8 +3,9 @@
 module Language.GML.Parser.Common
     ( Parser, Error, Result
     , Name
-    , spaces, parens, braces, brackets, comma, semicolon
-    , lexeme, symbol, ident
+    , spaces, comma, semicolon
+    , parens, braces, brackets
+    , lexeme, symbol, keyword, operator, ident
     , parseMany
     ) where
 
@@ -13,7 +14,6 @@ import Data.Void (Void)
 
 import Text.Megaparsec
 import Text.Megaparsec.Char
-    ( alphaNumChar, char, letterChar, space1 )
 import qualified Text.Megaparsec.Char.Lexer as L
 
 import Language.GML.Types (Name)
@@ -31,6 +31,12 @@ lexeme = L.lexeme spaces
 
 symbol :: Text -> Parser Text
 symbol = L.symbol spaces
+
+keyword :: Text -> Parser Text
+keyword kw = (lexeme . try) (string kw <* notFollowedBy alphaNumChar)
+
+operator :: Text -> Parser Text
+operator op = (lexeme . try) (string op <* notFollowedBy punctuationChar)
 
 parens, braces, brackets :: Parser a -> Parser a
 parens = between (symbol "(") (symbol ")")
