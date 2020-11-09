@@ -15,3 +15,5 @@ current_day, current_month, current_year : int
 background_width, background_height : array<int>
 //Rooms
 room_first, room_last : room
+//Enums
+true, false : bool

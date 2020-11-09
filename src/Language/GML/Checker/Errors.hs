@@ -24,7 +24,7 @@ data Error
     -- | Assigning to a constant
     | EAssignConst Variable
     -- | Argument of `with` is not an instance
-    | EWithInstance
+    | EWithInstance Type
     -- | Wrong expression type
     | EWrongExprType String Type Type
     -- | Wrong variable type

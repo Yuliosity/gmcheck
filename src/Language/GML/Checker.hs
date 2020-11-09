@@ -63,20 +63,19 @@ report err = do
     State: all derived data about the codebase at the moment. -}
 type Checker = RWS Settings Report Context
 
-{-| Lookup for a variable type. -}
-lookup :: Variable -> Checker Type
-lookup var = case var of
+{-| Lookup for a probably uninitialized variable type. -}
+lookupMaybe :: Variable -> Checker (Maybe Type)
+lookupMaybe var = case var of
     VVar name -> do
         -- Look for resources
         resources <- asks (pResources . sProject)
         bVar <- asks (lookupBuiltin name . sBuiltin)
         vars <- gets eVars
-        return $ fromMaybe TAny $ asum
+        return $ asum
             [ (\(t, _, _) -> t) <$> bVar      -- Check #1: built-in variables/constants
             , TId <$> M.lookup name resources -- Check #2: project resources
             , M.lookup name vars              -- Check #3: previously derived variables
             ]
-        --TODO: report a warning if not found
     {-
     VField name var -> do
         objects <- asks pObjects
@@ -86,13 +85,22 @@ lookup var = case var of
     VArray name expr -> do
         index <- derive expr
         when (index /= TInt) $ report $ EArrayIndex var index
+        --TODO: init unitialized arrays
         ty <- lookup (VVar name)
         case ty of
-            TArray res -> return res
+            TArray res -> return $ Just res
             res -> do
                 report $ EWrongVarType var res (TArray TVoid)
-                return TAny
-    _ -> return TAny
+                return Nothing
+    _ -> return Nothing
+
+{-| Lookup for a variable type and report an error if it's undefined. -}
+lookup :: Variable -> Checker Type
+lookup var = do
+    ty <- lookupMaybe var
+    case ty of
+        Nothing -> report (EUndefinedVar var) >> return TVoid
+        Just ty -> return ty
 
 setVar :: Variable -> Type -> Checker ()
 setVar var ty = do
@@ -159,7 +167,7 @@ derive = \case
     EFuncall fn args -> do
         sig <- lookupFn fn
         case sig of
-            Nothing -> report (EUnknownFunction fn) >> return TAny
+            Nothing -> report (EUndefinedFunction fn) >> return TAny
             Just (needed :-> res) -> do
                 argsT <- mapM derive args
                 let nn = length needed; na = length argsT
@@ -185,7 +193,7 @@ exec = \case
         setVar (VVar var) exprT
 
     SAssign var ass expr -> do
-        varT <- lookup var
+        varT <- lookupMaybe var
         exprT <- derive expr
 
         -- Check if this is not the constant
@@ -202,14 +210,19 @@ exec = \case
         when (exprT == TVoid) $ report (ENoResult var)
         case ass of
             AAssign -> do
-                when (varT /= TAny && varT /= exprT) $
-                    report $ WChangeType var varT exprT
+                case varT of
+                    Nothing -> return ()
+                    Just ty -> when (ty /= exprT) $
+                        report $ WChangeType var ty exprT
                 setVar var exprT
             AModify op -> do
-                -- TODO: refactor copy-pasta with binary derive
-                when (isJust $ deriveOp (BNum op) varT exprT) $
-                    report (EBadBinary (BNum op) varT exprT)
-        -- Check if the assigned expression doesn't return a value
+                case varT of
+                    Nothing -> report (EUndefinedVar var)
+                    -- Assuming that all modifying operators preserve the type, don't check the change
+                    -- TODO: refactor copy-pasta with binary derive
+                    Just ty ->
+                        when (isJust $ deriveOp (BNum op) ty exprT) $
+                            report (EBadBinary (BNum op) ty exprT)
         
     SExpression expr ->
         -- If the expression returns anything, the result is actually lost
@@ -217,7 +230,7 @@ exec = \case
 
     SWith expr stmt -> do
         varT <- derive expr
-        when (varT /= TInstance) $ report EWithInstance
+        when (varT /= TInstance) $ report $ EWithInstance varT
         -- TODO: switch the context
         exec stmt
 

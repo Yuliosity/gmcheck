@@ -115,20 +115,24 @@ instance ToMarkup Event where
 
 instance ToMarkup Error where
     toMarkup = \case
-        WChangeType var from to -> do "Type of "; toMarkup var; " might be changed from "; toMarkup from; " to "; toMarkup to
-        EUndefinedVar var -> do "Referencing an undefined variable "; toMarkup var
-        EUndefinedFunction fun -> do "Calling an undefined variable "; toMarkup fun
-        ENoResult fun -> do "Function "; toMarkup fun; " doesn't return anything"
-        EWrongExprType descr need ty -> do "Type of "; toMarkup descr; " should be "; toMarkup need; ", but seems to be "; toMarkup ty
-        EWrongVarType  var   need ty -> do "Type of "; toMarkup var;   " should be "; toMarkup need; ", but seems to be "; toMarkup ty
-        EWrongArgNum fun n1 n2 -> do "Function "; toMarkup fun; " is expected to have "; toMarkup n1; " arguments, but got "; toMarkup n2
-        EBadUnary  op ty    -> do "Operator "; toMarkup op; " cannot be applied to "; toMarkup ty
-        EBadBinary op t1 t2 -> do "Operator "; toMarkup op; " cannot be applied to "; toMarkup t1; " and "; toMarkup t2
-        EBadModify op t1 t2 -> do "Operator "; toMarkup op; " cannot be applied to "; toMarkup t1; " and "; toMarkup t2
-        EAssignConst var -> do "Cannot assign to a constant "; toMarkup var
-        EArrayIndex var ty -> do "Trying to index the array "; toMarkup var; " with "; toMarkup ty; " instead of an int"
-        EWrongArgument fun name need ty -> do "Argument "; toMarkup name; " of function "; toMarkup fun; " should be "; toMarkup need; ", but seems to be "; toMarkup ty
+        WChangeType var from to -> do "Type of "; m var; " might be changed from "; m from; " to "; m to
+        EUndefinedVar var -> do "Referencing an undefined variable "; m var
+        EUndefinedFunction fun -> do "Calling an undefined variable "; m fun
+        ENoResult fun -> do "Function "; m fun; " doesn't return anything"
+        EWrongExprType descr need ty -> do "Type of "; m descr; " should be "; m need; ", but seems to be "; m ty
+        EWrongVarType  var   need ty -> do "Type of "; m var;   " should be "; m need; ", but seems to be "; m ty
+        EWrongArgNum fun n1 n2 -> do "Function "; m fun; " is expected to have "; m n1; " arguments, but got "; m n2
+        EBadUnary  op ty    -> do "Operator "; m op; " cannot be applied to "; m ty
+        EBadBinary op t1 t2 -> do "Operator "; m op; " cannot be applied to "; m t1; " and "; m t2
+        EBadModify op t1 t2 -> do "Operator "; m op; " cannot be applied to "; m t1; " and "; m t2
+        EAssignConst var -> do "Cannot assign to a constant "; m var
+        EArrayIndex var ty -> do "Trying to index the array "; m var; " with "; m ty; " instead of an int"
+        EWrongArgument fun name need ty -> do "Argument "; m name; " of function "; m fun; " should be "; m need; ", but seems to be "; m ty
+        EWithInstance ty -> do "Parameter of the 'with' clause should be an instance, but seems to be "; m ty
         err -> toMarkup $ show err
+        where
+            m :: ToMarkup a => a -> Markup
+            m = toMarkup
 
 instance ToMarkup Source where
     toMarkup = \case
