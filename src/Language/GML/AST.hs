@@ -21,20 +21,20 @@ data Literal = LNumeric Double | LString String
 
 {-| Variables that hold a value and may be read or changed. -}
 data Variable
-    = VVar    Name              -- ^ Local, self or global variable
-    | VField  Name Variable     -- ^ Field/instance variable (possibly chained)
-    | VContainer  Container  Name Expr -- ^ Data structure accessor. Arrays are a special case.
-    | VContainer2 Container2 Name (Expr, Expr) -- ^ 2D data structure accessor
+    = VVar   Name          -- ^ Local, self or global variable
+    | VField Variable Name -- ^ Field/instance variable (possibly chained)
+    | VContainer  Container  Variable Expr         -- ^ Data structure accessor. Arrays are a special case.
+    | VContainer2 Container2 Variable (Expr, Expr) -- ^ 2D data structure accessor
     deriving (Eq, Show)
 
 instance IsString Variable where
     fromString = VVar
 
 {-| One-dimensional array, indexed by a number. -}
-pattern VArray n e = VContainer SArray n e
+pattern VArray  v e = VContainer  SArray  v e
 
 {-| Two-dimensional array, indexed by two numbers. Legacy in GMS 2.3. -}
-pattern VArray2 n e = VContainer2 SArray2 n e
+pattern VArray2 v e = VContainer2 SArray2 v e
 
 -- * Operators
 

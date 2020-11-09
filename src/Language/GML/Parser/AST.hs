@@ -10,7 +10,8 @@ import Text.Megaparsec
 import Text.Megaparsec.Char
 import qualified Text.Megaparsec.Char.Lexer as L
 import Control.Monad.Combinators.Expr
-import Data.Text hiding (empty, map)
+import Data.List (foldl')
+import Data.Text hiding (foldl', empty, map)
 
 import Language.GML.AST
 import Language.GML.Types
@@ -34,13 +35,13 @@ lNumeric = LNumeric <$>
 
 -- |String literal.
 lString :: Parser Literal
-lString = LString <$> (char '\"' *> manyTill L.charLiteral (char '\"'))
+lString = LString <$> (char '\"' *> manyTill L.charLiteral (char '\"') <* spaces)
 
 literal = lNumeric <|> lString
 
-accessor1 name = do
+accessor1 = do
     char '['
-    spec <- optional $ oneOf ['|', '?', '@']
+    spec <- optional $ oneOf [ '|', '?', '@' ]
     spaces
     let cons = case spec of
             Nothing -> SArray
@@ -50,9 +51,9 @@ accessor1 name = do
                 '@' -> SArray
     arg <- expr
     symbol "]"
-    return $ VContainer cons name arg
+    return $ \var -> VContainer cons var arg
 
-accessor2 name = do
+accessor2 = do
     char '['
     spec <- optional $ char '#'
     spaces
@@ -63,17 +64,14 @@ accessor2 name = do
     arg1 <- expr
     arg2 <- comma *> expr
     symbol "]"
-    return $ VContainer2 cons name (arg1, arg2)
-
+    return $ \var -> VContainer2 cons var (arg1, arg2)
 
 variable = do
-    name <- varName
-    choice
-        [ VField name <$> (symbol "." *> variable)
-        , try $ accessor1 name
-        , accessor2 name
-        , pure $ VVar name
-        ]
+    (var:vars) <- varName `sepBy1` (symbol ".")
+    accs <- many (try accessor1 <|> accessor2)
+    let nest  = foldl' VField (VVar var) vars
+    let nest2 = foldl' (flip ($)) nest accs
+    return nest2
 
 -- * Expressions
 

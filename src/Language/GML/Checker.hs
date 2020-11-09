@@ -38,23 +38,21 @@ data Settings = Settings
     }
 
 data Context = Context
-    { eSrc     :: !Source
-    , eVars    :: !VarDict
-    --, eScope   :: [Memory] -- TODO: stack
+    { cSrc     :: !Source
+    , cLocal   :: !Memory -- TODO: stack
     --, eGlobals :: Memory -- TODO: globals
-    , eObjects :: !(M.Map Name Memory)
+    , cObjects :: !(M.Map Name Memory)
     }
 
 emptyContext :: Context
 emptyContext = Context
-    { eSrc     = SScript ""
-    , eVars    = M.empty
-    -- , eScope   = []
-    , eObjects = M.empty
+    { cSrc     = SScript ""
+    , cLocal   = M.empty
+    , cObjects = M.empty
     }
 
 report err = do
-    src <- gets eSrc
+    src <- gets cSrc
     tell $ singleError src err
 
 {-| Typechecking monad.
@@ -63,36 +61,59 @@ report err = do
     State: all derived data about the codebase at the moment. -}
 type Checker = RWS Settings Report Context
 
-{-| Lookup for a probably uninitialized variable type. -}
-lookupMaybe :: Variable -> Checker (Maybe Type)
-lookupMaybe var = case var of
+{-| Lookup for a variable in a memory dictionary. -}
+lookupMem :: Variable -> Memory -> Checker (Maybe Type)
+lookupMem var mem = case var of
+    --Local or instance variables
     VVar name -> do
-        -- Look for resources
         resources <- asks (pResources . sProject)
-        bVar <- asks (lookupBuiltin name . sBuiltin)
-        vars <- gets eVars
+        builtin   <- asks (lookupBuiltin name . sBuiltin)
         return $ asum
-            [ (\(t, _, _) -> t) <$> bVar      -- Check #1: built-in variables/constants
+            [ (\(t, _, _) -> t) <$> builtin      -- Check #1: built-in variables/constants
             , TId <$> M.lookup name resources -- Check #2: project resources
-            , M.lookup name vars              -- Check #3: previously derived variables
+            , M.lookup name mem              -- Check #3: previously derived variables
             ]
-    {-
-    VField name var -> do
-        objects <- asks pObjects
-        M.lookup name objects
-    -}
-    -- TODO: check the same for other containers
-    VArray name expr -> do
+
+    VContainer cty var expr -> do
         index <- derive expr
         when (index /= TInt) $ report $ EArrayIndex var index
         --TODO: init unitialized arrays
-        ty <- lookup (VVar name)
+        ty <- lookupMem var mem
         case ty of
-            TArray res -> return $ Just res
-            res -> do
-                report $ EWrongVarType var res (TArray TVoid)
+            --TODO: init unitialized arrays
+            Nothing -> return Nothing
+            Just (TContainer rty res) | cty == rty -> return $ Just res
+            Just res -> do
+                report $ EWrongVarType var res (TContainer cty TVoid) --FIXME: actual expected array type
                 return Nothing
-    _ -> return Nothing
+
+    VContainer2 cty var (e1, e2) -> do
+        i1 <- derive e1
+        when (i1 /= TInt) $ report $ EArrayIndex var i1
+        i2 <- derive e2
+        when (i2 /= TInt) $ report $ EArrayIndex var i2
+        ty <- lookupMem var mem
+        case ty of
+            --TODO: init unitialized arrays
+            Nothing -> return Nothing
+            Just (TContainer2 rty res) | cty == rty -> return $ Just res
+            Just res -> do
+                report $ EWrongVarType var res (TContainer2 cty TVoid) --FIXME: actual expected array type
+                return Nothing
+
+    _ -> error $ "Shouldn't get there: " ++ show var
+
+{-| Lookup for a probably uninitialized variable type. -}
+lookupMaybe :: Variable -> Checker (Maybe Type)
+lookupMaybe = \case
+    VField var@(VVar name) field -> do
+        objects <- gets cObjects
+        case M.lookup name objects of 
+            Nothing  -> report (EUndefinedVar var) >> return Nothing
+            Just mem -> lookupMem (VVar field) mem
+    VField _var _name -> error "Chaining is not yet supported"
+
+    var -> gets cLocal >>= lookupMem var
 
 {-| Lookup for a variable type and report an error if it's undefined. -}
 lookup :: Variable -> Checker Type
@@ -104,9 +125,10 @@ lookup var = do
 
 setVar :: Variable -> Type -> Checker ()
 setVar var ty = do
-    env <- get
+    ctx <- get
     case var of
-        VVar var -> put $ env { eVars = M.insert var ty (eVars env) } -- TODO: lens
+        VVar var -> put $ ctx { cLocal = M.insert var ty (cLocal ctx) } -- TODO: lens
+        -- VField name var 
         _ -> return () --error "changing non-local variables is not implemented yet"
 
 {-| Lookup for a function signature. -}
@@ -271,7 +293,7 @@ run = mapM_ exec
 runObject :: (Name, Object) -> Checker ()
 runObject (name, Object {oEvents}) = do
     forM_ (M.toList oEvents) $ \(event, pr) -> do
-        modify $ \ctx -> ctx {eSrc = SObject name event}
+        modify $ \ctx -> ctx {cSrc = SObject name event}
         trace ("Checking " ++ show event) $ run pr
 
 runProject :: Checker ()
