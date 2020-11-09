@@ -156,7 +156,7 @@ move_wrap : [hor] bool, [vert] bool, [margin] real -> void
 //Create, transform, destroy [DONE]
 instance_create_depth : [x] real, [y] real, [depth] int, object -> instance
 instance_create_layer : [x] real, [y] real, [layer] int, object -> instance //TODO: layer
-instance_destroy : void -> void
+instance_destroy : void -> void //TODO: optional arguments
 instance_change : object, [perf] bool -> void
 instance_copy : [perf] bool -> void
 //Activating [DONE]

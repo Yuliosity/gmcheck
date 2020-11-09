@@ -7,7 +7,6 @@ import Options.Applicative
 import Language.GML.Project
 import Language.GML.Checker (runChecker)
 import Language.GML.Checker.Builtin (loadBuiltin)
-import Language.GML.Checker.Errors (prettyAll)
 import Language.GML.Checker.Report (htmlReport, save)
 
 data Options = Options

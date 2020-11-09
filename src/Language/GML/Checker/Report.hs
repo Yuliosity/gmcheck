@@ -22,7 +22,7 @@ htmlReport log = docTypeHtml $ do
         H.title "Report"
     body $ do
         p "All errors"
-        ul $ mapM_ (li . toHtml . pretty) log
+        ul $ mapM_ (li . toHtml) log
 
 save :: FilePath -> Html -> IO ()
 save path = BS.writeFile path . renderHtml
