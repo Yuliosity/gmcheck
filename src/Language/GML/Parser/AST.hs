@@ -135,14 +135,14 @@ eTerm = choice
     ]
 
 expr :: Parser Expr
-expr = makeExprParser eTerm opTable <?> "expression"
+expr = makeExprParser eTerm opTable <* spaces <?> "expression"
 
 assignOp = choice (map (\(c, s) -> c <$ symbol s) ops) <?> "assignment" where
     ops =
         [ (AAssign, "="), (AAssign, ":=")
         , (AModify Add, "+="), (AModify Sub, "-=")
         , (AModify Mul, "*="), (AModify Div, "/=")
-        , (AModify Or,  "|="), (AModify And, "&="), (AModify Xor, "^=")
+        , (AModify BitOr, "|="), (AModify BitAnd, "&="), (AModify BitXor, "^=")
         ]
 
 -- * Statements

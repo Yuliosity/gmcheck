@@ -25,7 +25,6 @@ data Variable
     | VField  Name Variable     -- ^ Field/instance variable (possibly chained)
     | VContainer  Container  Name Expr -- ^ Data structure accessor. Arrays are a special case.
     | VContainer2 Container2 Name (Expr, Expr) -- ^ 2D data structure accessor
-    | VAcc    Name 
     deriving (Eq, Show)
 
 instance IsString Variable where
@@ -43,17 +42,17 @@ pattern VArray2 n e = VContainer2 SArray2 n e
 data NumOp
     = Add | Sub | Mul | Div
     | Mod | IntDiv
-    | And | Or | Xor
+    | Shr | Shl | BitAnd | BitOr | BitXor
+    deriving (Eq, Show)
+
+{-| Boolean operations. -}
+data BoolOp
+    = And | Or | Xor
     deriving (Eq, Show)
 
 {-| Comparison operators. -}
 data CompOp
     = Eq | NotEq | Less | Greater | LessEq | GreaterEq
-    deriving (Eq, Show)
-
-{-| Bitwise operations. -}
-data BitOp
-    = Shr | Shl | BitAnd | BitOr | BitXor
     deriving (Eq, Show)
 
 {-| Unary operators, in order of precedence. -}
@@ -67,7 +66,7 @@ data UnOp
 data BinOp
     = BNum  NumOp
     | BComp CompOp
-    | BBit  BitOp
+    | BBool BoolOp
     deriving (Eq, Show)
 
 -- * Expressions
@@ -93,8 +92,8 @@ instance Binary NumOp where
 instance Binary CompOp where
     toBin = BComp
 
-instance Binary BitOp where
-    toBin = BBit
+instance Binary BoolOp where
+    toBin = BBool
 
 eBinary :: Binary a => a -> Expr -> Expr -> Expr
 eBinary = EBinary . toBin
