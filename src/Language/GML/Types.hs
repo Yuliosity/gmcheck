@@ -65,8 +65,15 @@ indexType :: Container -> Type
 indexType = \case
     SArray -> TInt
     SList  -> TInt
-    SMap   -> TString
+    SMap   -> TAny
     _      -> TVoid
+
+isSubtype :: Type -> Type -> Bool
+isSubtype _ TAny = True
+isSubtype t1 (TUnknown ts) = t1 `elem` ts
+isSubtype TInt TReal = True
+isSubtype t1 t2 | t1 == t2 = True
+isSubtype _ _ = False
 
 {- |Unknown type. -}
 pattern TAny :: Type

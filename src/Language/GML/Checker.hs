@@ -70,36 +70,36 @@ lookupMem var mem = case var of
         resources <- asks (pResources . sProject)
         builtin   <- asks (lookupBuiltin name . sBuiltin)
         return $ asum
-            [ (\(t, _, _) -> t) <$> builtin      -- Check #1: built-in variables/constants
+            [ (\(t, _, _) -> t) <$> builtin   -- Check #1: built-in variables/constants
             , TId <$> M.lookup name resources -- Check #2: project resources
-            , M.lookup name mem              -- Check #3: previously derived variables
+            , M.lookup name mem               -- Check #3: previously derived variables
             ]
 
-    VContainer cty var expr -> do
+    VContainer con var expr -> do
         index <- derive expr
-        when (index /= TInt) $ report $ EBadIndex cty index
+        when (not $ index `isSubtype` indexType con) $ report $ EBadIndex con index
         --TODO: init unitialized arrays
         ty <- lookupMem var mem
         case ty of
             --TODO: init unitialized arrays
             Nothing -> return Nothing
-            Just (TContainer rty res) | cty == rty -> return $ Just res
+            Just (TContainer rcon res) | con == rcon -> return $ Just res
             Just res -> do
-                report $ EWrongVarType var res (TContainer cty TVoid) --FIXME: actual expected array type
+                report $ EWrongVarType var res (TContainer con TVoid) --FIXME: actual expected array type
                 return Nothing
 
-    VContainer2 cty var (e1, e2) -> do
+    VContainer2 con var (e1, e2) -> do
         i1 <- derive e1
-        when (i1 /= TInt) $ report $ EBadIndex2 cty i1
+        when (i1 /= TInt) $ report $ EBadIndex2 con i1
         i2 <- derive e2
-        when (i2 /= TInt) $ report $ EBadIndex2 cty i2
+        when (i2 /= TInt) $ report $ EBadIndex2 con i2
         ty <- lookupMem var mem
         case ty of
             --TODO: init unitialized arrays
             Nothing -> return Nothing
-            Just (TContainer2 rty res) | cty == rty -> return $ Just res
+            Just (TContainer2 rcon res) | con == rcon -> return $ Just res
             Just res -> do
-                report $ EWrongVarType var res (TContainer2 cty TVoid) --FIXME: actual expected array type
+                report $ EWrongVarType var res (TContainer2 con TVoid) --FIXME: actual expected array type
                 return Nothing
 
     _ -> error $ "Shouldn't get there: " ++ show var

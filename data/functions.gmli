@@ -107,12 +107,24 @@ color_get_hue, color_get_saturation, color_get_value : color -> real
 /*--Data structures--*/
 ds_exists : [id] int, [type] int -> bool //TODO: dstype
 ds_set_precision : real -> void
-//Lists
+//List
 ds_list_create : void -> list<void>
 ds_list_destroy : list<any> -> void
 ds_list_size : list<any> -> int
 ds_list_add : list<any>, any -> void //TODO: vararg
 ds_list_sort : list<any>, [ascend] bool -> void
+//Map
+ds_map_create : void -> map<void>
+ds_map_add : map<any>, [key] any, [value] any -> void
+ds_map_add_map : map<any>, [key] any, [value] map<any> -> void
+ds_map_clear, ds_map_destroy : map<any> -> void
+//Queue
+ds_queue_create : void -> queue<void>
+ds_queue_enqueue : queue<any>, any -> void //TODO: vararg
+ds_queue_clear, ds_queue_destroy : queue<any> -> void
+ds_queue_head, ds_queue_tail, ds_queue_dequeue : queue<any> -> any
+ds_queue_empty : queue<any> -> bool
+ds_queue_size : queue<any> -> int
 
 /*--Mouse [DONE]--*/
 mouse_check_button, mouse_check_button_pressed, mouse_check_button_released : mbutton -> bool
@@ -208,6 +220,8 @@ room_set_width  : room,  [width] real -> void
 room_set_persistent : room, bool -> void
 room_set_camera : room, [viewport] int, [camera] int -> void
 room_set_viewport : room, [viewport] int, [vis] bool, [xport] int, [yport] int, [wport] int, [hport] int -> void
+room_instance_add : room, [x] real, [y] real, object -> void
+room_instance_clear : room -> void
 
 /*--Game [DONE]--*/
 game_load, game_save: [filename] string -> void
