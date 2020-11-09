@@ -5,8 +5,6 @@ Description : GM Project
 Datatypes representing the whole Game Maker project and functions for loading its codebase.
 -}
 
-{-# LANGUAGE LambdaCase #-}
-
 module Language.GML.Project
     ( Script (..)
     , Object (..)

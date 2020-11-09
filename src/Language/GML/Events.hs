@@ -5,8 +5,6 @@ Description : GM object events
 Events in Game Maker objects.
 -}
 
-{-# LANGUAGE LambdaCase #-}
-
 module Language.GML.Events
     ( Key (..), KeyState (..), MouseButton (..)
     , Guid, Stage (..)

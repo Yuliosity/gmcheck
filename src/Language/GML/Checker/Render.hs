@@ -3,8 +3,6 @@ Module      : Language.GML.Checker.Render
 Description : HTML rendering of errors report
 -}
 
-{-# LANGUAGE LambdaCase, NamedFieldPuns, OverloadedStrings #-}
-
 module Language.GML.Checker.Render where
 
 import Control.Monad (forM_)
@@ -81,7 +79,7 @@ instance ToMarkup Container where
 
 instance ToMarkup Container2 where
     toMarkup = \case
-        SArray2 -> "array2"
+        SArray2 -> "array2d"
         SGrid   -> "grid"
 
 instance ToMarkup Resource where
@@ -126,7 +124,8 @@ instance ToMarkup Error where
         EBadBinary op t1 t2 -> do "Operator "; m op; " cannot be applied to "; m t1; " and "; m t2
         EBadModify op t1 t2 -> do "Operator "; m op; " cannot be applied to "; m t1; " and "; m t2
         EAssignConst var -> do "Cannot assign to a constant "; m var
-        EArrayIndex var ty -> do "Trying to index the array "; m var; " with "; m ty; " instead of an int"
+        EBadIndex  con ty -> do m con; " should be indexed with "; m (indexType  con); ", but got "; m ty
+        EBadIndex2 con ty -> do m con; " should be indexed with ints, but got "; m ty
         EWrongArgument fun name need ty -> do "Argument "; m name; " of function "; m fun; " should be "; m need; ", but seems to be "; m ty
         EWithInstance ty -> do "Parameter of the 'with' clause should be an instance, but seems to be "; m ty
         err -> toMarkup $ show err

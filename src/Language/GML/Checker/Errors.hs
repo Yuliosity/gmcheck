@@ -1,4 +1,4 @@
-{-# LANGUAGE LambdaCase, OverloadedStrings, StrictData #-}
+{-# LANGUAGE StrictData #-}
 
 module Language.GML.Checker.Errors where
 
@@ -36,8 +36,9 @@ data Error
     -- | Wrong operand(s) of an assignment operator
     -- TODO: unify?
     | EBadModify NumOp Type Type
-    -- | Non-numeric array indexing
-    | EArrayIndex Variable Type
+    -- | Wrong index type of a container
+    | EBadIndex  Container Type
+    | EBadIndex2 Container2 Type
     -- | Wrong argument count
     | EWrongArgNum FunName Int Int
     -- | Wrong type of function argument
@@ -69,24 +70,6 @@ addError src err (Report map) = Report $ M.insertWith (++) src [err] map
 
 {-
 
-WARN
-N arguments in a script call, but it uses only K<N
-Using a deprecated function/variable
-Unspecified arguments evaluation order
-Instance variable is not used outside of the scope
-Script argument N is missing
-Call event_inherited by the object with no parent
 
-ERROR
-Uninitialized variable access
-Cannot add number and string
-Cannot use operator with numbers only
-Array access by non-number
-Argument type XX, must be YY
-N arguments in a script call, but it uses K>N
-Call unimplemented event
-Call unimplemented script
-Not all branches return a value
-Assign to a function which doesn't return anything
 
 -}

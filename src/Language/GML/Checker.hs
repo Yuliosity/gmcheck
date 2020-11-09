@@ -1,4 +1,3 @@
-{-# LANGUAGE NamedFieldPuns #-}
 {-|
 Module      : Language.GML.Checker
 Description : GML typecheck
@@ -6,8 +5,6 @@ Description : GML typecheck
 A rudimentary and conservative typechecker for the GML project codebase.
 It tries to derive types of variables and expressions based on their assignment order.
 -}
-
-{-# LANGUAGE LambdaCase #-}
 
 module Language.GML.Checker
     ( runChecker
@@ -18,8 +15,8 @@ import Prelude hiding (lookup)
 import Control.Monad
 import Control.Monad.Trans.RWS
 import Data.Foldable (asum)
-import Data.Maybe (catMaybes, isJust, fromMaybe)
 import qualified Data.Map as M
+import Debug.Trace
 
 import Language.GML.AST
 import Language.GML.Project
@@ -27,16 +24,20 @@ import Language.GML.Types
 
 import Language.GML.Checker.Errors
 import Language.GML.Checker.Builtin
-import Language.GML.Events
-import Debug.Trace
+import Data.Maybe (isJust)
 
 type Memory = M.Map Name Type
 
+emptyMem :: Memory
+emptyMem = M.empty
+
+{-| Project settings. -}
 data Settings = Settings
     { sBuiltin :: !Builtin
     , sProject :: !Project
     }
 
+{-| Checking context. -}
 data Context = Context
     { cSrc     :: !Source
     , cLocal   :: !Memory -- TODO: stack
@@ -47,19 +48,19 @@ data Context = Context
 emptyContext :: Context
 emptyContext = Context
     { cSrc     = SScript ""
-    , cLocal   = M.empty
-    , cObjects = M.empty
+    , cLocal   = emptyMem
+    , cObjects = M.singleton "global" emptyMem
     }
-
-report err = do
-    src <- gets cSrc
-    tell $ singleError src err
 
 {-| Typechecking monad.
     Reader environment: all of the project and built-in engine data.
     Writer output: errors/warnings report.
     State: all derived data about the codebase at the moment. -}
 type Checker = RWS Settings Report Context
+
+report err = do
+    src <- gets cSrc
+    tell $ singleError src err
 
 {-| Lookup for a variable in a memory dictionary. -}
 lookupMem :: Variable -> Memory -> Checker (Maybe Type)
@@ -76,7 +77,7 @@ lookupMem var mem = case var of
 
     VContainer cty var expr -> do
         index <- derive expr
-        when (index /= TInt) $ report $ EArrayIndex var index
+        when (index /= TInt) $ report $ EBadIndex cty index
         --TODO: init unitialized arrays
         ty <- lookupMem var mem
         case ty of
@@ -89,9 +90,9 @@ lookupMem var mem = case var of
 
     VContainer2 cty var (e1, e2) -> do
         i1 <- derive e1
-        when (i1 /= TInt) $ report $ EArrayIndex var i1
+        when (i1 /= TInt) $ report $ EBadIndex2 cty i1
         i2 <- derive e2
-        when (i2 /= TInt) $ report $ EArrayIndex var i2
+        when (i2 /= TInt) $ report $ EBadIndex2 cty i2
         ty <- lookupMem var mem
         case ty of
             --TODO: init unitialized arrays
@@ -111,7 +112,7 @@ lookupMaybe = \case
         case M.lookup name objects of 
             Nothing  -> report (EUndefinedVar var) >> return Nothing
             Just mem -> lookupMem (VVar field) mem
-    VField _var _name -> error "Chaining is not yet supported"
+    VField _var _name -> return Nothing--error "Chaining is not yet supported"
 
     var -> gets cLocal >>= lookupMem var
 

@@ -5,8 +5,6 @@ Description : GML builtin types parser
 A parser for signatures of built-in function and variables. See the self-descriptive format in `data/%filename%.ty`.
 -}
 
-{-# LANGUAGE OverloadedStrings #-}
-
 module Language.GML.Parser.Types where
 
 import Prelude hiding (Enum)

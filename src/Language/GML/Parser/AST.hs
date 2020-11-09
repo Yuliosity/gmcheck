@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Language.GML.Parser.AST
     ( Program, Result
     , variable, expr, stmt, program

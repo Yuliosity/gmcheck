@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Language.GML.Parser.Common
     ( Parser, Error, Result
     , Name

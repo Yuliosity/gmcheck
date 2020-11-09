@@ -43,6 +43,8 @@ data Container2
     | SGrid
     deriving (Eq, Show)
 
+-- data AnyContainer = AnyC1 Container | AnyC2 Container2
+
 {-| Value type. -}
 data Type
     = TUnknown [Type] -- ^ Unknown type with possibilities, if any
@@ -58,6 +60,13 @@ data Type
     | TContainer  Container  Type -- ^ Linear container of typed values.
     | TContainer2 Container2 Type -- ^ Two-dimensional container of typed values.
     deriving (Eq, Show)
+
+indexType :: Container -> Type
+indexType = \case
+    SArray -> TInt
+    SList  -> TInt
+    SMap   -> TString
+    _      -> TVoid
 
 {- |Unknown type. -}
 pattern TAny :: Type

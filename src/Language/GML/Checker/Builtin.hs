@@ -5,7 +5,7 @@ Description : Built-in GML functions
 Types of built-in instance variables and signatures of library functions.
 -}
 
-{-# LANGUAGE NamedFieldPuns, TupleSections #-}
+{-# LANGUAGE TupleSections #-}
 
 module Language.GML.Checker.Builtin
     ( Builtin (..)

@@ -34,6 +34,10 @@ dependencies:
 - transformers
 
 library:
+  default-extensions:
+    - LambdaCase
+    - NamedFieldPuns
+    - OverloadedStrings
   source-dirs: src
 
 executables:
