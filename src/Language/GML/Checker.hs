@@ -207,6 +207,42 @@ scriptDerive = go where
     go (stmt:rest) = case stmt of
 -}
 
+execAssignModify :: Maybe NumOp -> Variable -> Expr -> Checker ()
+execAssignModify op var expr = do
+    varT <- lookupMaybe var
+    exprT <- derive expr
+
+    -- Check if this is not the constant
+    -- TODO: simplify using MonadFail
+    case var of
+        VVar name -> do
+            builtin <- asks sBuiltin
+            case lookupBuiltin name builtin of
+                Just (_, _, True) -> report (EAssignConst var)
+                _ -> return ()
+        _ -> return ()
+
+    -- Check if the assigned expression doesn't return a value
+    when (exprT == TVoid) $ report (ENoResult var)
+    case op of
+        -- Assignment: "a = 5"
+        Nothing -> do
+            case varT of
+                --It is a freshly declared instance variable
+                Nothing -> return ()
+                Just ty -> when (ty /= exprT) $
+                    report $ WChangeType var ty exprT
+            setVar var exprT
+        -- Modification: "a += 5" etc.
+        Just op -> do
+            case varT of
+                Nothing -> report (EUndefinedVar var)
+                -- Assuming that all modifying operators preserve the type, don't check the change
+                -- TODO: refactor copy-pasta with binary derive
+                Just ty ->
+                    when (isJust $ deriveOp (BNum op) ty exprT) $
+                        report (EBadBinary (BNum op) ty exprT)
+
 exec :: Stmt -> Checker ()
 exec = \case
     SDeclare vexp -> forM_ vexp $ \(var, mExpr) -> do
@@ -215,37 +251,9 @@ exec = \case
             Just expr -> derive expr
         setVar (VVar var) exprT
 
-    SAssign var ass expr -> do
-        varT <- lookupMaybe var
-        exprT <- derive expr
+    SAssign var expr -> execAssignModify Nothing var expr
 
-        -- Check if this is not the constant
-        -- TODO: simplify using MonadFail
-        case var of
-            VVar name -> do
-                builtin <- asks sBuiltin
-                case lookupBuiltin name builtin of
-                    Just (_, _, True) -> report (EAssignConst var)
-                    _ -> return ()
-            _ -> return ()
-
-        -- Check if the assigned expression doesn't return a value
-        when (exprT == TVoid) $ report (ENoResult var)
-        case ass of
-            AAssign -> do
-                case varT of
-                    Nothing -> return ()
-                    Just ty -> when (ty /= exprT) $
-                        report $ WChangeType var ty exprT
-                setVar var exprT
-            AModify op -> do
-                case varT of
-                    Nothing -> report (EUndefinedVar var)
-                    -- Assuming that all modifying operators preserve the type, don't check the change
-                    -- TODO: refactor copy-pasta with binary derive
-                    Just ty ->
-                        when (isJust $ deriveOp (BNum op) ty exprT) $
-                            report (EBadBinary (BNum op) ty exprT)
+    SModify op var expr -> execAssignModify (Just op) var expr
         
     SExpression expr ->
         -- If the expression returns anything, the result is actually lost

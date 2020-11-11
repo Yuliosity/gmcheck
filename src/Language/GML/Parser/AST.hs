@@ -130,13 +130,18 @@ eTerm = choice
 expr :: Parser Expr
 expr = makeExprParser eTerm opTable <* spaces <?> "expression"
 
-assignOp = choice (map (\(c, s) -> c <$ symbol s) ops) <?> "assignment" where
-    ops =
-        [ (AAssign, "="), (AAssign, ":=")
-        , (AModify Add, "+="), (AModify Sub, "-=")
-        , (AModify Mul, "*="), (AModify Div, "/=")
-        , (AModify BitOr, "|="), (AModify BitAnd, "&="), (AModify BitXor, "^=")
-        ]
+sAssign = do
+    var <- variable
+    op <- choice (map (\(c, s) -> c <$ symbol s) ops) <?> "assignment" 
+    e <- expr
+    return $ op var e
+    where
+        ops =
+            [ (SAssign, "="), (SAssign, ":=")
+            , (SModify Add, "+="), (SModify Sub, "-=")
+            , (SModify Mul, "*="), (SModify Div, "/=")
+            , (SModify BitOr, "|="), (SModify BitAnd, "&="), (SModify BitXor, "^=")
+            ]
 
 -- * Statements
 
@@ -145,7 +150,7 @@ stmt :: Parser Stmt
 stmt = (choice
     [ SBlock        <$> ((symbol "{" <|> keyword "begin") *> manyTill stmt (symbol "}" <|> keyword "end"))
     , SBreak <$ keyword "break", SContinue <$ keyword "continue", SExit <$ keyword "exit"
-    , SDeclare      <$> (keyword "var" *> ((,) <$> varName <*> optional (assignOp *> expr)) `sepBy1` comma)
+    , SDeclare      <$> (keyword "var" *> ((,) <$> varName <*> optional (operator "=" *> expr)) `sepBy1` comma)
     , SWith         <$> (keyword "with" *> parens expr) <*> stmt
     , SRepeat       <$> (keyword "repeat" *> expr) <*> stmt
     , SWhile        <$> (keyword "while"  *> expr) <*> stmt
@@ -153,7 +158,7 @@ stmt = (choice
     , SFor          <$> (keyword "for" *> symbol "(" *> stmt) <*> (expr <* semicolon) <*> (stmt <* symbol ")") <*> stmt
     , SIf           <$> (keyword "if" *> expr) <*> stmt <*> optional (keyword "else" *> stmt)
     , SReturn       <$> (keyword "return" *> expr)
-    , try $ SAssign <$> variable <*> assignOp <*> expr
+    , try $ sAssign
     , SExpression   <$> expr
     ] <?> "statement")
     <* optional semicolon

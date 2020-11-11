@@ -100,17 +100,13 @@ eBinary = EBinary . toBin
 
 -- * Statements
 
-{-| Assigning operations, possibly with arithmetical/boolean modification. -}
-data AssignOp
-    = AAssign | AModify NumOp
-    deriving (Eq, Show)
-
 {-| Statement (instruction). -}
 data Stmt
     = SExpression Expr -- ^ Calling an expression (typically a function/script with side effects)
     -- Variable declaration and modification
     | SDeclare [(Name, Maybe Expr)]  -- ^ Declaring local variable(s)
-    | SAssign Variable AssignOp Expr -- ^ Assigning or modifying an existing variable
+    | SAssign Variable Expr          -- ^ Assigning a new variable, possibly declaring it in-place
+    | SModify NumOp Variable Expr    -- ^ Modifying an existing variable
     -- Control flow structures
     | SBlock   [Stmt]          -- ^ Nested sequence of statements
     | SWith    Expr Stmt       -- ^ Switching the execution context into an another instance
