@@ -36,33 +36,30 @@ literal = lNumeric <|> lString
 
 accessor1 = do
     char '['
-    spec <- optional $ oneOf [ '|', '?', '@' ]
+    spec <- option '@' $ oneOf [ '|', '?', '@' ]
     spaces
     let cons = case spec of
-            Nothing -> SArray
-            Just c -> case c of
-                '|' -> SList
-                '?' -> SMap
-                '@' -> SArray
+            '|' -> SList
+            '?' -> SMap
+            '@' -> SArray
     arg <- expr
     symbol "]"
     return $ \var -> VContainer cons var arg
 
 accessor2 = do
     char '['
-    spec <- optional $ char '#'
+    spec <- option ' ' $ char '#'
     spaces
     let cons = case spec of
-            Nothing -> SArray2
-            Just c -> case c of
-                '#' -> SGrid
+            ' ' -> SArray2
+            '#' -> SGrid
     arg1 <- expr
     arg2 <- comma *> expr
     symbol "]"
     return $ \var -> VContainer2 cons var (arg1, arg2)
 
 variable = do
-    (var:vars) <- varName `sepBy1` (symbol ".")
+    (var:vars) <- varName `sepBy1` symbol "."
     accs <- many (try accessor1 <|> accessor2)
     let nest  = foldl' VField (VVar var) vars
     let nest2 = foldl' (flip ($)) nest accs
@@ -122,6 +119,7 @@ postfix name f = Postfix (f <$ operator name)
 
 eTerm = choice
     [ parens expr
+    , EArray <$> brackets (expr `sepBy1` comma)
     , ELiteral <$> literal
     , try funcall
     , EVariable <$> variable

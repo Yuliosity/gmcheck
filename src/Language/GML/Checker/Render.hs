@@ -114,6 +114,7 @@ instance ToMarkup Event where
 instance ToMarkup Error where
     toMarkup = \case
         WChangeType var from to -> do "Type of "; m var; " might be changed from "; m from; " to "; m to
+        WHeteroArray var t1 t2 -> do "Array "; m var; " seems to contain "; m t1; " as well as "; m t2
         EUndefinedVar var -> do "Referencing an undefined variable "; m var
         EUndefinedFunction fun -> do "Calling an undefined variable "; m fun
         ENoResult fun -> do "Function "; m fun; " doesn't return anything"

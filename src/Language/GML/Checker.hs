@@ -197,6 +197,14 @@ derive = \case
     ELiteral (LNumeric _) -> return TReal
     ELiteral (LString  _) -> return TString
 
+    EArray (e1:es) -> do
+        t1 <- derive e1
+        forM_ es $ \expr -> do
+            ty <- derive expr
+            when (t1 /= ty) $ report $ WHeteroArray "literal" t1 ty
+            --TODO: array of variants?
+        return $ TArray t1
+
     EVariable var -> do
         mty <- lookup var
         case mty of
@@ -234,11 +242,10 @@ derive = \case
         sig <- lookupFn fn
         case sig of
             Just (needed :-> res) -> do
-    
                 let nn = length needed; na = length argsT
                 when (nn /= na) $ report $ EWrongArgNum fn nn na
                 forM_ (zip needed argsT) $ \((name, a), b) ->
-                    unless (a `isSubtype` b) $ report $ EWrongArgument fn name a b
+                    unless (b `isSubtype` a) $ report $ EWrongArgument fn name a b
                 return res
             Nothing -> do
                 scripts <- pScripts <$> view sProject

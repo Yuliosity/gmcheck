@@ -53,6 +53,9 @@ exprs = describe "expressions parser" $ do
         parse' expr "rand()" `shouldParse` EFuncall "rand" []
         parse' expr "sin(3.14)" `shouldParse` sin_pi
         parse' expr "cat(foo, bar)" `shouldParse` EFuncall "cat" [foo, bar]
+    it "can parse array literals" $ do
+        parse' expr "[foo, bar]" `shouldParse` EArray [foo, bar]
+        parse' expr "test([foo, 42 + 42])" `shouldParse` EFuncall "test" [EArray [foo, eBinary Add lit42 lit42]]
 
 stmts = describe "statements parser" $ do
     it "can parse variable declarations" $ do
@@ -79,7 +82,9 @@ stmts = describe "statements parser" $ do
         parse' stmt "while(foo) write(\"string\")" `shouldParse` SWhile foo (SExpression write_string)
         parse' stmt "while(foo) {foo -= 42; write(\"string\")}" `shouldParse`
             SWhile foo (SBlock [SModify Sub "foo" lit42, SExpression write_string])
-        parse' stmt "for(var foo=42; foo < bar; foo+=42) write(\"string\")"  `shouldParse`
+        parse' stmt "for(foo = 42; foo > 0; foo--) ++bar" `shouldParse`
+            SFor (SAssign "foo" lit42) (eBinary Greater foo (ELiteral $ LNumeric 0)) (SExpression $ EUnary UPostDec foo) (SExpression $ EUnary UPreInc bar) 
+        parse' stmt "for(var foo=42; foo < bar; foo+=42) write(\"string\")" `shouldParse`
             SFor (SDeclare [("foo", Just lit42)]) (eBinary Less foo bar) (SModify Add "foo" lit42) (SExpression write_string)
 
 programs = describe "complex script parser" $ do

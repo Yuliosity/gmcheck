@@ -81,6 +81,7 @@ data Expr
     | EFuncall  Name [Expr]     -- ^ Function/script call with arguments
     | EVariable Variable
     | ELiteral  Literal
+    | EArray    [Expr]          -- ^ Array literal
     deriving (Eq, Show)
 
 class Binary a where
