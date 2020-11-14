@@ -1,5 +1,5 @@
 name:                gmcheck
-version:             0.0.1.0
+version:             0.0.2.0
 github:              "yuuri/gmcheck"
 license:             BSD3
 author:              "Yulia Gorshkova"
@@ -29,6 +29,7 @@ dependencies:
 - filepath
 - keycode
 - megaparsec
+- microlens-platform
 - parser-combinators
 - text
 - transformers

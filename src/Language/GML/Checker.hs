@@ -6,6 +6,8 @@ A rudimentary and conservative typechecker for the GML project codebase.
 It tries to derive types of variables and expressions based on their assignment order.
 -}
 
+{-# LANGUAGE TemplateHaskell #-}
+
 module Language.GML.Checker
     ( runChecker
     ) where
@@ -16,7 +18,9 @@ import Control.Monad
 import Control.Monad.Trans.RWS
 import Data.Foldable (asum)
 import qualified Data.Map as M
+import Data.Maybe (isJust)
 import Debug.Trace
+import Lens.Micro.Platform
 
 import Language.GML.AST
 import Language.GML.Project
@@ -24,7 +28,6 @@ import Language.GML.Types
 
 import Language.GML.Checker.Errors
 import Language.GML.Checker.Builtin
-import Data.Maybe (isJust)
 
 type Memory = M.Map Name Type
 
@@ -41,25 +44,29 @@ lookupLocal name frames = asum $ map (M.!? name) frames
 
 {-| Project settings. -}
 data Settings = Settings
-    { sBuiltin :: !Builtin
-    , sProject :: !Project
+    { _sBuiltin :: !Builtin
+    , _sProject :: !Project
     }
+
+makeLenses ''Settings
 
 {-| Checking context. -}
 data Context = Context
-    { cSrc     :: !Source  -- ^ Current source name
-    , cScope   :: ![Name]  -- ^ Current object scope
-    , cLocal   :: !Stack   -- ^ Stack of local variable frames
+    { _cSrc     :: !Source  -- ^ Current source name
+    , _cScope   :: ![Name]  -- ^ Current object scope
+    , _cLocal   :: !Stack   -- ^ Stack of local variable frames
     --, eGlobals :: Memory -- TODO: globals
-    , cObjects :: !(M.Map Name Memory)
+    , _cObjects :: !(M.Map Name Memory)
     }
+
+makeLenses ''Context
 
 emptyContext :: Context
 emptyContext = Context
-    { cSrc     = SScript ""
-    , cScope   = []
-    , cLocal   = [emptyMem]
-    , cObjects = M.singleton "global" emptyMem
+    { _cSrc     = SScript ""
+    , _cScope   = []
+    , _cLocal   = [emptyMem]
+    , _cObjects = M.singleton "global" emptyMem
     }
 
 {-| Typechecking monad.
@@ -70,24 +77,23 @@ type Checker = RWS Settings Report Context
 
 withFrame :: Memory -> Checker () -> Checker ()
 withFrame mem action = do
-    modify (\ctx -> ctx {cLocal = mem : cLocal ctx})
+    cLocal %= (mem :)
     action
-    modify (\ctx -> ctx {cLocal = tail $ cLocal ctx})
+    cLocal %= tail
 
 withScope :: Name -> Checker () -> Checker ()
 withScope name action = do
-    modify (\ctx -> ctx {cScope = name : cScope ctx})
+    cScope %= (name :)
     withFrame emptyMem action
-    modify (\ctx -> ctx {cScope = tail $ cScope ctx})
+    cScope %= tail
 
 setLocal :: Name -> Type -> Checker ()
-setLocal k v = do
-    ctx <- get --TODO: lens
-    let (f:fs) = cLocal ctx
-    put $ ctx {cLocal = M.insert k v f : fs} --TODO: dive the stack
+setLocal k v =
+    --TODO: dive the stack
+    cLocal %= \(f:fs) -> M.insert k v f : fs
 
 report err = do
-    src <- gets cSrc
+    src <- use cSrc
     tell $ singleError src err
 
 {-| Lookup for a variable in a memory dictionary. -}
@@ -99,11 +105,11 @@ lookup :: Variable -> Checker (Maybe Type)
 lookup = \case
     --Local or instance variables
     VVar name -> do
-        resources <- asks (pResources . sProject)
-        builtin   <- asks (lookupBuiltin name . sBuiltin)
-        local <- gets cLocal
-        scope <- gets (head . cScope)
-        self <- gets (M.lookup scope . cObjects) --FIXME: report or insert self
+        resources <- pResources <$> view sProject
+        builtin   <- lookupBuiltin name <$> view sBuiltin
+        local <- use cLocal
+        scope <- head <$> use cScope
+        self <- use (cObjects . at scope) --FIXME: report or insert self
         return $ asum
             [ (\(t, _, _) -> t) <$> builtin   -- Check #1: built-in variables/constants
             , TId <$> M.lookup name resources -- Check #2: project resources
@@ -112,7 +118,7 @@ lookup = \case
             ]
     --Referenced variable
     VField var@(VVar name) field -> do
-        object <- gets (M.lookup name . cObjects)
+        object <- use (cObjects . at name)
         case object of 
             Nothing  -> report (EUndefinedVar var) >> return Nothing
             Just mem -> return $ lookupMem field mem
@@ -167,7 +173,7 @@ setVar var ty = case var of
 {-| Lookup for a function signature. -}
 lookupFn :: FunName -> Checker (Maybe Signature)
 lookupFn name = do
-    builtinFn <- asks (bFunctions . sBuiltin)
+    builtinFn <- bFunctions <$> view sBuiltin
     -- TODO: derive and store script types
     return $ M.lookup name builtinFn
 
@@ -235,7 +241,7 @@ derive = \case
                     unless (a `isSubtype` b) $ report $ EWrongArgument fn name a b
                 return res
             Nothing -> do
-                scripts <- asks $ pScripts . sProject
+                scripts <- pScripts <$> view sProject
                 case scripts M.!? fn of
                     Nothing -> report (EUndefinedFunction fn) >> return TAny
                     Just pr -> do
@@ -261,7 +267,7 @@ execAssignModify op var expr = do
     -- TODO: simplify using MonadFail
     case var of
         VVar name -> do
-            builtin <- asks sBuiltin
+            builtin <- view sBuiltin
             case lookupBuiltin name builtin of
                 Just (_, _, True) -> report (EAssignConst var)
                 _ -> return ()
@@ -345,12 +351,12 @@ run = mapM_ exec
 runObject :: (Name, Object) -> Checker ()
 runObject (name, Object {oEvents}) = do
     forM_ (M.toList oEvents) $ \(event, pr) -> do
-        modify $ \ctx -> ctx {cSrc = SObject name event}
+        cSrc .= SObject name event
         trace ("Checking " ++ show event) $ withScope "name" $ run pr
 
 runProject :: Checker ()
 runProject = do
-    objects <- asks $ pObjects . sProject
+    objects <- pObjects <$> view sProject
     forM_ (M.toList objects) runObject
 
 runChecker :: Builtin -> Project -> Report
