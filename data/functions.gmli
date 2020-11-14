@@ -1,3 +1,8 @@
+/*--Type checking [DONE]--*/
+is_string, is_real, is_bool, is_array, is_ptr, is_int32, is_int64, is_vec3, is_vec4,
+    is_matrix, is_undefined, is_nan, is_infinity : any -> bool
+typeof : any -> string
+
 /*--Math [MOSTLY DONE]--*/
 //Arithmetics
 abs, sqr, sqrt, exp, frac : real -> real
@@ -111,13 +116,19 @@ ds_set_precision : real -> void
 ds_list_create : void -> list<void>
 ds_list_destroy : list<any> -> void
 ds_list_size : list<any> -> int
-ds_list_add : list<any>, any -> void //TODO: vararg
+ds_list_add : list<any>, [val] any -> void //TODO: vararg
 ds_list_sort : list<any>, [ascend] bool -> void
 //Map
 ds_map_create : void -> map<void>
-ds_map_add : map<any>, [key] any, [value] any -> void
-ds_map_add_map : map<any>, [key] any, [value] map<any> -> void
+ds_map_exists : map<any>, [key] any -> bool
+ds_map_find_first, ds_map_find_last : map<any> -> any
+ds_map_find_next, ds_map_find_previous : map<any>, [key] any -> any
+ds_map_add : map<any>, [key] any, [val] any -> void //TODO: vararg
+ds_map_add_map : map<any>, [key] any, [val] map<any> -> void
+ds_map_replace : map<any>, [key] any, [val] any -> void
+ds_map_delete : map<any>, [key] any -> void
 ds_map_clear, ds_map_destroy : map<any> -> void
+ds_map_copy : map<any>, map<any> -> void
 //Queue
 ds_queue_create : void -> queue<void>
 ds_queue_enqueue : queue<any>, any -> void //TODO: vararg
@@ -224,7 +235,19 @@ room_instance_add : room, [x] real, [y] real, object -> void
 room_instance_clear : room -> void
 
 /*--Game [DONE]--*/
-game_load, game_save: [filename] string -> void
+game_load, game_save : [filename] string -> void
 game_load_buffer, game_save_buffer : [buffer] int -> void //TODO: buffer
 game_end, game_restart : void -> void
 game_get_speed : [type] int -> real
+
+/*--Display [MOSTLY DONE]--*/
+display_reset : [aa] int, [vsync] bool -> void
+display_get_dpi_x, display_get_dpi_y, display_get_sleep_margin : void -> real
+display_get_width, display_get_height, display_get_gui_width, display_get_gui_height : void -> int
+display_get_orientation : void -> /*TODO: orientation*/ int
+display_get_timing_orientation : void -> /*TODO: timing_method*/ int
+display_mouse_get_x, display_mouse_get_y : void -> real
+display_mouse_set : [x] real, [y] real -> void
+display_set_gui_maximize : [xscale] real, [yscale] real, [xoffset] real, [yoffset] real -> void //TODO: optional
+display_set_gui_size : [width] int, [height] int -> void
+display_set_ui_visibility : [flags] int -> void

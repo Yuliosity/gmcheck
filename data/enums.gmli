@@ -1,4 +1,3 @@
-/*--Enums--*/
 enum mbutton {
     mb_any, mb_none, mb_left, mb_right, mb_middle
 }
@@ -15,4 +14,12 @@ enum ds_type {
 
 enum primitive {
     pr_pointlist, pr_linelist, pr_linestrip, pr_trianglelist, pr_trianglestrip, pr_trianglefan
+}
+
+enum orientation {
+    display_landscape, display_landscape_flipped, display_portrait, display_portrait_flipped
+}
+
+enum timing_method {
+    tm_sleep, tm_countvsyncs
 }

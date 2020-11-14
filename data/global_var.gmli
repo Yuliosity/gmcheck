@@ -19,3 +19,4 @@ view_xport, view_yport, view_hport, view_wport : array<int>
 room : room
 room_height, room_width : int
 room_persistent : bool
+room_speed : int
