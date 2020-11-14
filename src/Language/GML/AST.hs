@@ -84,6 +84,19 @@ data Expr
     | EArray    [Expr]          -- ^ Array literal
     deriving (Eq, Show)
 
+instance Num Expr where
+    fromInteger = ELiteral . LNumeric . fromInteger
+    (+) = eBinary Add
+    (-) = eBinary Sub
+    (*) = eBinary Mul
+    negate = EUnary UNeg
+    abs x = EFuncall "abs" [x]
+    signum x = EFuncall "sign" [x]
+
+instance Fractional Expr where
+    fromRational = ELiteral . LNumeric . fromRational
+    (/) = eBinary Div
+
 class Binary a where
     toBin :: a -> BinOp
 

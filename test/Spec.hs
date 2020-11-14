@@ -45,17 +45,17 @@ exprs = describe "expressions parser" $ do
         parse' expr "foo" `shouldParse` foo
         parse' expr "foo[42]" `shouldParse` EVariable foo_42
     it "can parse binary operators" $ do
-        parse' expr "42+foo" `shouldParse` eBinary Add lit42 foo
+        parse' expr "42+foo" `shouldParse` (42 + foo)
     it "can parse prefix and postfix operators" $ do
         parse' expr "foo++" `shouldParse` EUnary UPostInc foo
-        parse' expr "foo-- - --foo" `shouldParse` eBinary Sub (EUnary UPostDec foo) (EUnary UPreDec foo)
+        parse' expr "foo-- - --foo" `shouldParse` (EUnary UPostDec foo - EUnary UPreDec foo)
     it "can parse function calls" $ do
         parse' expr "rand()" `shouldParse` EFuncall "rand" []
         parse' expr "sin(3.14)" `shouldParse` sin_pi
         parse' expr "cat(foo, bar)" `shouldParse` EFuncall "cat" [foo, bar]
     it "can parse array literals" $ do
         parse' expr "[foo, bar]" `shouldParse` EArray [foo, bar]
-        parse' expr "test([foo, 42 + 42])" `shouldParse` EFuncall "test" [EArray [foo, eBinary Add lit42 lit42]]
+        parse' expr "test([foo, 42 + 42])" `shouldParse` EFuncall "test" [EArray [foo, 42 + 42]]
 
 stmts = describe "statements parser" $ do
     it "can parse variable declarations" $ do
