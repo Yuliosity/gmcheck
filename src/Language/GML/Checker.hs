@@ -39,9 +39,6 @@ type Stack = [Memory]
 lookupLocal :: Name -> Stack -> Maybe Type
 lookupLocal name frames = asum $ map (M.!? name) frames
 
-setLocal :: Name -> Type -> Stack -> Stack
-setLocal k v (f:fs) = M.insert k v f : fs --TODO: dive the stack
-
 {-| Project settings. -}
 data Settings = Settings
     { sBuiltin :: !Builtin
@@ -82,6 +79,12 @@ withScope name action = do
     modify (\ctx -> ctx {cScope = name : cScope ctx})
     withFrame emptyMem action
     modify (\ctx -> ctx {cScope = tail $ cScope ctx})
+
+setLocal :: Name -> Type -> Checker ()
+setLocal k v = do
+    ctx <- get --TODO: lens
+    let (f:fs) = cLocal ctx
+    put $ ctx {cLocal = M.insert k v f : fs} --TODO: dive the stack
 
 report err = do
     src <- gets cSrc
@@ -155,12 +158,11 @@ lookup = \case
                 return Nothing
 
 setVar :: Variable -> Type -> Checker ()
-setVar var ty = do
-    ctx <- get
-    case var of
-        VVar var -> put $ ctx { cLocal = setLocal var ty $ cLocal ctx } -- TODO: lens
-        -- VField name var 
-        _ -> return () --error "changing non-local variables is not implemented yet"
+setVar var ty = case var of
+    VVar name -> setLocal name ty
+    VContainer  con (VVar name) _ -> setLocal name $ TContainer  con ty
+    VContainer2 con (VVar name) _ -> setLocal name $ TContainer2 con ty
+    _ -> return () --error "changing non-local variables is not implemented yet"
 
 {-| Lookup for a function signature. -}
 lookupFn :: FunName -> Checker (Maybe Signature)
@@ -271,10 +273,10 @@ execAssignModify op var expr = do
         -- Assignment: "a = 5"
         Nothing -> do
             case varT of
-                --It is a freshly declared instance variable
-                Nothing -> return ()
-                Just ty -> when (ty /= exprT) $
+                Just ty | ty /= TVoid && ty /= exprT ->
                     report $ WChangeType var ty exprT
+                --It is a freshly declared instance variable
+                _ -> return ()
             setVar var exprT
         -- Modification: "a += 5" etc.
         Just op -> do
@@ -344,7 +346,7 @@ runObject :: (Name, Object) -> Checker ()
 runObject (name, Object {oEvents}) = do
     forM_ (M.toList oEvents) $ \(event, pr) -> do
         modify $ \ctx -> ctx {cSrc = SObject name event}
-        trace ("Checking " ++ show event) $ run pr
+        trace ("Checking " ++ show event) $ withScope "name" $ run pr
 
 runProject :: Checker ()
 runProject = do
