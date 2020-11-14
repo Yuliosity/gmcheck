@@ -36,6 +36,9 @@ vars = describe "variables parser" $ do
     it "can parse chained stuff for future" $ do
         parse' variable "baz.bar.foo" `shouldParse` ("baz" `VField` "bar" `VField` "foo")
         parse' variable "foo[42][42][42]" `shouldParse` ("foo" `VArray` lit42 `VArray` lit42 `VArray` lit42)
+    it "must fail on keywords" $ do
+        parse' variable `shouldFailOn` "default"
+        parse' variable `shouldFailOn` "case"
 
 exprs = describe "expressions parser" $ do
     it "can parse a single literal" $ do
@@ -56,6 +59,9 @@ exprs = describe "expressions parser" $ do
     it "can parse array literals" $ do
         parse' expr "[foo, bar]" `shouldParse` EArray [foo, bar]
         parse' expr "test([foo, 42 + 42])" `shouldParse` EFuncall "test" [EArray [foo, 42 + 42]]
+    it "must fail on keywords" $ do
+        parse' variable `shouldFailOn` "do"
+        parse' variable `shouldFailOn` "1 + default"
 
 stmts = describe "statements parser" $ do
     it "can parse variable declarations" $ do
@@ -86,6 +92,11 @@ stmts = describe "statements parser" $ do
             SFor (SAssign "foo" lit42) (eBinary Greater foo (ELiteral $ LNumeric 0)) (SExpression $ EUnary UPostDec foo) (SExpression $ EUnary UPreInc bar) 
         parse' stmt "for(var foo=42; foo < bar; foo+=42) write(\"string\")" `shouldParse`
             SFor (SDeclare [("foo", Just lit42)]) (eBinary Less foo bar) (SModify Add "foo" lit42) (SExpression write_string)
+    it "can parse switch block" $ do
+        parse' stmt "switch(foo) {case 0: case 1: foo += 42 break}" `shouldParse`
+            SSwitch foo [([0, 1], [SModify Add "foo" lit42, SBreak])]
+        parse' stmt "switch(foo) {case 1 + 1: foo += 42 break default: write(\"string\")}" `shouldParse`
+            SSwitch foo [([1 + 1], [SModify Add "foo" lit42, SBreak]), ([], [SExpression write_string])]
 
 programs = describe "complex script parser" $ do
     it "can parse multi-lines" $ do

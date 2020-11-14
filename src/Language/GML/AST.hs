@@ -129,7 +129,7 @@ data Stmt
     | SDoUntil Stmt Expr       -- ^ Loop with a post-condition
     | SFor    Stmt Expr Stmt Stmt    -- ^ For loop. TODO: limit the first header stmt to assign or declare, and the second one to assign
     | SIf     Expr Stmt (Maybe Stmt) -- ^ Conditional. If the `else` branch is missing, the second statement is [Nothing].
-    | SSwitch Expr [([Expr], Stmt)]  -- ^ Switch-case
+    | SSwitch Expr [([Expr], [Stmt])]  -- ^ Switch-case. For the default branch, the case list is empty.
     -- Control flow redirection
     | SBreak       -- ^ Break from a loop or switch-case
     | SContinue    -- ^ Continue to the next loop iteration

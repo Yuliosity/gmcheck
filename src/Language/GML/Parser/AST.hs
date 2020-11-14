@@ -7,7 +7,9 @@ module Language.GML.Parser.AST
 import Text.Megaparsec
 import Text.Megaparsec.Char
 import qualified Text.Megaparsec.Char.Lexer as L
+import Control.Monad (guard)
 import Control.Monad.Combinators.Expr
+import Data.Functor (($>))
 import Data.List (foldl')
 import Data.Text hiding (foldl', empty, map)
 
@@ -17,8 +19,18 @@ import Language.GML.Parser.Common
 
 -- * Basic tokens
 
-varName = ident <?> "variable"
-funName = ident <?> "function"
+reserved =
+    [ "begin", "break", "case", "continue", "default", "do", "end", "for"
+    , "repeat", "switch", "until", "while", "with"
+    ]
+
+validIdent = try $ do
+    i <- ident
+    guard (i `notElem` reserved)
+    return i
+
+varName = validIdent <?> "variable"
+funName = validIdent <?> "function"
 
 -- * Values
 
@@ -27,10 +39,13 @@ lNumeric :: Parser Literal
 lNumeric = LNumeric <$>
     (try (lexeme (L.signed empty L.float))
     <|> fromIntegral <$> lexeme (L.signed empty L.decimal))
+    <?> "number"
 
 -- |String literal.
 lString :: Parser Literal
-lString = LString <$> (char '\"' *> manyTill L.charLiteral (char '\"') <* spaces)
+lString = LString <$>
+    (char '\"' *> manyTill L.charLiteral (char '\"') <* spaces)
+    <?> "string"
 
 literal = lNumeric <|> lString
 
@@ -128,11 +143,14 @@ eTerm = choice
 expr :: Parser Expr
 expr = makeExprParser eTerm opTable <* spaces <?> "expression"
 
+-- * Statements
+
+sDeclare = SDeclare <$> (keyword "var" *> ((,) <$> varName <*> optional (operator "=" *> expr)) `sepBy1` comma)
+
 sAssign = do
     var <- variable
-    op <- choice (map (\(c, s) -> c <$ symbol s) ops) <?> "assignment" 
-    e <- expr
-    return $ op var e
+    op <- choice (map (\(c, s) -> c <$ symbol s) ops) <?> "assignment operator" 
+    op var <$> expr
     where
         ops =
             [ (SAssign, "="), (SAssign, ":=")
@@ -141,22 +159,38 @@ sAssign = do
             , (SModify BitOr, "|="), (SModify BitAnd, "&="), (SModify BitXor, "^=")
             ]
 
--- * Statements
+sSwitch = do
+    keyword "switch"
+    cond <- expr
+    branches <- braces $ some $ do
+        cases <- some (keyword "case" *> expr <* colon)
+            <|> (keyword "default" *> colon $> [])
+        body <- many stmt
+        optional semicolon
+        return (cases, body)
+    return $ SSwitch cond branches 
+
+forInit :: Parser Stmt
+forInit = sDeclare <|> sAssign
+
+forStep :: Parser Stmt
+forStep = try sAssign <|> SExpression <$> expr
 
 -- | A single statement, optionally ended with a semicolon.
 stmt :: Parser Stmt
 stmt = (choice
     [ SBlock        <$> ((symbol "{" <|> keyword "begin") *> manyTill stmt (symbol "}" <|> keyword "end"))
     , SBreak <$ keyword "break", SContinue <$ keyword "continue", SExit <$ keyword "exit"
-    , SDeclare      <$> (keyword "var" *> ((,) <$> varName <*> optional (operator "=" *> expr)) `sepBy1` comma)
+    , sDeclare
     , SWith         <$> (keyword "with" *> parens expr) <*> stmt
     , SRepeat       <$> (keyword "repeat" *> expr) <*> stmt
     , SWhile        <$> (keyword "while"  *> expr) <*> stmt
     , SDoUntil      <$> (keyword "do" *> stmt) <*> (keyword "until" *> expr)
-    , SFor          <$> (keyword "for" *> symbol "(" *> stmt) <*> (expr <* semicolon) <*> (stmt <* symbol ")") <*> stmt
+    , SFor          <$> (keyword "for" *> symbol "(" *> forInit <* semicolon) <*> (expr <* semicolon) <*> (forStep <* symbol ")") <*> stmt
     , SIf           <$> (keyword "if" *> expr) <*> stmt <*> optional (keyword "else" *> stmt)
     , SReturn       <$> (keyword "return" *> expr)
-    , try $ sAssign
+    , sSwitch
+    , try sAssign
     , SExpression   <$> expr
     ] <?> "statement")
     <* optional semicolon

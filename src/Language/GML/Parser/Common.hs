@@ -1,12 +1,13 @@
 module Language.GML.Parser.Common
     ( Parser, Error, Result
     , Name
-    , spaces, comma, semicolon
+    , spaces, comma, colon, semicolon
     , parens, braces, brackets
     , lexeme, symbol, keyword, operator, ident
     , parseMany
     ) where
 
+import Data.Functor (($>))
 import Data.Text (Text)
 import Data.Void (Void)
 
@@ -41,9 +42,10 @@ parens = between (symbol "(") (symbol ")")
 braces = between (symbol "{") (symbol "}")
 brackets = between (symbol "[") (symbol "]")
 
-comma, semicolon :: Parser ()
-comma     = symbol "," *> return ()
-semicolon = symbol ";" *> return ()
+comma, colon, semicolon :: Parser ()
+comma     = symbol "," $> ()
+colon     = symbol ":" $> ()
+semicolon = symbol ";" $> ()
 
 {-| Identifier -}
 ident :: Parser Name
