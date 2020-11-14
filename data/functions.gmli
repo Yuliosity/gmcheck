@@ -62,9 +62,42 @@ string_count : [substr] string, string -> int
 string_replace, string_replace_all : string, [substr] string, [newstr] string -> string
 string_lower, string_upper, string_letters, string_digits : string -> string
 string_repeat : string, [count] int -> string
-//Drawing
-string_width, string_height : string -> int
-string_width_ext, string_height_ext : string, [sep] int, [max] int -> int
+
+/*--Containers--*/
+ds_exists : [id] int, [type] int -> bool //TODO: dstype
+ds_set_precision : real -> void
+//Array [DONE]
+array_create : [size] int, [value] any -> array<void> //TODO: optional arg
+array_copy : [dst] array<any>, [dst_index] int, [src] array<any>, [src_index] int, [count] int -> void
+array_equals : array<any>, array<any> -> bool
+array_get : array<any>, [index] int -> any
+array_get : array<any>, [index] int, [val] any -> void
+array_length_1d : array<any> -> int
+array_length_2d, array_height_2d : array2<any> -> int
+//List
+ds_list_create : void -> list<void>
+ds_list_destroy : list<any> -> void
+ds_list_size : list<any> -> int
+ds_list_add : list<any>, [val] any -> void //TODO: vararg
+ds_list_sort : list<any>, [ascend] bool -> void
+//Map [DONE]
+ds_map_create : void -> map<void>
+ds_map_exists : map<any>, [key] any -> bool
+ds_map_find_first, ds_map_find_last : map<any> -> any
+ds_map_find_next, ds_map_find_previous : map<any>, [key] any -> any
+ds_map_add : map<any>, [key] any, [val] any -> void //TODO: vararg
+ds_map_add_map : map<any>, [key] any, [val] map<any> -> void
+ds_map_replace : map<any>, [key] any, [val] any -> void
+ds_map_delete : map<any>, [key] any -> void
+ds_map_clear, ds_map_destroy : map<any> -> void
+ds_map_copy : map<any>, map<any> -> void
+//Queue
+ds_queue_create : void -> queue<void>
+ds_queue_enqueue : queue<any>, any -> void //TODO: vararg
+ds_queue_clear, ds_queue_destroy : queue<any> -> void
+ds_queue_head, ds_queue_tail, ds_queue_dequeue : queue<any> -> any
+ds_queue_empty : queue<any> -> bool
+ds_queue_size : queue<any> -> int
 
 /*--Draw--*/
 //Sprites [DONE]
@@ -94,6 +127,8 @@ draw_path : path, [x] real, [y] real, [absolute] bool -> void
 draw_healthbar : [x1] real, [y1] real, [x2] real, [y2] real, [amount] real, [backcol] color, [mincol] color, [maxcol] color, [direction] int, [showback] bool, [showborder] bool -> void
 //TODO: colored versions
 //Text
+string_width, string_height : string -> int
+string_width_ext, string_height_ext : string, [sep] int, [max] int -> int
 draw_text : [x] real, [y] real, string -> void
 draw_highscore : [x1] real, [y1] real, [x2] real, [y2] real -> void
 //Colors [DONE]
@@ -108,34 +143,6 @@ make_color_hsv : [h] real, [s] real, [v] real -> color
 merge_color : color, color, alpha -> color
 color_get_red, color_get_green, color_get_blue : color -> real
 color_get_hue, color_get_saturation, color_get_value : color -> real
-
-/*--Data structures--*/
-ds_exists : [id] int, [type] int -> bool //TODO: dstype
-ds_set_precision : real -> void
-//List
-ds_list_create : void -> list<void>
-ds_list_destroy : list<any> -> void
-ds_list_size : list<any> -> int
-ds_list_add : list<any>, [val] any -> void //TODO: vararg
-ds_list_sort : list<any>, [ascend] bool -> void
-//Map
-ds_map_create : void -> map<void>
-ds_map_exists : map<any>, [key] any -> bool
-ds_map_find_first, ds_map_find_last : map<any> -> any
-ds_map_find_next, ds_map_find_previous : map<any>, [key] any -> any
-ds_map_add : map<any>, [key] any, [val] any -> void //TODO: vararg
-ds_map_add_map : map<any>, [key] any, [val] map<any> -> void
-ds_map_replace : map<any>, [key] any, [val] any -> void
-ds_map_delete : map<any>, [key] any -> void
-ds_map_clear, ds_map_destroy : map<any> -> void
-ds_map_copy : map<any>, map<any> -> void
-//Queue
-ds_queue_create : void -> queue<void>
-ds_queue_enqueue : queue<any>, any -> void //TODO: vararg
-ds_queue_clear, ds_queue_destroy : queue<any> -> void
-ds_queue_head, ds_queue_tail, ds_queue_dequeue : queue<any> -> any
-ds_queue_empty : queue<any> -> bool
-ds_queue_size : queue<any> -> int
 
 /*--Mouse [DONE]--*/
 mouse_check_button, mouse_check_button_pressed, mouse_check_button_released : mbutton -> bool
@@ -240,7 +247,7 @@ game_load_buffer, game_save_buffer : [buffer] int -> void //TODO: buffer
 game_end, game_restart : void -> void
 game_get_speed : [type] int -> real
 
-/*--Display [MOSTLY DONE]--*/
+/*--Display [DONE]--*/
 display_reset : [aa] int, [vsync] bool -> void
 display_get_dpi_x, display_get_dpi_y, display_get_sleep_margin : void -> real
 display_get_width, display_get_height, display_get_gui_width, display_get_gui_height : void -> int
@@ -251,3 +258,22 @@ display_mouse_set : [x] real, [y] real -> void
 display_set_gui_maximize : [xscale] real, [yscale] real, [xoffset] real, [yoffset] real -> void //TODO: optional
 display_set_gui_size : [width] int, [height] int -> void
 display_set_ui_visibility : [flags] int -> void
+
+/*--Window [DONE]--*/
+window_center : void -> void
+window_device : void -> ptr //TODO: deprecated
+window_get_caption : void -> string
+window_set_caption : string -> void 
+window_get_color : void -> color //returns N/A in the manual
+window_set_color : color -> void
+window_get_cursor : void -> int //TODO: enum
+window_set_cursor : int -> void //TODO: enum
+window_get_fullscreen : void -> bool
+window_set_fullscreen : bool -> void
+window_get_width, window_get_height, window_get_x, window_get_y : void -> int
+window_get_visible_rects : [x1] int, [y1] int, [x2] int, [y2] int -> array<int>
+window_setposition : [x] int, [y] int -> void
+window_set_size : [w] int, [h] int -> void
+window_set_rectangle : [x] int, [y] int, [w] int, [h] int -> void
+window_view_mouse_get_x, window_view_mouse_get_y : int -> int //TODO: view
+window_views_mouse_get_x, window_views_mouse_get_y : void -> int

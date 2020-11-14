@@ -1,6 +1,6 @@
 //Input
 mouse_lastbutton : mbutton
-keyboard_key : keycode
+keyboard_key, keyboard_lastkey : keycode
 keyboard_lastchar : char
 keyboard_string : string
 cursor_sprite : sprite

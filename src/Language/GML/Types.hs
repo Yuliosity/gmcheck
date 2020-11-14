@@ -52,6 +52,7 @@ data Type
     | TVoid -- ^ GML 'undefined'
     | TReal -- ^ GML number, a primitive type
     | TString -- ^ GML string, a primitive type
+    | TPtr    -- ^ GML pointer, a primitive type 
     -- Derived types
     | TColor -- ^ RGB color. Represented as just a number in GML.
     | TEnum String -- ^ Enumeration with a label

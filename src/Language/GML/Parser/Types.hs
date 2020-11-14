@@ -37,6 +37,7 @@ nametype = do
             [ ("void",    TVoid)
             , ("real",    TReal)
             , ("string",  TString)
+            , ("ptr",     TPtr)
             -- Derived types
             , ("any",     TAny)
             , ("int",     TInt)
