@@ -31,6 +31,17 @@ type Memory = M.Map Name Type
 emptyMem :: Memory
 emptyMem = M.empty
 
+fromList :: [(Name, Type)] -> Memory
+fromList = M.fromList
+
+type Stack = [Memory]
+
+lookupLocal :: Name -> Stack -> Maybe Type
+lookupLocal name frames = asum $ map (M.!? name) frames
+
+setLocal :: Name -> Type -> Stack -> Stack
+setLocal k v (f:fs) = M.insert k v f : fs --TODO: dive the stack
+
 {-| Project settings. -}
 data Settings = Settings
     { sBuiltin :: !Builtin
@@ -39,8 +50,9 @@ data Settings = Settings
 
 {-| Checking context. -}
 data Context = Context
-    { cSrc     :: !Source
-    , cLocal   :: !Memory -- TODO: stack
+    { cSrc     :: !Source  -- ^ Current source name
+    , cScope   :: ![Name]  -- ^ Current object scope
+    , cLocal   :: !Stack   -- ^ Stack of local variable frames
     --, eGlobals :: Memory -- TODO: globals
     , cObjects :: !(M.Map Name Memory)
     }
@@ -48,7 +60,8 @@ data Context = Context
 emptyContext :: Context
 emptyContext = Context
     { cSrc     = SScript ""
-    , cLocal   = emptyMem
+    , cScope   = []
+    , cLocal   = [emptyMem]
     , cObjects = M.singleton "global" emptyMem
     }
 
@@ -58,77 +71,94 @@ emptyContext = Context
     State: all derived data about the codebase at the moment. -}
 type Checker = RWS Settings Report Context
 
+withFrame :: Memory -> Checker () -> Checker ()
+withFrame mem action = do
+    modify (\ctx -> ctx {cLocal = mem : cLocal ctx})
+    action
+    modify (\ctx -> ctx {cLocal = tail $ cLocal ctx})
+
+withScope :: Name -> Checker () -> Checker ()
+withScope name action = do
+    modify (\ctx -> ctx {cScope = name : cScope ctx})
+    withFrame emptyMem action
+    modify (\ctx -> ctx {cScope = tail $ cScope ctx})
+
 report err = do
     src <- gets cSrc
     tell $ singleError src err
 
 {-| Lookup for a variable in a memory dictionary. -}
-lookupMem :: Variable -> Memory -> Checker (Maybe Type)
-lookupMem var mem = case var of
+lookupMem :: Name -> Memory -> Maybe Type
+lookupMem = M.lookup
+
+{-| Lookup for a probably uninitialized variable type. -}
+lookup :: Variable -> Checker (Maybe Type)
+lookup = \case
     --Local or instance variables
     VVar name -> do
         resources <- asks (pResources . sProject)
         builtin   <- asks (lookupBuiltin name . sBuiltin)
+        local <- gets cLocal
+        scope <- gets (head . cScope)
+        self <- gets (M.lookup scope . cObjects) --FIXME: report or insert self
         return $ asum
             [ (\(t, _, _) -> t) <$> builtin   -- Check #1: built-in variables/constants
             , TId <$> M.lookup name resources -- Check #2: project resources
-            , M.lookup name mem               -- Check #3: previously derived variables
+            , lookupLocal name local          -- Check #3: local variables
+            , self >>= lookupMem name
             ]
+    --Referenced variable
+    VField var@(VVar name) field -> do
+        object <- gets (M.lookup name . cObjects)
+        case object of 
+            Nothing  -> report (EUndefinedVar var) >> return Nothing
+            Just mem -> return $ lookupMem field mem
 
+    VField _var _name -> return Nothing--error "Chaining is not yet supported"
+
+    --Indexed cell
     VContainer con var expr -> do
+        --1. Check the index
         index <- derive expr
-        when (not $ index `isSubtype` indexType con) $ report $ EBadIndex con index
-        --TODO: init unitialized arrays
-        ty <- lookupMem var mem
-        case ty of
-            --TODO: init unitialized arrays
-            Nothing -> return Nothing
+        unless (index `isSubtype` indexType con) $ report $ EBadIndex con index
+        --2. Check the container itself
+        mty <- lookup var
+        case mty of
+            --2.1. Uninitialized array
+            Nothing -> do
+                --TODO: init
+                return $ Just TVoid
+            --2.2. All is OK
             Just (TContainer rcon res) | con == rcon -> return $ Just res
+            --2.3. Wrong container type.
             Just res -> do
-                report $ EWrongVarType var res (TContainer con TVoid) --FIXME: actual expected array type
+                report $ EWrongVarType var res (TContainer con TAny) --FIXME: actual expected array type
                 return Nothing
 
+    --2D indexed cell
     VContainer2 con var (e1, e2) -> do
         i1 <- derive e1
         when (i1 /= TInt) $ report $ EBadIndex2 con i1
         i2 <- derive e2
         when (i2 /= TInt) $ report $ EBadIndex2 con i2
-        ty <- lookupMem var mem
-        case ty of
-            --TODO: init unitialized arrays
-            Nothing -> return Nothing
+        mty <- lookup var
+        case mty of
+            --2.1. Uninitialized array
+            Nothing -> do
+                --TODO: init
+                return $ Just TVoid
+            --2.2. All is OK
             Just (TContainer2 rcon res) | con == rcon -> return $ Just res
+            --2.3. Wrong container type.
             Just res -> do
-                report $ EWrongVarType var res (TContainer2 con TVoid) --FIXME: actual expected array type
+                report $ EWrongVarType var res (TContainer2 con TAny) --FIXME: actual expected array type
                 return Nothing
-
-    _ -> error $ "Shouldn't get there: " ++ show var
-
-{-| Lookup for a probably uninitialized variable type. -}
-lookupMaybe :: Variable -> Checker (Maybe Type)
-lookupMaybe = \case
-    VField var@(VVar name) field -> do
-        objects <- gets cObjects
-        case M.lookup name objects of 
-            Nothing  -> report (EUndefinedVar var) >> return Nothing
-            Just mem -> lookupMem (VVar field) mem
-    VField _var _name -> return Nothing--error "Chaining is not yet supported"
-
-    var -> gets cLocal >>= lookupMem var
-
-{-| Lookup for a variable type and report an error if it's undefined. -}
-lookup :: Variable -> Checker Type
-lookup var = do
-    ty <- lookupMaybe var
-    case ty of
-        Nothing -> report (EUndefinedVar var) >> return TVoid
-        Just ty -> return ty
 
 setVar :: Variable -> Type -> Checker ()
 setVar var ty = do
     ctx <- get
     case var of
-        VVar var -> put $ ctx { cLocal = M.insert var ty (cLocal ctx) } -- TODO: lens
+        VVar var -> put $ ctx { cLocal = setLocal var ty $ cLocal ctx } -- TODO: lens
         -- VField name var 
         _ -> return () --error "changing non-local variables is not implemented yet"
 
@@ -159,7 +189,11 @@ derive = \case
     ELiteral (LNumeric _) -> return TReal
     ELiteral (LString  _) -> return TString
 
-    EVariable var -> lookup var
+    EVariable var -> do
+        mty <- lookup var
+        case mty of
+            Nothing -> report (EUndefinedVar var) >> return TVoid
+            Just ty -> return ty
 
     EUnary op expr -> do
         exprT <- derive expr
@@ -188,17 +222,26 @@ derive = \case
             return $ e1T <> e2T
 
     EFuncall fn args -> do
+        argsT <- mapM derive args
         sig <- lookupFn fn
         case sig of
-            Nothing -> report (EUndefinedFunction fn) >> return TAny
             Just (needed :-> res) -> do
-                argsT <- mapM derive args
+    
                 let nn = length needed; na = length argsT
                 when (nn /= na) $ report $ EWrongArgNum fn nn na
-                --FIXME: check the arguments number
                 forM_ (zip needed argsT) $ \((name, a), b) ->
-                    when (a /= b) $ report $ EWrongArgument fn name a b
+                    unless (a `isSubtype` b) $ report $ EWrongArgument fn name a b
                 return res
+            Nothing -> do
+                scripts <- asks $ pScripts . sProject
+                case scripts M.!? fn of
+                    Nothing -> report (EUndefinedFunction fn) >> return TAny
+                    Just pr -> do
+                        --Push the stack frame with arguments
+                        let frame = zipWith (\i t -> ("argument" ++ show i, t)) [0..] argsT
+                        withFrame (fromList frame) $ run pr
+                        return TAny --FIXME: return type
+                        --Pop the stack frame
 
 {-| Deriving the script signature. -}
 {-
@@ -209,7 +252,7 @@ scriptDerive = go where
 
 execAssignModify :: Maybe NumOp -> Variable -> Expr -> Checker ()
 execAssignModify op var expr = do
-    varT <- lookupMaybe var
+    varT <- lookup var
     exprT <- derive expr
 
     -- Check if this is not the constant
@@ -268,9 +311,7 @@ exec = \case
     SIf cond true false -> do
         checkCond cond
         exec true
-        case false of
-            Nothing -> return ()
-            Just stmt -> exec stmt
+        mapM_ exec false
 
     SWhile cond stmt -> do
         checkCond cond
