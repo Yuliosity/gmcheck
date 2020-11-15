@@ -4,6 +4,7 @@ keyboard_key, keyboard_lastkey : keycode
 keyboard_lastchar : char
 keyboard_string : string
 cursor_sprite : sprite
+event_data : map<real>
 //Backgrounds [DONE]
 background_color, background_showcolor : color
 background_visible : array<bool>

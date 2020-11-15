@@ -241,7 +241,7 @@ derive = \case
         argsT <- mapM derive args
         sig <- lookupFn fn
         case sig of
-            Just (needed :-> res) -> do
+            Just (Signature needed _ res) -> do --FIXME: handle optional arguments
                 let nn = length needed; na = length argsT
                 when (nn /= na) $ report $ EWrongArgNum fn nn na
                 forM_ (zip needed argsT) $ \((name, a), b) ->
@@ -357,9 +357,11 @@ run = mapM_ exec
 
 runObject :: (Name, Object) -> Checker ()
 runObject (name, Object {oEvents}) = do
+    traceM ("Checking " ++ name)
     forM_ (M.toList oEvents) $ \(event, pr) -> do
         cSrc .= SObject name event
-        trace ("Checking " ++ show event) $ withScope "name" $ run pr
+        traceM ("-- " ++ show event)
+        withScope "name" $ run pr
 
 runProject :: Checker ()
 runProject = do

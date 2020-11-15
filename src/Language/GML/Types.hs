@@ -150,13 +150,29 @@ pattern TGrid t = TContainer2 SGrid t
 {-| Possibly named function argument. -}
 type Argument = (Name, Type)
 
-{-| Function or script signature. -}
-data Signature =
-    [Argument] -- ^ Argument types
-    :-> 
-    Type -- ^ Return type
-    --TODO: variadic and optional arguments
+{-| Optional or variadic arguments (cannot be mixed). -}
+data MoreArgs
+    = OptArgs [Argument] -- ^ Optional arguments
+    | VarArgs  Argument  -- ^ Variadic arguments
     deriving (Eq, Show)
+
+{-| Function or script signature. -}
+data Signature = Signature
+    [Argument]       -- ^ Mandatory arguments
+    MoreArgs         -- ^ Optional or variadic arguments
+    Type             -- ^ Return type
+    deriving (Eq, Show)
+
+allArgs :: Signature -> [Argument]
+allArgs (Signature args more _) = take maxGmlArgs $ args ++ case more of
+    OptArgs opt -> opt
+    VarArgs (name, ty) -> map (\i -> (name ++ show i, ty)) [0 ..]
+    where
+        maxGmlArgs = 16
+
+minArgs, maxArgs :: Signature -> Int
+minArgs (Signature args _ _) = length args
+maxArgs sig = length $ allArgs sig
 
 {-| Enumeration of named constants. -}
 data Enum = Enum !String ![(String, Int)]

@@ -97,18 +97,20 @@ arg :: Parser Argument
 arg = do
     name <- optional $ brackets ident
     (tyName, ty) <- nametype
-    return $ (fromMaybe tyName name, ty)
+    return (fromMaybe tyName name, ty)
 
 sigs :: Parser ([Name], Signature)
 sigs = do
     names <- names <* symbol ":"
-    rawArgs <- sepBy1 arg (symbol ",")
+    rawArgs <- arg `sepBy` symbol ","
     let args = case rawArgs of
                     [(_, TVoid)] -> []
                     xs -> xs
+    moreArgs <- (VarArgs <$> (symbol "*" *> arg))
+            <|> (OptArgs <$> option [] (symbol "?" *> arg `sepBy1` symbol ","))
     symbol "->"
     (_, ret) <- nametype
-    return (names, args :-> ret)
+    return (names, Signature args moreArgs ret)
 
 -- | Dictionary for holding function signatures.
 type FunDict = M.Map Name Signature
