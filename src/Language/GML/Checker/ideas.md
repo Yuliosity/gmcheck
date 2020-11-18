@@ -1,4 +1,6 @@
-# WARN 
+# Checker ideas
+
+## WARN 
 - N arguments in a script call, but it uses only K<N
 - Using a deprecated function/variable
 - Unspecified arguments evaluation order
@@ -8,7 +10,7 @@
 - Resource prefix
 - Condition is always true/false
 
-# ERROR
+## ERROR
 - N arguments in a script call, but it uses K>N
 - Call unimplemented event
 - Not all branches return a value
