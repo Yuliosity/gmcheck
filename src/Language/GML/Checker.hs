@@ -239,13 +239,17 @@ derive = \case
 
     EFuncall fn args -> do
         argsT <- mapM derive args
-        sig <- lookupFn fn
-        case sig of
-            Just (Signature needed _ res) -> do --FIXME: handle optional arguments
-                let nn = length needed; na = length argsT
-                when (nn /= na) $ report $ EWrongArgNum fn nn na
-                forM_ (zip needed argsT) $ \((name, a), b) ->
-                    unless (b `isSubtype` a) $ report $ EWrongArgument fn name a b
+        msig <- lookupFn fn
+        case msig of
+            Just sig@(Signature _ _ res) -> do --FIXME: handle optional arguments
+                let minn = minArgs sig; maxn = maxArgs sig; na = length argsT
+                if minn == maxn then
+                    when (na /= minn) $ report $ EWrongArgNum fn EQ minn na
+                else do
+                    when (na <  minn) $ report $ EWrongArgNum fn GT minn na
+                    when (na >  maxn) $ report $ EWrongArgNum fn LT maxn na
+                forM_ (zip argsT $ allArgs sig) $ \(a, (name, b)) ->
+                    unless (a `isSubtype` b) $ report $ EWrongArgument fn name b a
                 return res
             Nothing -> do
                 scripts <- pScripts <$> view sProject

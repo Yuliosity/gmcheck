@@ -40,7 +40,7 @@ data Error
     | EBadIndex  Container Type
     | EBadIndex2 Container2 Type
     -- | Wrong argument count
-    | EWrongArgNum FunName Int Int
+    | EWrongArgNum FunName Ordering Int Int
     -- | Wrong type of function argument
     | EWrongArgument FunName Name Type Type
     -- | Data structure is not destroyed
@@ -67,9 +67,3 @@ singleError src err = Report $ M.singleton src [err]
 
 addError :: Source -> Error -> Report -> Report
 addError src err (Report map) = Report $ M.insertWith (++) src [err] map
-
-{-
-
-
-
--}

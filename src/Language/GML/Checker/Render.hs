@@ -94,6 +94,7 @@ instance ToMarkup Resource where
 
 instance ToMarkup Type where
     toMarkup = \case
+        TAny    -> "any"
         TUnknown opt -> do "{"; markupMany opt; "}"
         TVoid   -> "void"
         TReal   -> "real"
@@ -120,7 +121,11 @@ instance ToMarkup Error where
         ENoResult fun -> do "Function "; m fun; " doesn't return anything"
         EWrongExprType descr need ty -> do "Type of "; m descr; " should be "; m need; ", but seems to be "; m ty
         EWrongVarType  var   need ty -> do "Type of "; m var;   " should be "; m need; ", but seems to be "; m ty
-        EWrongArgNum fun n1 n2 -> do "Function "; m fun; " is expected to have "; m n1; " arguments, but got "; m n2
+        EWrongArgNum fun ord n1 n2 -> do "Function "; m fun; " is expected to have "; bound; m n1; " argument(s), but got "; m n2 where
+            bound = case ord of
+                EQ -> ""
+                LT -> "no more than "
+                GT -> "at least "
         EBadUnary  op ty    -> do "Operator "; m op; " cannot be applied to "; m ty
         EBadBinary op t1 t2 -> do "Operator "; m op; " cannot be applied to "; m t1; " and "; m t2
         EBadModify op t1 t2 -> do "Operator "; m op; " cannot be applied to "; m t1; " and "; m t2

@@ -76,7 +76,7 @@ array_length_1d : array<any> -> int
 array_length_2d, array_height_2d : array2<any> -> int
 //List
 ds_list_create : void -> list<void>
-ds_list_destroy : list<any> -> void
+ds_list_clear, ds_list_destroy : list<any> -> void
 ds_list_size : list<any> -> int
 ds_list_add : list<any> * [val] any -> void
 ds_list_sort : list<any>, [ascend] bool -> void
