@@ -41,6 +41,7 @@ data Object = Object
 
 data Project = Project
     { pResources :: M.Map String Resource
+    --, pGuids     :: M.Map String String
     , pScripts   :: M.Map String Program
     , pObjects   :: M.Map String Object
     }
@@ -76,6 +77,7 @@ loadProgram what path = do
 {-| Loads the project from a directory. -}
 loadProject :: FilePath -> IO Project
 loadProject path = do
+    --TODO: load 2.3 projects
     -- Load resources
     resources <- mapM (loadResources path)
         [ RSprite
@@ -87,15 +89,19 @@ loadProject path = do
     let sDir = path </> "scripts"
     sNames <- listDirectory sDir
     scripts <- forM sNames $ \name -> do
-        pr <- loadProgram "script" $ sDir </> name </> name <.> "gml"
-        return (name, pr)
+        let name' = case name of
+                '@':xs -> xs --Strip the compatibility script prefix
+                xs     -> xs
+        pr <- loadProgram "script" $ sDir </> name </> name' <.> "gml"
+        return (name', pr)
     -- Load objects
     let oDir = path </> "objects"
     oNames <- listDirectory oDir
     objects <- forM oNames $ \name -> do
-        eNames <- filter ((== ".gml") . takeExtension) <$> (listDirectory $ oDir </> name)
+        eNames <- filter ((== ".gml") . takeExtension) <$> listDirectory (oDir </> name)
         events <- forM eNames $ \eName -> do
             pr <- loadProgram "event" $ oDir </> name </> eName
             return (read $ dropExtension eName, pr)
         return (name, Object (M.fromList events))
-    return $ Project (M.unions resources) (M.fromList scripts) (M.fromList objects)
+    let resObjects = M.fromList $ zip oNames $ repeat RObject
+    return $ Project (M.unions $ resObjects : resources) (M.fromList scripts) (M.fromList objects)
