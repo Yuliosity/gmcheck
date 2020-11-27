@@ -42,10 +42,27 @@ distance_to_object : object -> real
 distance_to_point : [x] real, [y] real -> real
 //TODO: 3D stuff
 
+/*--Datetime [DONE]--*/
+date_current_datetime : void -> date
+date_create_datetime : [year] int, [month] int, [day] int, [hour] int, [minute] int, [second] int -> date
+date_valid_datetime : [year] int, [month] int, [day] int, [hour] int, [minute] int, [second] int -> bool
+date_get_day, date_get_day_of_year, date_get_week, date_get_weekday, date_get_month, date_get_year,
+    date_get_hour, date_get_minute, date_get_minute_of_year, date_get_second, date_get_second_of_year : date -> int
+date_get_timezone : void -> int //TODO: timezone
+date_set_timezone : int -> void //TODO: timezone
+date_inc_year, date_inc_month, date_inc_week, date_inc_day, date_inc_hour, date_inc_minute, date_inc_second : date, int -> date
+date_year_span, date_month_span, date_week_span, date_day_span, date_hour_span, date_minute_span, date_second_span : [date1] date, [date2] date -> int
+date_compare_datetime, date_compare_date, date_compare_time : [date1] date, [date2] date -> int
+date_date_of, date_time_of : date -> date
+date_datetime_string, date_date_string, date_time_string : date -> string
+date_days_in_month, date_days_in_year : date -> int
+date_leap_year, date_is_today : date -> bool
+get_timer : void -> real
+
 /*--Matrix--*/
 //TODO
 
-/*--String--*/
+/*--String [DONE]--*/
 //Access
 string_char_at : string, int -> char
 string_byte_at : string, int -> int
@@ -60,7 +77,7 @@ string : real -> string
 string_copy, string_delete : string, [index] int, [count] int -> string
 string_count : [substr] string, string -> int
 string_replace, string_replace_all : string, [substr] string, [newstr] string -> string
-string_lower, string_upper, string_letters, string_digits : string -> string
+string_lower, string_upper, string_letters, string_digits, string_lettersdigits : string -> string
 string_repeat : string, [count] int -> string
 
 /*--Containers--*/

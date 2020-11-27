@@ -55,6 +55,7 @@ data Type
     | TPtr    -- ^ GML pointer, a primitive type 
     -- Derived types
     | TColor -- ^ RGB color. Represented as just a number in GML.
+    | TDate  -- ^ Datetime. Represented as just a number in GML.
     | TEnum String -- ^ Enumeration with a label
     | TId Resource -- ^ Resource descriptor. Represented as just a number in GML.
     -- Vector types

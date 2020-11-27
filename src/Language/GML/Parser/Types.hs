@@ -45,6 +45,7 @@ nametype = do
             , ("char",    TChar)
             , ("alpha",   TAlpha)
             , ("color",   TColor)
+            , ("date",    TDate)
             -- Enums
             , ("keycode", TKeyCode)
             -- Resource descriptors

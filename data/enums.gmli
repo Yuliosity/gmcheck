@@ -37,6 +37,10 @@ enum primitive {
     pr_pointlist, pr_linelist, pr_linestrip, pr_trianglelist, pr_trianglestrip, pr_trianglefan
 }
 
+enum timezone {
+    timezone_local, timezone_utc
+}
+
 enum timing_method {
     tm_sleep, tm_countvsyncs
 }
