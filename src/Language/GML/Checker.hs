@@ -16,9 +16,9 @@ import Prelude hiding (lookup)
 
 import Control.Monad
 import Control.Monad.Trans.RWS
+import Data.Either (isLeft)
 import Data.Foldable (asum)
 import qualified Data.Map as M
-import Data.Maybe (isJust)
 import Debug.Trace
 import Lens.Micro.Platform
 
@@ -177,13 +177,20 @@ lookupFn name = do
     -- TODO: derive and store script types
     return $ M.lookup name builtinFn
 
-deriveOp :: BinOp -> Type -> Type -> Maybe Type
-deriveOp (BComp _) t1 t2 | t1 == t2 = Just TBool
-deriveOp (BNum Add) TString TString = Just TString
-deriveOp (BNum Div) TInt    TInt    = Just TReal
-deriveOp _          TInt    TInt    = Just TInt
-deriveOp (BNum _)   TReal   TReal   = Just TReal
-deriveOp _          _       _       = Nothing
+{-| Try to derive a result type of a binary operator application.
+    In case of impossible combinations, returns `Left` with the expected result. -}
+deriveOp :: BinOp -> Type -> Type -> Either Type Type
+deriveOp (BComp _) t t2 | t == t2   = Right TBool
+                        | otherwise = Left  TBool
+deriveOp (BNum Add) TString TString = Right TString
+deriveOp (BNum Add) TString _       = Left  TString
+deriveOp (BNum Add) _       TString = Left  TString
+deriveOp (BNum Div) TInt    TInt    = Right TReal
+deriveOp (BNum  _)  TInt    TInt    = Right TInt
+deriveOp (BNum  _)  TReal   TReal   = Right TReal
+deriveOp (BNum  _)  _       _       = Left  TReal
+deriveOp (BBool _)  TInt    TInt    = Right TBool
+deriveOp (BBool _)  _       _       = Left  TBool
 
 checkType descr ty expr = do
     varT <- derive expr
@@ -220,12 +227,11 @@ derive = \case
     EBinary op e1 e2 -> do
         e1T <- derive e1
         e2T <- derive e2
-
         case deriveOp op e1T e2T of
-            Just res -> return res
-            Nothing  -> do
+            Right res -> return res
+            Left  res  -> do
                 report (EBadBinary op e1T e2T)
-                return $ e1T <> e2T --FIXME: what should be here?
+                return res
 
     ETernary cond e1 e2 -> do
         checkCond cond
@@ -302,7 +308,8 @@ execAssignModify op var expr = do
                 -- Assuming that all modifying operators preserve the type, don't check the change
                 -- TODO: refactor copy-pasta with binary derive
                 Just ty ->
-                    when (isJust $ deriveOp (BNum op) ty exprT) $
+                    when (isLeft $ deriveOp (BNum op) ty exprT) $
+                        --FIXME: report assignment operators differently
                         report (EBadBinary (BNum op) ty exprT)
 
 exec :: Stmt -> Checker ()
