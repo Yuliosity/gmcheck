@@ -14,23 +14,21 @@ module Language.GML.Checker.Builtin
     , lookupBuiltin, testBuiltin
     ) where
 
-import qualified Data.Text.IO as T (readFile)
-import Text.Megaparsec (errorBundlePretty) 
-
 import Control.Monad (forM)
-import Data.Map.Strict ((!?))
+import qualified Data.Map.Strict as M
 import Data.Foldable (asum)
 import System.FilePath ((</>))
 import System.IO.Unsafe (unsafePerformIO)
 
+import Language.GML.Parser.Common (parseFile)
 import Language.GML.Parser.Types
-import Language.GML.Types (Name, Type)
+import Language.GML.Types
 
-load parser file = do
-    src <- T.readFile file
-    case parser file src of
-        Left err -> error $ errorBundlePretty err
-        Right res -> return res
+-- | Dictionary for holding variable types.
+type VarDict = M.Map Name Type
+
+-- | Dictionary for holding function signatures.
+type FunDict = M.Map Name Signature
 
 {-| Bundle of type annotations of built-in functions and variables. -}
 data Builtin = Builtin
@@ -39,28 +37,28 @@ data Builtin = Builtin
     , bGlobalVar     :: !VarDict
     , bInstanceConst :: !VarDict
     , bInstanceVar   :: !VarDict
-    , bEnums         :: !EnumDict
     }
 
 {-| Looks up for a built-in variable or a constant. -}
 lookupBuiltin :: Name -> Builtin -> Maybe (Type, Bool, Bool)
-lookupBuiltin name (Builtin {bGlobalConst, bGlobalVar, bInstanceConst, bInstanceVar}) = asum
-    [ (, True,  True)  <$> bGlobalConst   !? name
-    , (, True,  False) <$> bGlobalVar     !? name
-    , (, False, True)  <$> bInstanceConst !? name
-    , (, False, False) <$> bInstanceVar   !? name
+lookupBuiltin name Builtin {bGlobalConst, bGlobalVar, bInstanceConst, bInstanceVar} = asum
+    [ (, True,  True)  <$> bGlobalConst   M.!? name
+    , (, True,  False) <$> bGlobalVar     M.!? name
+    , (, False, True)  <$> bInstanceConst M.!? name
+    , (, False, False) <$> bInstanceVar   M.!? name
     ]
 
 {-| Loads a built-in bundle from a directory. TODO: report missing files. -}
 loadBuiltin :: FilePath -> IO Builtin
 loadBuiltin dir = do
-    en <- load parseEnum $ dir </> "enums.gmli"
-    fs <- load parseFun $ dir </> "functions.gmli"
-    let loadVars = load parseVars
+    en <- parseFile enums $ dir </> "enums.gmli"
+    let enc = M.fromList [(name, TNewtype ty) | Enum ty opts <- en, (name, _) <- opts]
+    fs <- M.fromList <$> parseFile functions (dir </> "functions.gmli")
+    let loadVars file = M.fromList <$> parseFile variables file
     [gc, gv, ic, iv] <- forM
         ["global_const.gmli", "global_var.gmli", "instance_const.gmli", "instance_var.gmli"] $
         \file -> loadVars (dir </> file)
-    return $ Builtin fs gc gv ic iv en
+    return $ Builtin fs (M.union gc enc) gv ic iv
 
 {-| Hardcoded built-in bundle. For testing purposes. -}
 testBuiltin :: Builtin

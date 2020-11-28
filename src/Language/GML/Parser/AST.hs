@@ -1,7 +1,6 @@
 module Language.GML.Parser.AST
     ( Program, Result
     , variable, expr, stmt, program
-    , parseProgram
     ) where
 
 import Text.Megaparsec
@@ -10,6 +9,7 @@ import qualified Text.Megaparsec.Char.Lexer as L
 import Control.Monad (guard)
 import Control.Monad.Combinators.Expr
 import Data.Functor (($>))
+import Data.Functor.Identity
 import Data.List (foldl')
 import Data.Text hiding (foldl', empty, map)
 
@@ -196,7 +196,4 @@ stmt = (choice
     <* optional semicolon
 
 program :: Parser Program
-program = many stmt
-
-parseProgram :: String -> Text -> Result Program
-parseProgram = parseMany stmt
+program = manyAll stmt

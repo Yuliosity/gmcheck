@@ -82,16 +82,6 @@ instance ToMarkup Container2 where
         SArray2 -> "array2d"
         SGrid   -> "grid"
 
-instance ToMarkup Resource where
-    toMarkup = \case
-        RBackground -> "background"
-        RFont       -> "font"
-        RObject     -> "object"
-        RPath       -> "path"
-        RRoom       -> "room"
-        RSound      -> "sound"
-        RSprite     -> "sprite"
-
 instance ToMarkup Type where
     toMarkup = \case
         TAny    -> "any"
@@ -99,11 +89,9 @@ instance ToMarkup Type where
         TVoid   -> "void"
         TReal   -> "real"
         TString -> "string"
-        TColor  -> "color"
         TPtr    -> "ptr"
         TMatrix -> "matrix"
-        TId res -> toMarkup res
-        TEnum name -> toMarkup name
+        TNewtype n -> toMarkup n
         TContainer  con ty -> do toMarkup con; "<"; toMarkup ty; ">"
         TContainer2 con ty -> do toMarkup con; "<"; toMarkup ty; ">"
         where

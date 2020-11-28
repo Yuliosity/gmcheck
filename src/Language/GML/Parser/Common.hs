@@ -1,14 +1,17 @@
+{-# LANGUAGE TypeFamilies #-}
+
 module Language.GML.Parser.Common
     ( Parser, Error, Result
     , Name
     , spaces, comma, colon, semicolon
     , parens, braces, brackets
     , lexeme, symbol, keyword, operator, ident
-    , parseMany
+    , manyAll, parseFile
     ) where
 
 import Data.Functor (($>))
 import Data.Text (Text)
+import qualified Data.Text.IO as T (readFile)
 import Data.Void (Void)
 
 import Text.Megaparsec
@@ -51,5 +54,12 @@ semicolon = symbol ";" $> ()
 ident :: Parser Name
 ident = lexeme $ (:) <$> letterChar <*> many (alphaNumChar <|> char '_')
 
-parseMany :: Parser a -> String -> Text -> Result [a]
-parseMany p = parse (spaces *> many p <* eof)
+manyAll :: Parser a -> Parser [a]
+manyAll p = spaces *> many p <* eof
+
+parseFile :: Parser [a] -> FilePath -> IO [a]
+parseFile parser path = do
+    src <- T.readFile path
+    case parse parser path src of
+        Left err -> putStrLn (errorBundlePretty err) >> return []
+        Right err -> return err

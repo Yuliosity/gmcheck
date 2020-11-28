@@ -15,15 +15,14 @@ module Language.GML.Project
 import Control.Applicative ((<|>))
 import Control.Monad (forM)
 import qualified Data.Map as M
-import qualified Data.Text.IO as T (readFile)
 import System.Directory
 import System.FilePath
 import System.IO
 
+import Language.GML.Parser.Common (parseFile)
 import Language.GML.Parser.AST
-import Language.GML.Types (Resource (..))
+import Language.GML.Types (Type(TNewtype))
 import Language.GML.Events
-import Text.Megaparsec (errorBundlePretty)
 
 {-| Executable script. -}
 data Script = Script
@@ -40,39 +39,29 @@ data Object = Object
     deriving Show
 
 data Project = Project
-    { pResources :: M.Map String Resource
+    { pResources :: M.Map String Type
     --, pGuids     :: M.Map String String
     , pScripts   :: M.Map String Program
     , pObjects   :: M.Map String Object
     }
     deriving Show
 
-resDir :: Resource -> FilePath
-resDir = \case
-    RSprite     -> "sprites"
-    RSound      -> "sounds"
-    RBackground -> "backgrounds"
-    RRoom       -> "rooms"
-
 logTrace :: String -> IO ()
 logTrace = hPutStrLn stderr
 
-loadResources :: FilePath -> Resource -> IO (M.Map String Resource)
+loadResources :: FilePath -> String -> IO (M.Map String Type)
 loadResources path ty = do
-    let rPath = path </> resDir ty
+    let rPath = path </> (ty ++ "s")
     rNames <- listDirectory rPath
     logTrace $ "Loading resources from " ++ rPath
-    return $ M.fromList [(res, ty) | res <- rNames]
+    return $ M.fromList [(res, TNewtype ty) | res <- rNames]
     <|>
     return M.empty
 
 loadProgram :: String -> FilePath -> IO Program
 loadProgram what path = do
     logTrace $ "Loading " ++ what ++ " from " ++ path
-    src <- T.readFile path
-    case parseProgram path src of
-        Left err -> putStrLn (errorBundlePretty err) >> return []
-        Right err -> return err
+    parseFile program path
 
 {-| Loads the project from a directory. -}
 loadProject :: FilePath -> IO Project
@@ -80,11 +69,7 @@ loadProject path = do
     --TODO: load 2.3 projects
     -- Load resources
     resources <- mapM (loadResources path)
-        [ RSprite
-        , RSound
-        , RBackground
-        , RRoom
-        ]
+        [ "font", "sound", "sprite", "room" ]
     -- Load scripts
     let sDir = path </> "scripts"
     sNames <- listDirectory sDir
@@ -103,5 +88,5 @@ loadProject path = do
             pr <- loadProgram "event" $ oDir </> name </> eName
             return (read $ dropExtension eName, pr)
         return (name, Object (M.fromList events))
-    let resObjects = M.fromList $ zip oNames $ repeat RObject
+    let resObjects = M.fromList $ zip oNames $ repeat (TNewtype "object")
     return $ Project (M.unions $ resObjects : resources) (M.fromList scripts) (M.fromList objects)

@@ -13,20 +13,6 @@ import Data.List (union)
 {-| Identifier (name). -}
 type Name = String
 
-{-| Resource type. In GML any resource descriptor is actually
-    just a number, but here we want to differ. -}
-data Resource
-    = RBackground
-    | RFont
-    | RObject
-    | RPath
-    | RRoom
-    | RScript
-    | RSound
-    | RSprite
-    -- TODO: paths, etc.
-    deriving (Eq, Show)
-
 {-| Linear data structure type. In GML any structure descriptor
     is also just a number, but here we want to differ. -}
 data Container
@@ -50,17 +36,13 @@ data Container2
 data Type
     = TUnknown [Type] -- ^ Unknown type with possibilities, if any
     -- Base types
-    | TVoid -- ^ GML 'undefined'
-    | TReal -- ^ GML number, a primitive type
+    | TVoid   -- ^ GML 'undefined'
+    | TReal   -- ^ GML number, a primitive type
     | TString -- ^ GML string, a primitive type
     | TPtr    -- ^ GML pointer, a primitive type
     | TMatrix -- ^ GML pointer, a primitive type
     -- Derived types
-    | TColor -- ^ RGB color. Represented as just a number in GML.
-    | TDate  -- ^ Datetime. Represented as just a number in GML.
-    | TEnum String -- ^ Enumeration with a label
-    -- | TInstance String -- ^ Instance of an object
-    | TId Resource -- ^ Resource descriptor. Represented as just a number in GML.
+    | TNewtype String -- ^ Represented as just a number, but distinguished here
     -- Vector types
     | TContainer  Container  Type -- ^ Linear container of typed values.
     | TContainer2 Container2 Type -- ^ Two-dimensional container of typed values.
@@ -114,34 +96,9 @@ pattern TChar = TString
 pattern TAlpha :: Type
 pattern TAlpha = TReal
 
-{-| Keyboard key code enum. Reserved for future typechecking. -}
-pattern TKeyCode :: Type
-pattern TKeyCode = TInt
-
-{-| Mouse button enum. Reserved for future typechecking. -}
-pattern TMouseButton :: Type
-pattern TMouseButton = TInt
-
 {-| Instance descriptor. Reserved for future typechecking. -}
 pattern TInstance :: Type 
 pattern TInstance = TReal
-
-pattern TSurface :: Type
-pattern TSurface = TInt
-
-pattern TTileset :: Type
-pattern TTileset = TInt
-
-{-| Resource descriptors. -}
-pattern TBackground, TFont, TObject, TPath, TRoom, TScript, TSound, TSprite :: Type
-pattern TBackground = TId RBackground
-pattern TFont   = TId RFont
-pattern TObject = TId RObject
-pattern TPath   = TId RPath
-pattern TRoom   = TId RRoom
-pattern TScript = TId RScript
-pattern TSound  = TId RSound
-pattern TSprite = TId RSprite
 
 {-| Data structure descriptors. -}
 pattern TArray, TList, TMap, TPriorityQueue, TQueue, TStack :: Type -> Type

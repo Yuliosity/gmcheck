@@ -22,6 +22,40 @@ enum ds_type {
     ds_type_map, ds_type_list, ds_type_stack, ds_type_grid, ds_type_queue, ds_type_priority
 }
 
+enum event {
+    ev_create, ev_destroy,
+    ev_step, ev_alarm,
+    ev_keyboard, ev_mouse,
+    ev_collision,
+    ev_other,
+    ev_draw, ev_draw_begin, ev_draw_end, ev_draw_pre, ev_draw_post,
+    ev_keypress, ev_keyrelease,
+    ev_trigger,
+    ev_left_button, ev_right_button, ev_middle_button, ev_no_button,
+    ev_left_press, ev_right_press, ev_middle_press,
+    ev_left_release, ev_right_release, ev_middle_release,
+    ev_mouse_enter, ev_mouse_leave,
+    ev_mouse_wheel_up, ev_mouse_wheel_down,
+    ev_global_left_button, ev_global_right_button, ev_global_middle_button,
+    ev_global_left_press, ev_global_right_press, ev_global_middle_press,
+    ev_global_left_release, ev_global_right_release, ev_global_middle_release,
+    ev_joystick1_left, ev_joystick1_right, ev_joystick1_up, ev_joystick1_down,
+    ev_joystick1_button1, ev_joystick1_button2, ev_joystick1_button3, ev_joystick1_button4,
+    ev_joystick1_button5, ev_joystick1_button6, ev_joystick1_button7, ev_joystick1_button8,
+    ev_joystick2_left, ev_joystick2_right, ev_joystick2_up, ev_joystick2_down,
+    ev_joystick2_button1, ev_joystick2_button2, ev_joystick2_button3, ev_joystick2_button4,
+    ev_joystick2_button5, ev_joystick2_button6, ev_joystick2_button7, ev_joystick2_button8,
+    ev_outside, ev_boundary,
+    ev_game_start, ev_game_end, ev_room_start, ev_room_end,
+    ev_no_more_lives, ev_animation_end, ev_end_of_path, ev_no_more_health, ev_close_button,
+    ev_user0, ev_user1, ev_user2, ev_user3,
+    ev_user4, ev_user5, ev_user6, ev_user7,
+    ev_user8, ev_user9, ev_user10, ev_user11,
+    ev_user12, ev_user13, ev_user14, ev_user15,
+    ev_step_normal, ev_step_begin, ev_step_end,
+    ev_gui, ev_gui_begin, ev_gui_end
+}
+
 enum keycode {
     vk_nokey, vk_anykey, vk_left, vk_right, vk_up, vk_down,
     vk_enter, vk_escape, vk_space, vk_shift, vk_control, vk_alt,

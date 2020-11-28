@@ -111,9 +111,9 @@ lookup = \case
         scope <- head <$> use cScope
         self <- use (cObjects . at scope) --FIXME: report or insert self
         return $ asum
-            [ (\(t, _, _) -> t) <$> builtin   -- Check #1: built-in variables/constants
-            , TId <$> M.lookup name resources -- Check #2: project resources
-            , lookupLocal name local          -- Check #3: local variables
+            [ (\(t, _, _) -> t) <$> builtin -- Check #1: built-in variables/constants
+            , M.lookup name resources       -- Check #2: project resources
+            , lookupLocal name local        -- Check #3: local variables
             , self >>= lookupMem name
             ]
     --Referenced variable
@@ -241,7 +241,7 @@ derive = \case
         argsT <- mapM derive args
         msig <- lookupFn fn
         case msig of
-            Just sig@(Signature _ _ res) -> do --FIXME: handle optional arguments
+            Just sig@(Signature _ _ res) -> do
                 let minn = minArgs sig; maxn = maxArgs sig; na = length argsT
                 if minn == maxn then
                     when (na /= minn) $ report $ EWrongArgNum fn EQ minn na
