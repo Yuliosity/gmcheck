@@ -21,6 +21,7 @@ data Resource
     | RObject
     | RPath
     | RRoom
+    | RScript
     | RSound
     | RSprite
     -- TODO: paths, etc.
@@ -52,11 +53,13 @@ data Type
     | TVoid -- ^ GML 'undefined'
     | TReal -- ^ GML number, a primitive type
     | TString -- ^ GML string, a primitive type
-    | TPtr    -- ^ GML pointer, a primitive type 
+    | TPtr    -- ^ GML pointer, a primitive type
+    | TMatrix -- ^ GML pointer, a primitive type
     -- Derived types
     | TColor -- ^ RGB color. Represented as just a number in GML.
     | TDate  -- ^ Datetime. Represented as just a number in GML.
     | TEnum String -- ^ Enumeration with a label
+    -- | TInstance String -- ^ Instance of an object
     | TId Resource -- ^ Resource descriptor. Represented as just a number in GML.
     -- Vector types
     | TContainer  Container  Type -- ^ Linear container of typed values.
@@ -123,13 +126,20 @@ pattern TMouseButton = TInt
 pattern TInstance :: Type 
 pattern TInstance = TReal
 
+pattern TSurface :: Type
+pattern TSurface = TInt
+
+pattern TTileset :: Type
+pattern TTileset = TInt
+
 {-| Resource descriptors. -}
-pattern TBackground, TFont, TObject, TPath, TRoom, TSound, TSprite :: Type
+pattern TBackground, TFont, TObject, TPath, TRoom, TScript, TSound, TSprite :: Type
 pattern TBackground = TId RBackground
 pattern TFont   = TId RFont
 pattern TObject = TId RObject
 pattern TPath   = TId RPath
 pattern TRoom   = TId RRoom
+pattern TScript = TId RScript
 pattern TSound  = TId RSound
 pattern TSprite = TId RSprite
 

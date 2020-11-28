@@ -13,6 +13,8 @@ delta_time : int
 current_day, current_weekday, current_month, current_year, current_hour, current_minute, current_second, current_time : int
 //Backgrounds
 background_width, background_height : array<int>
+//Views
+view_current : int
 //Rooms
 room, room_first, room_last : room
 //Graphics

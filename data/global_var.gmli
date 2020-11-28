@@ -14,8 +14,11 @@ background_htiled, background_vtiled : array<bool>
 background_blend : array<color>
 background_alpha : array<alpha>
 //Views
-view_xview, view_yview, view_hview, view_wview : array<int>
+view_xview, view_yview, view_hview, view_wview : array<int> //TODO: deprecated
 view_xport, view_yport, view_hport, view_wport : array<int>
+view_camera : array<camera>
+view_enabled, view_visible : array<bool>
+view_surface_id : array<surface>
 //Rooms
 room : room
 room_height, room_width : int

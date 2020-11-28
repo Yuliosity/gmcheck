@@ -1,3 +1,11 @@
+enum bbox_kind {
+    bboxkind_rectangular, bboxkind_ellipse, bboxkind_diamond, bboxkind_precise
+}
+
+enum bbox_mode {
+    bboxmode_automatic, bboxmode_fullimage, bboxmode_manual
+}
+
 enum color {
     c_aqua, c_black, c_blue, c_dkgray, c_fuchsia, c_gray,
     c_green, c_lime, c_ltgray, c_maroon, c_navy, c_olive,
@@ -25,6 +33,10 @@ enum keycode {
     vk_multiply, vk_divide, vk_add, vk_subtract, vk_decimal
 }
 
+enum matrix_type {
+    matrix_view, matrix_projection, matrix_world
+}
+
 enum mbutton {
     mb_any, mb_none, mb_left, mb_right, mb_middle
 }
@@ -37,10 +49,29 @@ enum primitive {
     pr_pointlist, pr_linelist, pr_linestrip, pr_trianglelist, pr_trianglestrip, pr_trianglefan
 }
 
+enum speed_type {
+    spritespeed_framespersecond, spritespeed_framespergameframe
+}
+
+enum tile_mode {
+    tile_rotate /*= 1*/, tile_mirror /*= 2*/, tile_flip /*= 4*/, tile_index_mask /*= ??*/
+}
+
 enum timezone {
     timezone_local, timezone_utc
 }
 
 enum timing_method {
     tm_sleep, tm_countvsyncs
+}
+
+enum vertex_type {
+    vertex_type_float1, vertex_type_float2, vertex_type_float3, vertex_type_float4,
+    vertex_type_color, vertex_type_ubyte4
+}
+
+enum vertex_usage {
+    vertex_usage_position, vertex_usage_color, vertex_usage_normal, vertex_usage_textcoord,
+    vertex_usage_blendweight, vertex_usage_blendindices, vertex_usage_depth, vertex_usage_tangent,
+    vertex_usage_binormal, vertex_usage_fog, vertex_usage_sample
 }

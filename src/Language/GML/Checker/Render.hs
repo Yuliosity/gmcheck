@@ -100,6 +100,8 @@ instance ToMarkup Type where
         TReal   -> "real"
         TString -> "string"
         TColor  -> "color"
+        TPtr    -> "ptr"
+        TMatrix -> "matrix"
         TId res -> toMarkup res
         TEnum name -> toMarkup name
         TContainer  con ty -> do toMarkup con; "<"; toMarkup ty; ">"
