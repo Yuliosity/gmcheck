@@ -3,6 +3,7 @@
 module Language.GML.Checker.Errors where
 
 import qualified Data.Map.Strict as M
+import qualified Data.Set as S
 
 import Language.GML.AST
 import Language.GML.Events (Event) 
@@ -44,10 +45,41 @@ data Error
     -- | Wrong type of function argument
     | EWrongArgument FunName Name Type Type
     -- | Data structure is not destroyed
-    | EDataStructureLeak Variable
+    | WDataStructureLeak Variable
     deriving Show
 
+errNum :: Error -> Int
+errNum = \case
+    WChangeType             {} -> 1
+    WHeteroArray            {} -> 6
+    WTernaryDiff            {} -> 5
+    WDataStructureLeak      {} -> 9
+    --Mismatched type
+    EWrongArgument          {} -> 20
+    EWrongVarType           {} -> 21
+    EWrongExprType          {} -> 22
+    EWithInstance           {} -> 22
+    EBadModify              {} -> 23
+    EBadUnary               {} -> 24
+    EBadBinary              {} -> 24
+    EBadIndex               {} -> 26
+    EBadIndex2              {} -> 26
+    --Misc
+    EUndefinedVar           {} -> 40
+    EUndefinedFunction      {} -> 41
+    ENoResult               {} -> 42
+    EAssignConst            {} -> 43
+
+    _ -> 0
+
 type Log = [Error]
+type ErrorSet = S.Set Int
+
+fromList :: [Int] -> ErrorSet
+fromList = S.fromList
+
+inSet :: Error -> ErrorSet -> Bool
+inSet err = S.member (errNum err)
 
 {-| Source script. -}
 data Source = SScript !Name | SObject !Name !Event

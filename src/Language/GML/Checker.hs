@@ -26,7 +26,7 @@ import Language.GML.AST
 import Language.GML.Project
 import Language.GML.Types
 
-import Language.GML.Checker.Errors
+import Language.GML.Checker.Errors hiding (fromList)
 import Language.GML.Checker.Builtin
 
 type Memory = M.Map Name Type
@@ -46,6 +46,7 @@ lookupLocal name frames = asum $ map (M.!? name) frames
 data Settings = Settings
     { _sBuiltin :: !Builtin
     , _sProject :: !Project
+    , _sDisabledErrors :: !ErrorSet
     }
 
 makeLenses ''Settings
@@ -92,9 +93,12 @@ setLocal k v =
     --TODO: dive the stack
     cLocal %= \(f:fs) -> M.insert k v f : fs
 
+report :: Error -> Checker ()
 report err = do
-    src <- use cSrc
-    tell $ singleError src err
+    noErr <- inSet err <$> view sDisabledErrors
+    unless noErr $ do
+        src <- use cSrc
+        tell $ singleError src err
 
 {-| Lookup for a variable in a memory dictionary. -}
 lookupMem :: Name -> Memory -> Maybe Type
@@ -111,10 +115,10 @@ lookup = \case
         scope <- head <$> use cScope
         self <- use (cObjects . at scope) --FIXME: report or insert self
         return $ asum
-            [ (\(t, _, _) -> t) <$> builtin -- Check #1: built-in variables/constants
-            , M.lookup name resources       -- Check #2: project resources
-            , lookupLocal name local        -- Check #3: local variables
-            , self >>= lookupMem name
+            [ (\(t, _, _) -> t) <$> builtin -- #1: built-in variables/constants
+            , M.lookup name resources       -- #2: project resources
+            , lookupLocal name local        -- #3: local variables
+            , self >>= lookupMem name       -- #4: instance variables
             ]
     --Referenced variable
     VField var@(VVar name) field -> do
@@ -379,6 +383,8 @@ runProject = do
     objects <- pObjects <$> view sProject
     forM_ (M.toList objects) runObject
 
-runChecker :: Builtin -> Project -> Report
-runChecker builtin project = snd $ execRWS runProject settings emptyContext where
-    settings = Settings builtin project
+runChecker :: Builtin -> Project -> ErrorSet -> Report
+runChecker builtin project disabledErrors =
+    snd $ execRWS runProject settings emptyContext
+    where
+        settings = Settings builtin project disabledErrors
