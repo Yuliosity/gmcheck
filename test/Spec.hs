@@ -68,6 +68,7 @@ stmts = describe "statements parser" $ do
         parse' stmt "var foo" `shouldParse` SDeclare [("foo", Nothing)]
         parse' stmt "var foo, bar" `shouldParse` SDeclare [("foo", Nothing), ("bar", Nothing)]
         parse' stmt "var foo=42" `shouldParse` SDeclare [("foo", Just lit42)]
+        parse' stmt "var foo=2+2, bar, baz=42" `shouldParse` SDeclare [("foo", Just $ 2 + 2), ("bar", Nothing), ("baz", Just lit42)]
     it "can parse variable assignments" $ do
         parse' stmt "foo=42" `shouldParse` SAssign "foo" lit42
         parse' stmt "foo+=\"string\"" `shouldParse` SModify Add "foo" litString
@@ -78,6 +79,7 @@ stmts = describe "statements parser" $ do
     it "can parse function calls" $ do
         parse' stmt "write(\"string\")" `shouldParse` SExpression write_string
         parse' stmt "var foo = sin(3.14)" `shouldParse` SDeclare [("foo", Just sin_pi)]
+        parse' stmt "return atan2(1, a)" `shouldParse` SReturn (EFuncall "atan2" [1, EVariable "a"])
     it "can parse conditionals" $ do
         parse' stmt "if foo==42 exit" `shouldParse` SIf (eBinary Eq foo lit42) SExit Nothing
         parse' stmt "if (foo < 42) exit" `shouldParse` SIf foo_lt_42 SExit Nothing

@@ -37,8 +37,11 @@ symbol = L.symbol spaces
 keyword :: Text -> Parser Text
 keyword kw = (lexeme . try) (string kw <* notFollowedBy alphaNumChar)
 
+opSymbol :: Parser Char
+opSymbol = satisfy (`elem` ("+-*/=<>!|&^" :: String)) --TODO: optimize
+
 operator :: Text -> Parser Text
-operator op = (lexeme . try) (string op <* notFollowedBy punctuationChar)
+operator op = (lexeme . try) (string op <* notFollowedBy opSymbol)
 
 parens, braces, brackets :: Parser a -> Parser a
 parens = between (symbol "(") (symbol ")")
@@ -52,7 +55,7 @@ semicolon = symbol ";" $> ()
 
 {-| Identifier -}
 ident :: Parser Name
-ident = lexeme $ (:) <$> letterChar <*> many (alphaNumChar <|> char '_')
+ident = lexeme $ (:) <$> (letterChar <|> char '_') <*> many (alphaNumChar <|> char '_')
 
 manyAll :: Parser a -> Parser [a]
 manyAll p = spaces *> many p <* eof

@@ -9,7 +9,6 @@ import qualified Text.Megaparsec.Char.Lexer as L
 import Control.Monad (guard)
 import Control.Monad.Combinators.Expr
 import Data.Functor (($>))
-import Data.Functor.Identity
 import Data.List (foldl')
 import Data.Text hiding (foldl', empty, map)
 
@@ -20,8 +19,8 @@ import Language.GML.Parser.Common
 -- * Basic tokens
 
 reserved =
-    [ "begin", "break", "case", "continue", "default", "do", "end", "for"
-    , "repeat", "switch", "until", "while", "with"
+    [ "begin", "break", "case", "continue", "default", "do", "else", "end", "enum", "exit", "for"
+    , "globalvar", "if", "repeat", "return", "switch", "until", "var", "while", "with"
     ]
 
 validIdent = try $ do
@@ -86,51 +85,55 @@ funcall = EFuncall <$> funName <*> parens (expr `sepBy` comma)
 
 opTable :: [[Operator Parser Expr]]
 opTable =
-    [   [ prefix "-" (EUnary UNeg)
-        , prefix "~" (EUnary UBitNeg)
-        , prefix "!" (EUnary UNot)
-        , prefix "+" id
+    [   [ prefix "-" UNeg
+        , prefix "~" UBitNeg
+        , prefix "!" UNot
+        --, prefix "+" id
         ]
-    ,   [ binary "div" (eBinary IntDiv)
-        , binary "%"   (eBinary Mod)
-        , binary "mod" (eBinary Mod)
+    ,   [ binaryK "div" IntDiv
+        , binary  "%"   Mod
+        , binaryK "mod" Mod
         ]
-    ,   [ prefix  "--" (EUnary UPreDec)
-        , prefix  "++" (EUnary UPreInc)
-        , postfix "--" (EUnary UPostDec)
-        , postfix "++" (EUnary UPostInc)
+    ,   [ prefix  "--" UPreDec
+        , prefix  "++" UPreInc
+        , postfix "--" UPostDec
+        , postfix "++" UPostInc
         ]
-    ,   [ binary "|"  (eBinary BitOr)
-        , binary "&"  (eBinary BitAnd)
-        , binary "^"  (eBinary BitXor)
-        , binary ">>" (eBinary Shr)
-        , binary "<<" (eBinary Shl)
+    ,   [ binary "|"  BitOr
+        , binary "&"  BitAnd
+        , binary "^"  BitXor
+        , binary ">>" Shr
+        , binary "<<" Shl
         ]
-    ,   [ binary "*"  (eBinary Mul)
-        , binary "/"  (eBinary Div)
+    ,   [ binary "*"  Mul
+        , binary "/"  Div
         ]
-    ,   [ binary "+"  (eBinary Add)
-        , binary "-"  (eBinary Sub)
+    ,   [ binary "+"  Add
+        , binary "-"  Sub
         ]
-    ,   [ binary "==" (eBinary Eq)
-        , binary "!=" (eBinary NotEq)
-        , binary "<=" (eBinary LessEq)
-        , binary "<"  (eBinary Less)
-        , binary ">=" (eBinary GreaterEq)
-        , binary ">"  (eBinary Greater)
+    ,   [ binary "==" Eq
+        , binary "!=" NotEq
+        , binary "<=" LessEq
+        , binary "<"  Less
+        , binary ">=" GreaterEq
+        , binary ">"  Greater
         ]
-    ,   [ binary "&&" (eBinary And)
-        , binary "||" (eBinary Or)
-        , binary "^^" (eBinary Xor)
+    ,   [ binary  "&&"  And
+        , binaryK "and" And
+        , binary  "||"  Or
+        , binaryK "or"  Or
+        , binary  "^^"  Xor
+        , binaryK "xor" Xor
         ]
     ]
 
-binary :: Text -> (Expr -> Expr -> Expr) -> Operator Parser Expr
-binary  name f = InfixL  (f <$ operator name)
+binary, binaryK :: Binary a => Text -> a -> Operator Parser Expr
+binary  name op = InfixL  (eBinary op <$ operator name)
+binaryK name op = InfixL  (eBinary op <$ keyword name)
 
-prefix, postfix :: Text -> (Expr -> Expr) -> Operator Parser Expr
-prefix  name f = Prefix  (f <$ operator name)
-postfix name f = Postfix (f <$ operator name)
+prefix, postfix :: Text -> UnOp -> Operator Parser Expr
+prefix  name op = Prefix  (EUnary op <$ operator name)
+postfix name op = Postfix (EUnary op <$ operator name)
 
 eTerm = choice
     [ parens expr
@@ -145,7 +148,7 @@ expr = makeExprParser eTerm opTable <* spaces <?> "expression"
 
 -- * Statements
 
-sDeclare = SDeclare <$> (keyword "var" *> ((,) <$> varName <*> optional (operator "=" *> expr)) `sepBy1` comma)
+sDeclare = SDeclare <$> (keyword "var" *> (((,) <$> varName <*> optional (symbol "=" *> expr)) `sepBy1` comma))
 
 sAssign = do
     var <- variable
