@@ -6,7 +6,7 @@ A parser for signatures of built-in function and variables. See the self-descrip
 -}
 
 module Language.GML.Parser.Types
-    ( variables, functions, enums )
+    ( VarType (..), variables, functions, enums )
     where
 
 import Prelude hiding (Enum)
@@ -66,13 +66,16 @@ unpack (xs, y) = [(x, y) | x <- xs]
 
 -- * Parsing variable types
 
-vars :: Parser ([Name], Type)
+type VarType = (Type, Bool)
+
+vars :: Parser ([Name], VarType)
 vars = do
+    isConst <- option False $ True <$ keyword "const"
     names <- names <* symbol ":"
     (_, ty) <- nametype
-    return (names, ty)
+    return (names, (ty, isConst))
 
-variables :: Parser [(Name, Type)]
+variables :: Parser [(Name, VarType)]
 variables = concatMap unpack <$> manyAll vars
 
 -- * Parsing function signatures

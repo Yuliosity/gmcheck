@@ -79,6 +79,10 @@ enum orientation {
     display_landscape, display_landscape_flipped, display_portrait, display_portrait_flipped
 }
 
+enum path_action {
+    path_action_stop, path_action_restart, path_action_continue, path_action_reverse
+}
+
 enum primitive {
     pr_pointlist, pr_linelist, pr_linestrip, pr_trianglelist, pr_trianglestrip, pr_trianglefan
 }

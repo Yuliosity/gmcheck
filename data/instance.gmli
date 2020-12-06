@@ -1,0 +1,28 @@
+const id : instance
+const object_index : object
+const event_action : event //TODO: event
+const event_number : int
+alarm : array<int>
+//Physics [DONE]
+x, y, xstart, ystart, xprevious, yprevious : real
+speed, direction, hspeed, vspeed, gravity, gravity_direction, friction : real
+persistent, solid : bool
+mask_index : sprite
+const bbox_left, bbox_right, bbox_top, bbox_bottom : int
+//Graphics [DONE]
+visible : bool
+sprite_index : sprite
+const sprite_height, sprite_width, sprite_xoffset, sprite_yoffset : int
+const image_number : int
+image_angle, image_xscale, image_yscale : real
+image_blend : color
+image_alpha : alpha
+depth, layer, image_index : int
+//Paths [DONE]
+const path_index : path
+path_endaction : path_action
+path_orientation, path_position, path_positionprevious, path_scale, path_speed : real
+//Timelines [DONE]
+timeline_index : timeline
+timeline_loop, timeline_running : bool
+timeline_position, timeline_speed : real

@@ -100,6 +100,12 @@ report err = do
         src <- use cSrc
         tell $ singleError src err
 
+{-| Lookup for a builtin variable. -}
+lookupBuiltin :: Name -> Checker (Maybe (Type, Bool))
+lookupBuiltin name = do
+    Builtin {bGlobalVar, bInstanceVar} <- view sBuiltin
+    return $ asum (map (M.!? name) [bGlobalVar, bInstanceVar])
+
 {-| Lookup for a variable in a memory dictionary. -}
 lookupMem :: Name -> Memory -> Maybe Type
 lookupMem = M.lookup
@@ -110,12 +116,12 @@ lookup = \case
     --Local or instance variables
     VVar name -> do
         resources <- pResources <$> view sProject
-        builtin   <- lookupBuiltin name <$> view sBuiltin
+        builtin   <- lookupBuiltin name
         local <- use cLocal
         scope <- head <$> use cScope
         self <- use (cObjects . at scope) --FIXME: report or insert self
         return $ asum
-            [ (\(t, _, _) -> t) <$> builtin -- #1: built-in variables/constants
+            [ fst <$> builtin               -- #1: built-in variables/constants
             , M.lookup name resources       -- #2: project resources
             , lookupLocal name local        -- #3: local variables
             , self >>= lookupMem name       -- #4: instance variables
@@ -288,9 +294,9 @@ execAssignModify op var expr = do
     -- TODO: simplify using MonadFail
     case var of
         VVar name -> do
-            builtin <- view sBuiltin
-            case lookupBuiltin name builtin of
-                Just (_, _, True) -> report (EAssignConst var)
+            builtin <- lookupBuiltin name
+            case builtin of
+                Just (_, True) -> report (EAssignConst var)
                 _ -> return ()
         _ -> return ()
 
