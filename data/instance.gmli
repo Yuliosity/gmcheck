@@ -1,6 +1,6 @@
 const id : instance
 const object_index : object
-const event_action : event //TODO: event
+const event_action : event
 const event_number : int
 alarm : array<int>
 //Physics [DONE]

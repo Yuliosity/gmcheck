@@ -100,7 +100,7 @@ string_lower, string_upper, string_letters, string_digits, string_lettersdigits 
 string_repeat : string, [count] int -> string
 
 /*--Containers--*/
-ds_exists : [id] int, [type] int -> bool //TODO: dstype
+ds_exists : [id] int, ds_type -> bool
 ds_set_precision : real -> void
 //Array [DONE]
 array_create : [size] int ? [value] any -> array<void>
@@ -177,7 +177,7 @@ draw_text : [x] real, [y] real, string -> void
 draw_highscore : [x1] real, [y1] real, [x2] real, [y2] real -> void
 //Colors [DONE]
 draw_getpixel : [x] int, [y] int -> color
-draw_getpixel_ext : [x] int, [y] int -> real //TODO: RGBA?
+draw_getpixel_ext : [x] int, [y] int -> int //TODO: RGBA?
 draw_get_alpha : void -> alpha
 draw_set_alpha : alpha -> void
 draw_get_color : void -> color
@@ -188,7 +188,7 @@ merge_color : color, color, alpha -> color
 color_get_red, color_get_green, color_get_blue : color -> real
 color_get_hue, color_get_saturation, color_get_value : color -> real
 //Tiles
-draw_tile : tileset, [tile] int, [frame] int, [x] int, [y] int -> void //returns real in the docs
+draw_tile : tileset, [tile] int, [frame] int, [x] int, [y] int -> void //Returns `real` in the docs
 draw_tilemap : [id] int, [x] int, [y] int -> void
 //Surfaces
 draw_surface : surface, [x] int, [y] int -> void
@@ -209,8 +209,8 @@ surface_copy_part : [dst] surface, [x] int, [y] int, surface, [xs] int, [ys] int
 /*--Cameras [DONE]--*/
 camera_create : void -> camera
 camera_create_view : [room_x] int, [room_y] int, [width] int, [height] int ?
-    [angle] real, object, [x_speed] real, [y_speed] real, [x_border] int, [y_border] int -> camera //TODO: or instance
-camera_destroy : camera -> void //returns `camera` in the docs
+    [angle] real, object, [x_speed] real, [y_speed] real, [x_border] int, [y_border] int -> camera //TODO: object or instance
+camera_destroy : camera -> void //Returns `camera` in the docs
 camera_apply : camera -> void
 camera_get_active, camera_get_default : void -> camera
 camera_get_begin_script, camera_get_end_script, camera_get_update_script : camera -> script
@@ -218,14 +218,14 @@ camera_get_proj_mat, camera_get_view_mat : camera -> matrix
 camera_get_view_border_x, camera_get_view_border_y, camera_get_view_width, camera_get_view_height,
     camera_get_view_x, camera_get_view_y : camera -> int
 camera_get_view_angle, camera_get_view_speed_x, camera_get_view_speed_y : camera -> real
-camera_get_view_target : camera -> object //TODO: or instance
+camera_get_view_target : camera -> object //TODO: object or instance
 camera_set_begin_script, camera_set_end_script, camera_set_update_script : camera, script -> void
 camera_set_default : camera -> void
 camera_set_proj_mat, camera_set_view_mat : camera, matrix -> void
 camera_set_view_angle, camera_set_view_speed_x, camera_set_view_speed_y : camera, real -> void
 camera_set_view_border, camera_set_view_pos : camera, [x] int, [y] int -> void
 camera_set_view_size : camera, [width] int, [height] int -> void
-camera_set_view_target : camera, object -> void //TODO: or instance
+camera_set_view_target : camera, object -> void //TODO: object or instance
 //Views [DONE]
 view_get_camera : [viewport] int -> camera
 view_get_hport, view_get_wport, view_get_xport, view_get_yport : [viewport] int -> int
@@ -233,7 +233,7 @@ view_get_surface_id : [viewport] int -> surface //TODO: option
 view_get_visible : [viewport] int -> bool
 view_get_camera : [viewport] int, camera -> void
 view_set_hport, view_set_wport, view_set_xport, view_set_yport : [viewport] int, int -> void
-view_set_surface_id : [viewport] int, surface -> void //returns `real` in the docs
+view_set_surface_id : [viewport] int, surface -> void //Returns `real` in the docs
 view_get_visible : [viewport] int, bool -> void
 
 /*--3D [DONE]--*/
@@ -252,8 +252,8 @@ texturegroup_get_sprites : string -> array<sprite>
 texturegroup_get_tilesets : string -> array<tileset>
 texturegroup_get_textures : string -> array<texture>
 //Primitive drawing
-draw_primitive_begin : [kind] int -> void //TODO: primitive
-draw_primitive_begin_texture : [kind] int, texture -> void //TODO: primitive
+draw_primitive_begin : primitive -> void
+draw_primitive_begin_texture : primitive, texture -> void
 draw_primitive_end : void -> void
 draw_vertex : [x] real, [y] real -> void
 draw_vertex_color : [x] real, [y] real, color, alpha -> void
@@ -285,11 +285,11 @@ vertex_format_begin : void -> void
 vertex_format_end : void -> vformat
 vertex_format_delete : vformat -> void
 vertex_format_add_color, vertex_format_add_normal, vertex_format_add_position, vertex_format_add_position_3d, vertex_format_add_texcoord : void -> void
-vertex_format_add_custom : int, int -> void //TODO: vertex_type, vertex_usage
+vertex_format_add_custom : vertex_type, vertex_usage -> void
 
 /*--Mouse [DONE]--*/
 mouse_check_button, mouse_check_button_pressed, mouse_check_button_released : mbutton -> bool
-mouse_clear : mbutton -> void //'bool' in the documentation, a mistake probably
+mouse_clear : mbutton -> void //Returns `bool` in the docs
 mouse_wheel_up, mouse_wheel_down : void -> bool
 
 /*--Keyboard [DONE]--*/
@@ -305,7 +305,7 @@ keyboard_set_numlock : bool -> void
 
 /*--Collision [MOSTLY DONE]--*/
 place_free : [x] real, [y] real -> bool
-position_meeting : [x] real, [y] real, object -> bool //FIXME: object OR instance!
+position_meeting : [x] real, [y] real, object -> bool //TODO: object or instance
 position_change  : [x] real, [y] real, object, [perf] bool -> void
 position_destroy : [x] real, [y] real -> void
 //Primitive collistions
@@ -329,13 +329,13 @@ move_wrap : [hor] bool, [vert] bool, [margin] real -> void
 /*--Instance [MOSTLY DONE]--*/
 //Create, transform, destroy [DONE]
 instance_create_depth : [x] real, [y] real, [depth] int, object -> instance
-instance_create_layer : [x] real, [y] real, [layer] int, object -> instance //TODO: layer
+instance_create_layer : [x] real, [y] real, layer, object -> instance
 instance_destroy : ? object -> void
 instance_change : object, [perf] bool -> void
 instance_copy : [perf] bool -> void
 //Activating [DONE]
 instance_activate_all : void -> void
-instance_activate_layer,  instance_deactivate_layer  : int    -> void //TODO: layer
+instance_activate_layer,  instance_deactivate_layer  : layer  -> void
 instance_activate_object, instance_deactivate_object : object -> void
 instance_activate_region :
     [left] real, [top] real, [width] real, [height] real, [inside] bool -> void
@@ -357,18 +357,18 @@ sprite_add : [filename] string, [imgnum] int, [removeback] bool, [smooth] bool, 
 sprite_add_from_surface : sprite, surface, [x] int, [y] int, [w] int, [h] int, [removeback] bool, [smooth] bool -> void
 sprite_create_from_surface : surface, [x] int, [y] int, [w] int, [h] int, [removeback] bool, [smooth] bool, [xorig] int, [yorig] int -> sprite
 sprite_assign : [dst] sprite, [src] sprite -> void
-sprite_collision_mask : sprite, [sepmasks] bool, [bboxmode] int, [bbleft] int, [bbtop] int, [bbright] int, [bbbottom] int, [kind] int, [tolerance] int -> void //TODO: bbox_kind
+sprite_collision_mask : sprite, [sepmasks] bool, [bboxmode] int, [bbleft] int, [bbtop] int, [bbright] int, [bbbottom] int, bbox_kind, [tolerance] int -> void
 sprite_delete : sprite -> void
 sprite_duplicate : sprite -> sprite
 sprite_duplicate : sprite -> sprite
-sprite_exists : sprite -> bool //`void` in the docs
+sprite_exists : sprite -> bool //Returns `void` in the docs
 sprite_flush, sprite_prefetch : sprite -> int
 sprite_flush_multi, sprite_prefetch_multi : array<sprite> -> int
 sprite_get_bbox_left, sprite_get_bbox_top, sprite_get_bbox_right, sprite_get_bbox_bottom,
     sprite_get_width, sprite_get_height, sprite_get_number, sprite_get_xoffset, sprite_get_yoffset : sprite -> int
 sprite_get_name : sprite -> string
 sprite_get_speed : sprite -> real
-sprite_get_speed_type : sprite -> int //TODO: speed_type
+sprite_get_speed_type : sprite -> speed_type
 sprite_get_texture : sprite, [subimg] int -> texture
 sprite_get_tpe : sprite, [index] int -> int
 sprite_get_uvs : sprite -> array<real>
@@ -378,11 +378,11 @@ sprite_save : sprite, [subimg] int, [filename] string -> void
 sprite_save_strip : sprite, [filename] string -> void
 sprite_set_alpha_from_sprite : sprite, [mask] sprite -> void
 sprite_set_bbox : sprite, [left] int, [top] int, [right] int, [bottom] int -> void
-sprite_set_bbox_mode : sprite, int -> void //TODO: bbox_mode
+sprite_set_bbox_mode : sprite, bbox_mode -> void
 sprite_set_cache_size : sprite, [max] int -> void
 sprite_set_cache_size_ext : sprite, [subimg] int, [max] int -> void
 sprite_set_offset : sprite, [xoff] int, [yoff] int -> void
-sprite_set_speed : sprite, [speed] real, int -> void //TODO: speed_type. Returns 'constant' in the docs
+sprite_set_speed : sprite, [speed] real, speed_type -> void //Returns `constant` in the docs
 tileset_get_name : tileset -> string
 tileset_get_texture : tileset -> texture
 tileset_get_uvs : tileset -> array<real>
@@ -437,8 +437,8 @@ game_get_speed : [type] int -> real
 display_reset : [aa] int, [vsync] bool -> void
 display_get_dpi_x, display_get_dpi_y, display_get_sleep_margin : void -> real
 display_get_width, display_get_height, display_get_gui_width, display_get_gui_height : void -> int
-display_get_orientation : void -> /*TODO: orientation*/ int
-display_get_timing_orientation : void -> /*TODO: timing_method*/ int
+display_get_orientation : void -> orientation
+display_get_timing_orientation : void -> timing_method
 display_mouse_get_x, display_mouse_get_y : void -> real
 display_mouse_set : [x] real, [y] real -> void
 display_set_gui_maximize : ? [xscale] real, [yscale] real , [xoffset] real, [yoffset] real -> void
