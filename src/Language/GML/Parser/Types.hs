@@ -45,6 +45,7 @@ nametype = do
             , ("char",    TChar)
             , ("alpha",   TAlpha)
             , ("instance",TInstance)
+            , ("layer",   TUnknown [TNewtype "layer_id", TString])
             ]
 
         vectorTypes = M.fromList

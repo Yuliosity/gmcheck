@@ -352,6 +352,83 @@ instance_id_get : int -> instance
 instance_place, instance_position : [x] real, [y] real, object -> instance
 instance_place_list, instance_position_list : [x] real, [y] real, list<instance>, [ordered] bool -> int
 
+/*--Layers [DONE]--*/
+layer_add_instance : layer, instance -> void
+layer_create : [depth] int ? [name] string -> layer_id
+layer_depth : layer, [depth] int -> void
+layer_destroy : layer -> void
+layer_destroy_instances : layer -> instance
+layer_element_move : element, layer -> void
+layer_exists : layer -> bool
+layer_instance_get_instance : element -> instance
+layer_is_draw_depth_forced : void -> bool
+layer_has_instance : layer, instance -> bool //TODO: or object
+//Getters
+layer_get_all : void -> array<layer>
+layer_get_all_elements : layer -> array<element>
+layer_get_depth : layer -> int
+layer_get_element_layer : element -> layer_id
+layer_get_element_type : element -> element_type
+layer_get_forced_depth : void -> int
+layer_get_hspeed, layer_get_vspeed : void -> real //Returns `N/A` in the docs
+layer_get_id : string -> layer_id
+layer_get_id_at_depth : int -> layer_id
+layer_get_name : layer_id -> string
+layer_get_script_begin, layer_get_script_end : layer -> script //TODO: option
+layer_get_shader : layer -> shader //TODO: option
+layer_get_target_room : void -> room
+layer_get_visible : layer -> bool
+layer_get_x, layer_get_y : layer -> real
+//Setters
+layer_hspeed, layer_vspeed : layer, real -> void
+layer_reset_target_room : void -> void
+layer_script_begin, layer_script_end : layer, script -> void
+layer_set_target_room : room -> void
+layer_set_visible : layer, bool -> void
+layer_shader      : layer, shader -> void
+layer_x, layer_y  : layer, real -> void
+//Background
+layer_background_create : layer, sprite -> element
+layer_background_exists : layer, element -> bool
+layer_background_destroy : element -> void
+layer_background_alpha  : element, alpha  -> void
+layer_background_blend  : element, color  -> void
+layer_background_sprite : element, sprite -> void
+layer_background_speed, layer_background_xscale, layer_background_yscale : element, real -> void
+layer_background_stretch, layer_background_visible,
+    layer_background_htiled, layer_background_vtiled : element, bool -> void
+layer_background_get_xscale
+layer_background_get_alpha  : element -> alpha
+layer_background_get_blend  : element -> color
+layer_background_get_index  : element -> int
+layer_background_get_speed, layer_background_get_xscale, layer_background_get_yscale  : element -> real
+layer_background_get_sprite : element -> sprite
+layer_background_get_stretch, layer_background_get_visible,
+    layer_background_get_htiled, layer_background_get_vtiled : element -> bool
+layer_background_get_id : layer -> element
+//Sprite
+layer_sprite_create : layer, [x] real, [y] real, sprite -> element
+layer_sprite_exists : layer, element -> bool
+layer_sprite_destroy : element -> void
+layer_sprite_alpha  : element, alpha  -> void
+layer_sprite_angle, layer_sprite_speed, layer_sprite_x, layer_sprite_y,
+    layer_sprite_xscale, layer_sprite_yscale : element, real -> void
+layer_sprite_blend  : element, color  -> void
+layer_sprite_change : element, sprite -> void
+layer_sprite_index  : element, int    -> void
+layer_sprite_get_alpha  : element -> alpha
+layer_sprite_get_blend  : element -> color
+layer_sprite_get_id     : element, [asset] string -> sprite
+layer_sprite_get_index  : element -> int
+layer_sprite_get_sprite : element -> sprite
+layer_sprite_get_angle, layer_sprite_get_speed, layer_sprite_get_x, layer_sprite_get_y,
+    layer_sprite_get_xscale, layer_sprite_get_yscale : element -> real
+//Tilemap
+layer_tilemap_create : layer, [x] real, [y] real, tileset, [width] int, [height] int -> element
+layer_tilemap_destroy : element -> void
+layer_tilemap_exists : layer, element -> bool
+layer_tilemap_get_id : layer -> element
+
 /*--Sprites [DONE]--*/
 sprite_add : [filename] string, [imgnum] int, [removeback] bool, [smooth] bool, [xorig] int, [yorig] int -> sprite
 sprite_add_from_surface : sprite, surface, [x] int, [y] int, [w] int, [h] int, [removeback] bool, [smooth] bool -> void

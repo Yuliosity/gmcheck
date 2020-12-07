@@ -22,6 +22,11 @@ enum ds_type {
     ds_type_map, ds_type_list, ds_type_stack, ds_type_grid, ds_type_queue, ds_type_priority
 }
 
+enum element_type {
+    layerelementtype_background, layerelementtype_instance, layerelementtype_sprite,
+    layerelementtype_tilemap, layerelementtype_particlesystem, layerelementtype_tile
+}
+
 enum event {
     ev_create, ev_destroy,
     ev_step, ev_alarm,
