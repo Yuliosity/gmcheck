@@ -221,6 +221,7 @@ derive = \case
     ENumber _ -> return TReal
     EString _ -> return TString
 
+    EArray [] -> return $ TArray TAny
     EArray (e1:es) -> do
         t1 <- derive e1
         forM_ es $ \expr -> do
@@ -260,30 +261,42 @@ derive = \case
             report (WTernaryDiff e1T e2T)
             return $ e1T <> e2T
 
-    EFuncall (fn, args) -> do
-        argsT <- mapM derive args
-        msig <- lookupFn fn
-        case msig of
-            Just sig@(Signature _ _ res) -> do
-                let minn = minArgs sig; maxn = maxArgs sig; na = length argsT
-                if minn == maxn then
-                    when (na /= minn) $ report $ EWrongArgNum fn EQ minn na
-                else do
-                    when (na <  minn) $ report $ EWrongArgNum fn GT minn na
-                    when (na >  maxn) $ report $ EWrongArgNum fn LT maxn na
-                forM_ (zip argsT $ allArgs sig) $ \(a, (name, b)) ->
-                    unless (a `isSubtype` b) $ report $ EWrongArgument fn name b a
-                return res
-            Nothing -> do
-                scripts <- pScripts <$> view sProject
-                case scripts M.!? fn of
-                    Nothing -> report (EUndefinedFunction fn) >> return TAny
-                    Just pr -> do
-                        --Push the stack frame with arguments
-                        let frame = zipWith (\i t -> ("argument" <> pack (show i), t)) [0..] argsT
-                        withFrame (fromList frame) $ run pr
-                        return TAny --FIXME: return type
-                        --Pop the stack frame
+    EFuncall (fn, args) -> deriveCall fn args
+
+    --TODO: check if fn is a constructor
+    ENew (fn, args) -> deriveCall fn args
+
+    -- TODO: actually derive
+    EFunction (Function args _cons _body) -> do
+        let argsT = zip args (repeat TAny)
+        let bodyT = TAny
+        return $ TFunction argsT bodyT
+
+    where
+        deriveCall fn args = do
+            argsT <- mapM derive args
+            msig <- lookupFn fn
+            case msig of
+                Just sig@(Signature _ _ res) -> do
+                    let minn = minArgs sig; maxn = maxArgs sig; na = length argsT
+                    if minn == maxn then
+                        when (na /= minn) $ report $ EWrongArgNum fn EQ minn na
+                    else do
+                        when (na <  minn) $ report $ EWrongArgNum fn GT minn na
+                        when (na >  maxn) $ report $ EWrongArgNum fn LT maxn na
+                    forM_ (zip argsT $ allArgs sig) $ \(a, (name, b)) ->
+                        unless (a `isSubtype` b) $ report $ EWrongArgument fn name b a
+                    return res
+                Nothing -> do
+                    scripts <- pScripts <$> view sProject
+                    case scripts M.!? fn of
+                        Nothing -> report (EUndefinedFunction fn) >> return TAny
+                        Just pr -> do
+                            --Push the stack frame with arguments
+                            let frame = zipWith (\i t -> ("argument" <> pack (show i), t)) [0..] argsT
+                            withFrame (fromList frame) $ run pr
+                            return TAny --FIXME: return type
+                            --Pop the stack frame
 
 {-| Deriving the script signature. -}
 {-
@@ -386,6 +399,8 @@ exec = \case
             Just body -> run body
 
     SThrow expr -> checkType "thrown exception" TException expr
+
+    -- Function declarations should have been preprocessed and added by now
 
     --TODO: for break/continue/exit/return/throw, check that it's the last statement in a block
 

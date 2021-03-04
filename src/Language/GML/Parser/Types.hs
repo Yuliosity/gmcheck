@@ -6,7 +6,7 @@ A parser for signatures of built-in function and variables. See the self-descrip
 -}
 
 module Language.GML.Parser.Types
-    ( VarType (..)
+    ( VarType
     , type_, signature_
     , variables, functions, enums
     ) where

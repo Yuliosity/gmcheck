@@ -40,6 +40,7 @@ library:
     - NamedFieldPuns
     - OverloadedStrings
   source-dirs: src
+  ghc-options: [-W]
 
 executables:
   gmcheck-exe:

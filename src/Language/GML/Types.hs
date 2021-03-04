@@ -44,8 +44,9 @@ data Type
     | TReal   -- ^ GML number, a primitive type
     | TString -- ^ GML string, a primitive type
     | TPtr    -- ^ GML pointer, a primitive type
-    | TMatrix -- ^ GML pointer, a primitive type
-    | TStruct [(FieldName, Type)]
+    | TMatrix -- ^ GML matrix, a primitive type
+    | TStruct [(FieldName, Type)] -- ^ GML struct, a primitive type
+    | TFunction [Argument] Type   -- ^ GML inline function, a primitive type
     -- Derived types
     | TNewtype Text -- ^ Represented as just a number, but distinguished here
     -- Vector types

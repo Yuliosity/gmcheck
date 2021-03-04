@@ -85,19 +85,24 @@ instance ToMarkup Container2 where
 instance ToMarkup Type where
     toMarkup = \case
         TAny    -> "any"
-        TUnknown opt -> do "{"; markupMany opt; "}"
+        TUnknown opt -> do "{"; markupOpt opt; "}"
         TVoid   -> "void"
         TReal   -> "real"
         TString -> "string"
         TPtr    -> "ptr"
         TMatrix -> "matrix"
+        TFunction args ret -> do
+            "("
+            forM_ args (\(name, ty) -> do toMarkup name; ";"; toMarkup ty)
+            ") -> "
+            toMarkup ret
         TNewtype n -> toMarkup n
         TContainer  con ty -> do toMarkup con; "<"; toMarkup ty; ">"
         TContainer2 con ty -> do toMarkup con; "<"; toMarkup ty; ">"
         where
-            markupMany [] = mempty
-            markupMany [x] = toMarkup x
-            markupMany (x:xs) = do toMarkup x; "|"; markupMany xs
+            markupOpt [] = mempty
+            markupOpt [x] = toMarkup x
+            markupOpt (x:xs) = do toMarkup x; "|"; markupOpt xs
 
 instance ToMarkup Event where
     toMarkup = toMarkup . show

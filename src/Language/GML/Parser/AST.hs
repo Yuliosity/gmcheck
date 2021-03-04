@@ -5,7 +5,6 @@ module Language.GML.Parser.AST
 
 import Text.Megaparsec
 import Text.Megaparsec.Char
-import qualified Text.Megaparsec.Char.Lexer as L
 import Control.Monad.Combinators.Expr
 import Data.Functor (($>))
 import Data.List (foldl')
@@ -30,6 +29,7 @@ accessor1 = do
             '|' -> SList
             '?' -> SMap
             '@' -> SArray
+            _   -> error "impossible"
     arg <- expr
     symbol "]"
     return $ \var -> VContainer cons var arg
@@ -41,6 +41,7 @@ accessor2 = do
     let cons = case spec of
             ' ' -> SArray2
             '#' -> SGrid
+            _   -> error "impossible"
     arg1 <- expr
     arg2 <- comma *> expr
     symbol "]"

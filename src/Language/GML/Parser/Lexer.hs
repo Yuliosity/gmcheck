@@ -5,8 +5,6 @@ module Language.GML.Parser.Lexer where
 import Control.Monad (guard)
 import Data.Functor (($>))
 import Data.Text (Text, pack)
-import qualified Data.Text.IO as T (readFile)
-import Data.Void (Void)
 
 import Text.Megaparsec
 import Text.Megaparsec.Char
