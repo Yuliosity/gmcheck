@@ -6,7 +6,6 @@ module Language.GML.Parser.AST
 import Text.Megaparsec
 import Text.Megaparsec.Char
 import qualified Text.Megaparsec.Char.Lexer as L
-import Control.Monad (guard)
 import Control.Monad.Combinators.Expr
 import Data.Functor (($>))
 import Data.List (foldl')
@@ -15,38 +14,16 @@ import Data.Text hiding (foldl', empty, map)
 import Language.GML.AST
 import Language.GML.Types
 import Language.GML.Parser.Common
+import Language.GML.Parser.Lexer
 
 -- * Basic tokens
 
-reserved =
-    [ "begin", "break", "case", "continue", "default", "do", "else", "end", "enum", "exit", "for"
-    , "globalvar", "if", "repeat", "return", "switch", "until", "var", "while", "with"
-    ]
-
-validIdent = try $ do
-    i <- ident
-    guard (i `notElem` reserved)
-    return i
-
-varName = validIdent <?> "variable"
-funName = validIdent <?> "function"
+varName = ident <?> "variable"
+funName = ident <?> "function"
 
 -- * Values
 
--- |Number literal.
-lNumeric :: Parser Literal
-lNumeric = LNumeric <$>
-    (try (lexeme (L.signed empty L.float))
-    <|> fromIntegral <$> lexeme (L.signed empty L.decimal))
-    <?> "number"
-
--- |String literal.
-lString :: Parser Literal
-lString = LString <$>
-    (char '\"' *> manyTill L.charLiteral (char '\"') <* spaces)
-    <?> "string"
-
-literal = lNumeric <|> lString
+literal = LNumeric <$> lNumeric <|> LString <$> lString
 
 accessor1 = do
     char '['
@@ -148,7 +125,7 @@ expr = makeExprParser eTerm opTable <* spaces <?> "expression"
 
 -- * Statements
 
-sDeclare = SDeclare <$> (keyword "var" *> (((,) <$> varName <*> optional (symbol "=" *> expr)) `sepBy1` comma))
+sDeclare = SDeclare <$> (kwVar *> (((,) <$> varName <*> optional (symbol "=" *> expr)) `sepBy1` comma))
 
 sAssign = do
     var <- variable
@@ -163,11 +140,11 @@ sAssign = do
             ]
 
 sSwitch = do
-    keyword "switch"
+    kwSwitch
     cond <- expr
     branches <- braces $ some $ do
-        cases <- some (keyword "case" *> expr <* colon)
-            <|> (keyword "default" *> colon $> [])
+        cases <- some (kwCase *> expr <* colon)
+            <|> (kwDefault *> colon $> [])
         body <- many stmt
         optional semicolon
         return (cases, body)
@@ -182,16 +159,16 @@ forStep = try sAssign <|> SExpression <$> expr
 -- | A single statement, optionally ended with a semicolon.
 stmt :: Parser Stmt
 stmt = (choice
-    [ SBlock        <$> ((symbol "{" <|> keyword "begin") *> manyTill stmt (symbol "}" <|> keyword "end"))
-    , SBreak <$ keyword "break", SContinue <$ keyword "continue", SExit <$ keyword "exit"
+    [ SBlock        <$> ((braceL <|> kwBegin) *> manyTill stmt (braceR <|> kwEnd))
+    , SBreak <$ kwBreak, SContinue <$ kwContinue, SExit <$ kwExit
     , sDeclare
-    , SWith         <$> (keyword "with" *> parens expr) <*> stmt
-    , SRepeat       <$> (keyword "repeat" *> expr) <*> stmt
-    , SWhile        <$> (keyword "while"  *> expr) <*> stmt
-    , SDoUntil      <$> (keyword "do" *> stmt) <*> (keyword "until" *> expr)
-    , SFor          <$> (keyword "for" *> symbol "(" *> forInit <* semicolon) <*> (expr <* semicolon) <*> (forStep <* symbol ")") <*> stmt
-    , SIf           <$> (keyword "if" *> expr) <*> stmt <*> optional (keyword "else" *> stmt)
-    , SReturn       <$> (keyword "return" *> expr)
+    , SWith         <$> (kwWith *> parens expr) <*> stmt
+    , SRepeat       <$> (kwRepeat *> expr) <*> stmt
+    , SWhile        <$> (kwWhile  *> expr) <*> stmt
+    , SDoUntil      <$> (kwDo *> stmt) <*> (kwUntil *> expr)
+    , SFor          <$> (kwFor *> parenL *> forInit <* semicolon) <*> (expr <* semicolon) <*> (forStep <* parenR) <*> stmt
+    , SIf           <$> (kwIf *> expr) <*> stmt <*> optional (kwElse *> stmt)
+    , SReturn       <$> (kwReturn *> expr)
     , sSwitch
     , try sAssign
     , SExpression   <$> expr

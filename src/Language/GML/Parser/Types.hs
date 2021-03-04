@@ -18,6 +18,7 @@ import Text.Megaparsec
 
 import Language.GML.Types
 import Language.GML.Parser.Common
+import Language.GML.Parser.Lexer
 
 nametype :: Parser (Name, Type)
 nametype = do
