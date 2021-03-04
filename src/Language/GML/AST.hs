@@ -82,6 +82,7 @@ data Expr
     | EVariable Variable
     | ELiteral  Literal
     | EArray    [Expr]          -- ^ Array literal
+    | EFunction [Name] Block    -- ^ Inline function
     deriving (Eq, Show)
 
 instance Num Expr where
@@ -121,15 +122,17 @@ data Stmt
     | SDeclare [(Name, Maybe Expr)]  -- ^ Declaring local variable(s)
     | SAssign Variable Expr          -- ^ Assigning a new variable, possibly declaring it in-place
     | SModify NumOp Variable Expr    -- ^ Modifying an existing variable
+    -- Function declaration
+    | SFunction Name [Name] Block -- ^ Declaring a function with arguments and a body
     -- Control flow structures
-    | SBlock   [Stmt]          -- ^ Nested sequence of statements
+    | SBlock   Block          -- ^ Nested sequence of statements
     | SWith    Expr Stmt       -- ^ Switching the execution context into an another instance
     | SRepeat  Expr Stmt       -- ^ Repeating some instructions several times
     | SWhile   Expr Stmt       -- ^ Loop with a pre-condition
     | SDoUntil Stmt Expr       -- ^ Loop with a post-condition
     | SFor    Stmt Expr Stmt Stmt    -- ^ For loop. TODO: limit the first header stmt to assign or declare, and the second one to assign
     | SIf     Expr Stmt (Maybe Stmt) -- ^ Conditional. If the `else` branch is missing, the second statement is [Nothing].
-    | SSwitch Expr [([Expr], [Stmt])]  -- ^ Switch-case. For the default branch, the case list is empty.
+    | SSwitch Expr [([Expr], Block)]  -- ^ Switch-case. For the default branch, the case list is empty.
     -- Control flow redirection
     | SBreak       -- ^ Break from a loop or switch-case
     | SContinue    -- ^ Continue to the next loop iteration
@@ -137,5 +140,8 @@ data Stmt
     | SReturn Expr -- ^ Return the result from a script
     deriving (Eq, Show)
 
+{-| A block is a sequence of statements, typically in braces. -}
+type Block = [Stmt]
+
 {-| Any GML source is a list of statements. -}
-type Program = [Stmt]
+type Program = Block

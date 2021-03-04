@@ -59,6 +59,8 @@ exprs = describe "expressions parser" $ do
     it "can parse array literals" $ do
         parse' expr "[foo, bar]" `shouldParse` EArray [foo, bar]
         parse' expr "test([foo, 42 + 42])" `shouldParse` EFuncall "test" [EArray [foo, 42 + 42]]
+    it "can parse inline functions" $ do
+        parse' expr "function(foo, bar) {return (foo + 42)}" `shouldParse` EFunction ["foo", "bar"] [SReturn (foo + 42)]
     it "must fail on keywords" $ do
         parse' variable `shouldFailOn` "do"
         parse' variable `shouldFailOn` "1 + default"
@@ -69,6 +71,8 @@ stmts = describe "statements parser" $ do
         parse' stmt "var foo, bar" `shouldParse` SDeclare [("foo", Nothing), ("bar", Nothing)]
         parse' stmt "var foo=42" `shouldParse` SDeclare [("foo", Just lit42)]
         parse' stmt "var foo=2+2, bar, baz=42" `shouldParse` SDeclare [("foo", Just $ 2 + 2), ("bar", Nothing), ("baz", Just lit42)]
+    it "can parse function declarations" $ do
+        parse' stmt "function smth(foo, bar) { return foo + bar; } " `shouldParse` SFunction "smth" ["foo", "bar"] [SReturn (foo + bar)]
     it "can parse variable assignments" $ do
         parse' stmt "foo=42" `shouldParse` SAssign "foo" lit42
         parse' stmt "foo+=\"string\"" `shouldParse` SModify Add "foo" litString

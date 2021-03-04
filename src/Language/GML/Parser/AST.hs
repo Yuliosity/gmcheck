@@ -21,6 +21,8 @@ import Language.GML.Parser.Lexer
 varName = ident <?> "variable"
 funName = ident <?> "function"
 
+funArgs = parens $ ident `sepBy` comma
+
 -- * Values
 
 literal = LNumeric <$> lNumeric <|> LString <$> lString
@@ -116,6 +118,7 @@ eTerm = choice
     [ parens expr
     , EArray <$> brackets (expr `sepBy1` comma)
     , ELiteral <$> literal
+    , EFunction <$> (kwFunction *> funArgs) <*> block
     , try funcall
     , EVariable <$> variable
     ]
@@ -159,8 +162,9 @@ forStep = try sAssign <|> SExpression <$> expr
 -- | A single statement, optionally ended with a semicolon.
 stmt :: Parser Stmt
 stmt = (choice
-    [ SBlock        <$> ((braceL <|> kwBegin) *> manyTill stmt (braceR <|> kwEnd))
+    [ SBlock        <$> block
     , SBreak <$ kwBreak, SContinue <$ kwContinue, SExit <$ kwExit
+    , SFunction     <$> (kwFunction *> ident) <*> funArgs <*> block
     , sDeclare
     , SWith         <$> (kwWith *> parens expr) <*> stmt
     , SRepeat       <$> (kwRepeat *> expr) <*> stmt
@@ -174,6 +178,9 @@ stmt = (choice
     , SExpression   <$> expr
     ] <?> "statement")
     <* optional semicolon
+
+block :: Parser Block
+block = (braceL <|> kwBegin) *> manyTill stmt (braceR <|> kwEnd)
 
 program :: Parser Program
 program = manyAll stmt

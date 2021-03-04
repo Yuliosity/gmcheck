@@ -12,7 +12,7 @@ GMCheck is best compiled and run using [Haskell Stack](https://haskellstack.org)
 
 ## Features and Plans
 
-- ✔️ (Mostly) complete parser of pre-2.3 GML.
+- ✔️ (Mostly) complete parser of pre-2.3 GML. 2.3 additions are in-progress.
 - ✔️ Deriving and tracking variable types to detect type errors.
 - ✔️ "Extending" the GML type system to distinguish booleans, integers, colors, resource identifiers and so on, which are just ordinary numbers in GML.
 - ✔️ Type-annotated signatures of built-in functions and variables, stored in editable external file.
