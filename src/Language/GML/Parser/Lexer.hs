@@ -73,8 +73,8 @@ ident = try $ do
 -- * Literals
 
 -- |Number literal.
-lNumeric :: Parser Double
-lNumeric = 
+lNumber :: Parser Double
+lNumber = 
     (try (lexeme (L.signed empty L.float))
     <|> fromIntegral <$> lexeme (L.signed empty L.decimal))
     <?> "number"

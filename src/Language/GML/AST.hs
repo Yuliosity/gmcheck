@@ -15,10 +15,6 @@ import Language.GML.Types
 
 -- * GML values
 
-{-| Literal constant in a source. -}
-data Literal = LNumeric Double | LString String
-    deriving (Eq, Show)
-
 {-| Variables that hold a value and may be read or changed. -}
 data Variable
     = VVar   Name          -- ^ Local, self or global variable
@@ -26,9 +22,6 @@ data Variable
     | VContainer  Container  Variable Expr         -- ^ Data structure accessor. Arrays are a special case.
     | VContainer2 Container2 Variable (Expr, Expr) -- ^ 2D data structure accessor
     deriving (Eq, Show)
-
-instance IsString Variable where
-    fromString = VVar
 
 {-| One-dimensional array, indexed by a number. -}
 pattern VArray  v e = VContainer  SArray  v e
@@ -75,18 +68,29 @@ type FunName = String
 
 {-| Expression which can be evaluated to a value. -}
 data Expr
-    = EUnary    UnOp Expr       -- ^ Unary expression
-    | EBinary   BinOp Expr Expr -- ^ Binary expression
-    | ETernary  Expr Expr Expr  -- ^ Ternary conditional [cond ? t : f]
-    | EFuncall  Name [Expr]     -- ^ Function/script call with arguments
-    | EVariable Variable
-    | ELiteral  Literal
+    -- Values
+    = EVariable Variable
+    | ENumber   Double          -- ^ Numeric literal
+    | EString   String          -- ^ String literal
     | EArray    [Expr]          -- ^ Array literal
     | EFunction [Name] Block    -- ^ Inline function
+    -- Operators
+    | EUnary    UnOp  Expr      -- ^ Unary expression
+    | EBinary   BinOp Expr Expr -- ^ Binary expression
+    | ETernary  Expr  Expr Expr -- ^ Ternary conditional [cond ? t : f]
+    | EFuncall  Name [Expr]     -- ^ Function/script call with arguments
     deriving (Eq, Show)
 
+-- Helper instances for writing expressions in code
+
+instance IsString Variable where
+    fromString = VVar --TODO: parse
+
+instance IsString Expr where
+    fromString = EVariable . fromString
+
 instance Num Expr where
-    fromInteger = ELiteral . LNumeric . fromInteger
+    fromInteger = ENumber . fromInteger
     (+) = eBinary Add
     (-) = eBinary Sub
     (*) = eBinary Mul
@@ -95,7 +99,7 @@ instance Num Expr where
     signum x = EFuncall "sign" [x]
 
 instance Fractional Expr where
-    fromRational = ELiteral . LNumeric . fromRational
+    fromRational = ENumber . fromRational
     (/) = eBinary Div
 
 class Binary a where

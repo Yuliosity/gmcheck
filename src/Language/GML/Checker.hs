@@ -211,8 +211,8 @@ checkCond = checkType "conditional" TBool
 {-| Deriving the expression type. -}
 derive :: Expr -> Checker Type
 derive = \case
-    ELiteral (LNumeric _) -> return TReal
-    ELiteral (LString  _) -> return TString
+    ENumber _ -> return TReal
+    EString _ -> return TString
 
     EArray (e1:es) -> do
         t1 <- derive e1

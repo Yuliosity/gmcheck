@@ -25,8 +25,6 @@ funArgs = parens $ ident `sepBy` comma
 
 -- * Values
 
-literal = LNumeric <$> lNumeric <|> LString <$> lString
-
 accessor1 = do
     char '['
     spec <- option '@' $ oneOf [ '|', '?', '@' ]
@@ -117,7 +115,8 @@ postfix name op = Postfix (EUnary op <$ operator name)
 eTerm = choice
     [ parens expr
     , EArray <$> brackets (expr `sepBy1` comma)
-    , ELiteral <$> literal
+    , ENumber <$> lNumber
+    , EString <$> lString
     , EFunction <$> (kwFunction *> funArgs) <*> block
     , try funcall
     , EVariable <$> variable

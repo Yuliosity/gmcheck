@@ -8,9 +8,9 @@ import Language.GML.AST
 import Language.GML.Types
 import Language.GML.Parser.AST
 
-lit42 = ELiteral (LNumeric 42)
-litPi = ELiteral (LNumeric 3.14)
-litString = ELiteral (LString "string")
+lit42 = ENumber 42
+litPi = ENumber 3.14
+litString = EString "string"
 sin_pi = EFuncall "sin" [litPi]
 write_string = EFuncall "write" [litString]
 foo = EVariable "foo"
@@ -95,7 +95,7 @@ stmts = describe "statements parser" $ do
         parse' stmt "while(foo) {foo -= 42; write(\"string\")}" `shouldParse`
             SWhile foo (SBlock [SModify Sub "foo" lit42, SExpression write_string])
         parse' stmt "for(foo = 42; foo > 0; foo--) ++bar" `shouldParse`
-            SFor (SAssign "foo" lit42) (eBinary Greater foo (ELiteral $ LNumeric 0)) (SExpression $ EUnary UPostDec foo) (SExpression $ EUnary UPreInc bar) 
+            SFor (SAssign "foo" lit42) (eBinary Greater foo (ENumber 0)) (SExpression $ EUnary UPostDec foo) (SExpression $ EUnary UPreInc bar) 
         parse' stmt "for(var foo=42; foo < bar; foo+=42) write(\"string\")" `shouldParse`
             SFor (SDeclare [("foo", Just lit42)]) (eBinary Less foo bar) (SModify Add "foo" lit42) (SExpression write_string)
     it "can parse switch block" $ do
