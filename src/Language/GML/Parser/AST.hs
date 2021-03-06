@@ -114,9 +114,10 @@ postfix name op = Postfix (EUnary op <$ operator name)
 
 eTerm = choice
     [ parens expr
-    , EArray <$> brackets (expr `sepBy1` comma)
     , ENumber <$> lNumber
     , EString <$> lString
+    , EArray <$> brackets (expr `sepBy1` comma)
+    , EStruct <$> braces (((,) <$> ident <*> (colon *> expr)) `sepBy` comma)
     , EFunction <$> (kwFunction *> funArgs) <*> block
     , try funcall
     , EVariable <$> variable

@@ -64,6 +64,8 @@ data BinOp
 
 -- * Expressions
 
+type FieldName = String
+
 type FunName = String
 
 {-| Expression which can be evaluated to a value. -}
@@ -74,6 +76,7 @@ data Expr
     | EString   String          -- ^ String literal
     | EArray    [Expr]          -- ^ Array literal
     | EFunction [Name] Block    -- ^ Inline function
+    | EStruct   [(FieldName, Expr)] -- ^ Struct
     -- Operators
     | EUnary    UnOp  Expr      -- ^ Unary expression
     | EBinary   BinOp Expr Expr -- ^ Binary expression
@@ -122,21 +125,20 @@ eBinary = EBinary . toBin
 {-| Statement (instruction). -}
 data Stmt
     = SExpression Expr -- ^ Calling an expression (typically a function/script with side effects)
-    -- Variable declaration and modification
+    -- Ddeclarations and modification
     | SDeclare [(Name, Maybe Expr)]  -- ^ Declaring local variable(s)
     | SAssign Variable Expr          -- ^ Assigning a new variable, possibly declaring it in-place
     | SModify NumOp Variable Expr    -- ^ Modifying an existing variable
-    -- Function declaration
-    | SFunction Name [Name] Block -- ^ Declaring a function with arguments and a body
+    | SFunction Name [Name] Block    -- ^ Declaring a function with arguments and a body
     -- Control flow structures
-    | SBlock   Block          -- ^ Nested sequence of statements
+    | SBlock   Block           -- ^ Nested sequence of statements
     | SWith    Expr Stmt       -- ^ Switching the execution context into an another instance
     | SRepeat  Expr Stmt       -- ^ Repeating some instructions several times
     | SWhile   Expr Stmt       -- ^ Loop with a pre-condition
     | SDoUntil Stmt Expr       -- ^ Loop with a post-condition
-    | SFor    Stmt Expr Stmt Stmt    -- ^ For loop. TODO: limit the first header stmt to assign or declare, and the second one to assign
-    | SIf     Expr Stmt (Maybe Stmt) -- ^ Conditional. If the `else` branch is missing, the second statement is [Nothing].
-    | SSwitch Expr [([Expr], Block)]  -- ^ Switch-case. For the default branch, the case list is empty.
+    | SFor     Stmt Expr Stmt Stmt    -- ^ For loop. TODO: limit the first header stmt to assign or declare, and the second one to assign
+    | SIf      Expr Stmt (Maybe Stmt) -- ^ Conditional. If the `else` branch is missing, the second statement is [Nothing].
+    | SSwitch  Expr [([Expr], Block)] -- ^ Switch-case. For the default branch, the case list is empty.
     -- Control flow redirection
     | SBreak       -- ^ Break from a loop or switch-case
     | SContinue    -- ^ Continue to the next loop iteration

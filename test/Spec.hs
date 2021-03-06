@@ -61,6 +61,9 @@ exprs = describe "expressions parser" $ do
         parse' expr "test([foo, 42 + 42])" `shouldParse` EFuncall "test" [EArray [foo, 42 + 42]]
     it "can parse inline functions" $ do
         parse' expr "function(foo, bar) {return (foo + 42)}" `shouldParse` EFunction ["foo", "bar"] [SReturn (foo + 42)]
+    it "can parse structs" $ do
+        parse' expr "{}" `shouldParse` EStruct []
+        parse' expr "{foo : a + 42, bar : \"string\"}" `shouldParse` EStruct [("foo", "a" + lit42), ("bar", litString)]
     it "must fail on keywords" $ do
         parse' variable `shouldFailOn` "do"
         parse' variable `shouldFailOn` "1 + default"
