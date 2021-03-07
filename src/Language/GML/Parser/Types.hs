@@ -39,6 +39,8 @@ nametype = do
             , ("string",  TString)
             , ("ptr",     TPtr)
             , ("matrix",  TMatrix)
+            -- , ("function", TFunction [] TAny)
+            , ("struct",  TStruct []) --TODO: which fields?
             -- Derived types
             , ("any",     TAny)
             , ("int",     TInt)

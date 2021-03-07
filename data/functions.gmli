@@ -1,7 +1,41 @@
 /*--Type checking [DONE]--*/
 is_string, is_real, is_bool, is_array, is_ptr, is_int32, is_int64, is_vec3, is_vec4,
-    is_matrix, is_undefined, is_nan, is_infinity : any -> bool
+    is_method, is_struct, is_matrix, is_undefined, is_nan, is_infinity : any -> bool
 typeof : any -> string
+instanceof : struct -> string
+
+/*--Type conversion [DONE]--*/
+chr : keycode -> char
+ord : char -> keycode
+real   : string -> real
+string : real -> string
+bool : real -> bool
+ptr : any -> ptr //TODO: either a real, a string, an int64, an int32, or a ptr
+int64 : any -> int //TODO: either a real, a string, an int64, an int32, or a ptr, into int64
+
+/*--Variable functions [DONE]--*/
+//Instance variables
+variable_instance_exists : instance, string -> bool
+variable_instance_get_names : instance -> array<string> //TODO: or global
+variable_instance_names_count : instance -> int
+variable_instance_get : instance, string -> any
+variable_instance_set : instance, string, any -> void
+//Global variables
+variable_global_exists : string -> bool
+variable_global_get : string -> any
+variable_global_set : string, any -> void
+//Struct variables
+variable_struct_exists : struct, string -> bool
+variable_struct_get : struct, string -> any
+variable_struct_set : struct, string, any -> void
+variable_struct_remove : struct, string -> void
+variable_struct_get_names : struct -> array<string>
+variable_struct_names_count : struct -> int
+
+/*--Methods [DONE]--*/
+//method : any, function -> function //TODO: what should be here?
+method_get_self : function -> instance
+method_get_index : function -> int
 
 /*--Math [MOSTLY DONE]--*/
 //Arithmetics
@@ -88,11 +122,7 @@ string_byte_at : string, int -> int
 string_ord_at  : string, int -> keycode
 string_length : string -> int
 //Transform
-chr : keycode -> char
-ord : char -> keycode
-real   : string -> real
 string_format : real, [tot] int, [dec] int -> string
-string : real -> string
 string_copy, string_delete : string, [index] int, [count] int -> string
 string_count : [substr] string, string -> int
 string_replace, string_replace_all : string, [substr] string, [newstr] string -> string
