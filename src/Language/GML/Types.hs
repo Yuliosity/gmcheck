@@ -13,6 +13,9 @@ import Data.List (union)
 {-| Identifier (name). -}
 type Name = String
 
+{-| Name of struct fields. -}
+type FieldName = String
+
 {-| Linear data structure type. In GML any structure descriptor
     is also just a number, but here we want to differ. -}
 data Container
@@ -41,6 +44,7 @@ data Type
     | TString -- ^ GML string, a primitive type
     | TPtr    -- ^ GML pointer, a primitive type
     | TMatrix -- ^ GML pointer, a primitive type
+    | TStruct [(FieldName, Type)]
     -- Derived types
     | TNewtype String -- ^ Represented as just a number, but distinguished here
     -- Vector types

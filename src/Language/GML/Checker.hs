@@ -211,6 +211,12 @@ checkCond = checkType "conditional" TBool
 {-| Deriving the expression type. -}
 derive :: Expr -> Checker Type
 derive = \case
+    EVariable var -> do
+        mty <- lookup var
+        case mty of
+            Nothing -> report (EUndefinedVar var) >> return TVoid
+            Just ty -> return ty
+
     ENumber _ -> return TReal
     EString _ -> return TString
 
@@ -222,11 +228,11 @@ derive = \case
             --TODO: array of variants?
         return $ TArray t1
 
-    EVariable var -> do
-        mty <- lookup var
-        case mty of
-            Nothing -> report (EUndefinedVar var) >> return TVoid
-            Just ty -> return ty
+    EStruct fields -> do
+        fieldsT <- forM fields $ \(field, expr) -> do
+            ty <- derive expr
+            return (field, ty)
+        return $ TStruct fieldsT
 
     EUnary op expr -> do
         exprT <- derive expr

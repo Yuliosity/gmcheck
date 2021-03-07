@@ -64,8 +64,6 @@ data BinOp
 
 -- * Expressions
 
-type FieldName = String
-
 type FunName = String
 
 {-| Expression which can be evaluated to a value. -}
