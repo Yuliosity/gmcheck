@@ -165,20 +165,21 @@ forStep = try sAssign <|> SExpression <$> expr
 -- | A single statement, optionally ended with a semicolon.
 stmt :: Parser Stmt
 stmt = (choice
-    [ SBlock        <$> block
+    [ SBlock      <$> block
     , SBreak <$ kwBreak, SContinue <$ kwContinue, SExit <$ kwExit
-    , SFunction     <$> (kwFunction *> ident) <*> function
+    , SFunction   <$> (kwFunction *> ident) <*> function
     , sDeclare
-    , SWith         <$> (kwWith *> parens expr) <*> stmt
-    , SRepeat       <$> (kwRepeat *> expr) <*> stmt
-    , SWhile        <$> (kwWhile  *> expr) <*> stmt
-    , SDoUntil      <$> (kwDo *> stmt) <*> (kwUntil *> expr)
-    , SFor          <$> (kwFor *> parenL *> forInit <* semicolon) <*> (expr <* semicolon) <*> (forStep <* parenR) <*> stmt
-    , SIf           <$> (kwIf *> expr) <*> stmt <*> optional (kwElse *> stmt)
-    , SReturn       <$> (kwReturn *> expr)
+    , SWith       <$> (kwWith *> parens expr) <*> stmt
+    , SRepeat     <$> (kwRepeat *> expr) <*> stmt
+    , SWhile      <$> (kwWhile  *> expr) <*> stmt
+    , SDoUntil    <$> (kwDo *> stmt) <*> (kwUntil *> expr)
+    , SFor        <$> (kwFor *> parenL *> forInit <* semicolon) <*> (expr <* semicolon) <*> (forStep <* parenR) <*> stmt
+    , SIf         <$> (kwIf *> expr) <*> stmt <*> optional (kwElse *> stmt)
+    , SReturn     <$> (kwReturn *> expr)
+    , SThrow      <$> (kwThrow  *> expr)
     , sSwitch
     , try sAssign
-    , SExpression   <$> expr
+    , SExpression <$> expr
     ] <?> "statement")
     <* optional semicolon
 

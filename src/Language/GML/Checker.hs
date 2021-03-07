@@ -375,7 +375,7 @@ exec = \case
 
     SBlock stmts -> run stmts
 
-    --TODO: for break/continue/exit/return, check that it's the last statement in a block
+    --TODO: for break/continue/exit/return/throw, check that it's the last statement in a block
 
     _ -> return ()
 

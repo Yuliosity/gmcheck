@@ -16,6 +16,12 @@ data Error
     | WHeteroArray Variable Type Type
     -- | Different types of the ternary operator
     | WTernaryDiff Type Type
+    -- | Data structure is not destroyed
+    | WDataStructureLeak Variable
+    -- | Function always throw an exception
+    | WAlwaysThrow Name
+    -- | Unreachable code after returns or throws
+    | WUnreachable -- TODO: position
     -- | Referencing an unknown variable
     | EUndefinedVar Variable
     -- | Calling an unknown function or script
@@ -44,8 +50,8 @@ data Error
     | EWrongArgNum Name Ordering Int Int
     -- | Wrong type of function argument
     | EWrongArgument Name Name Type Type
-    -- | Data structure is not destroyed
-    | WDataStructureLeak Variable
+    -- | Not every branch returns a value
+    | ENotAlwaysReturn Name
     deriving Show
 
 errNum :: Error -> Int

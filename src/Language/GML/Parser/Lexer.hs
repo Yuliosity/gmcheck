@@ -50,12 +50,12 @@ keyword kw = (lexeme . try) (string kw <* notFollowedBy alphaNumChar) $> ()
 reserved =
     [ "begin", "break", "case", "constructor", "continue", "default", "delete", "do"
     , "else", "end", "enum", "exit", "for", "function", "globalvar", "if", "new"
-    , "repeat", "return", "static", "switch", "until", "var", "while", "with"
+    , "repeat", "return", "static", "switch", "throw", "until", "var", "while", "with"
     ]
 
 [ kwBegin, kwBreak, kwCase, kwConstructor, kwContinue, kwDefault, kwDelete, kwDo
     , kwElse, kwEnd, kwEnum, kwExit, kwFor, kwFunction, kwGlobalvar, kwIf, kwNew
-    , kwRepeat, kwReturn, kwStatic, kwSwitch, kwUntil, kwVar, kwWhile, kwWith
+    , kwRepeat, kwReturn, kwStatic, kwSwitch, kwThrow, kwUntil, kwVar, kwWhile, kwWith
     ] = map keyword reserved
 
 -- * Operators

@@ -146,6 +146,7 @@ data Stmt
     | SContinue    -- ^ Continue to the next loop iteration
     | SExit        -- ^ Exit from a script/event without a result
     | SReturn Expr -- ^ Return the result from a script
+    | SThrow  Expr -- ^ Throw an exception
     deriving (Eq, Show)
 
 {-| A block is a sequence of statements, typically in braces. -}
