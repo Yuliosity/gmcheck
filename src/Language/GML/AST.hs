@@ -64,7 +64,9 @@ data BinOp
 
 -- * Expressions
 
-type FunName = String
+{-| Anonymous function (possibly a constructor) with arguments and a body -}
+data Function = Function [Name] Bool Block    
+    deriving (Eq, Show)
 
 {-| Expression which can be evaluated to a value. -}
 data Expr
@@ -73,13 +75,14 @@ data Expr
     | ENumber   Double          -- ^ Numeric literal
     | EString   String          -- ^ String literal
     | EArray    [Expr]          -- ^ Array literal
-    | EFunction [Name] Block    -- ^ Inline function
+    | EFunction Function        -- ^ Inline function
     | EStruct   [(FieldName, Expr)] -- ^ Struct
     -- Operators
     | EUnary    UnOp  Expr      -- ^ Unary expression
     | EBinary   BinOp Expr Expr -- ^ Binary expression
     | ETernary  Expr  Expr Expr -- ^ Ternary conditional [cond ? t : f]
     | EFuncall  Name [Expr]     -- ^ Function/script call with arguments
+    | ENew      Name [Expr]     -- ^ Constructor call with arguments
     deriving (Eq, Show)
 
 -- Helper instances for writing expressions in code
@@ -124,10 +127,11 @@ eBinary = EBinary . toBin
 data Stmt
     = SExpression Expr -- ^ Calling an expression (typically a function/script with side effects)
     -- Ddeclarations and modification
-    | SDeclare [(Name, Maybe Expr)]  -- ^ Declaring local variable(s)
-    | SAssign Variable Expr          -- ^ Assigning a new variable, possibly declaring it in-place
-    | SModify NumOp Variable Expr    -- ^ Modifying an existing variable
-    | SFunction Name [Name] Block    -- ^ Declaring a function with arguments and a body
+    | SDeclare [(Name, Maybe Expr)] -- ^ Declaring local variable(s)
+    | SAssign Variable Expr         -- ^ Assigning a new variable, possibly declaring it in-place
+    | SModify NumOp Variable Expr   -- ^ Modifying an existing variable
+    | SFunction Name Function       -- ^ Declaring a function (possibly constructor) with arguments and a body
+    | SDelete Name                  -- ^ Delete operator
     -- Control flow structures
     | SBlock   Block           -- ^ Nested sequence of statements
     | SWith    Expr Stmt       -- ^ Switching the execution context into an another instance

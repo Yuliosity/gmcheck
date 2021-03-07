@@ -19,7 +19,7 @@ data Error
     -- | Referencing an unknown variable
     | EUndefinedVar Variable
     -- | Calling an unknown function or script
-    | EUndefinedFunction FunName
+    | EUndefinedFunction Name
     -- | Function doesn't return anything
     | ENoResult Variable
     -- | Assigning to a constant
@@ -41,9 +41,9 @@ data Error
     | EBadIndex  Container Type
     | EBadIndex2 Container2 Type
     -- | Wrong argument count
-    | EWrongArgNum FunName Ordering Int Int
+    | EWrongArgNum Name Ordering Int Int
     -- | Wrong type of function argument
-    | EWrongArgument FunName Name Type Type
+    | EWrongArgument Name Name Type Type
     -- | Data structure is not destroyed
     | WDataStructureLeak Variable
     deriving Show

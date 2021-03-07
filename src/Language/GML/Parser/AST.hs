@@ -20,9 +20,6 @@ import Language.GML.Parser.Lexer
 
 varName = ident <?> "variable"
 funName = ident <?> "function"
-
-funArgs = parens $ ident `sepBy` comma
-
 -- * Values
 
 accessor1 = do
@@ -56,9 +53,12 @@ variable = do
     let nest2 = foldl' (flip ($)) nest accs
     return nest2
 
--- * Expressions
+function = Function
+    <$> (parens $ ident `sepBy` comma)
+    <*> option False (kwConstructor $> True)
+    <*> block
 
-funcall = EFuncall <$> funName <*> parens (expr `sepBy` comma)
+-- * Expressions
 
 opTable :: [[Operator Parser Expr]]
 opTable =
@@ -112,14 +112,17 @@ prefix, postfix :: Text -> UnOp -> Operator Parser Expr
 prefix  name op = Prefix  (EUnary op <$ operator name)
 postfix name op = Postfix (EUnary op <$ operator name)
 
+funcall = (,) <$> funName <*> parens (expr `sepBy` comma)
+
 eTerm = choice
     [ parens expr
     , ENumber <$> lNumber
     , EString <$> lString
     , EArray <$> brackets (expr `sepBy1` comma)
     , EStruct <$> braces (((,) <$> ident <*> (colon *> expr)) `sepBy` comma)
-    , EFunction <$> (kwFunction *> funArgs) <*> block
-    , try funcall
+    , EFunction <$> (kwFunction *> function)
+    , uncurry ENew <$> (kwNew *> funcall)
+    , try (uncurry EFuncall <$> funcall)
     , EVariable <$> variable
     ]
 
@@ -164,7 +167,7 @@ stmt :: Parser Stmt
 stmt = (choice
     [ SBlock        <$> block
     , SBreak <$ kwBreak, SContinue <$ kwContinue, SExit <$ kwExit
-    , SFunction     <$> (kwFunction *> ident) <*> funArgs <*> block
+    , SFunction     <$> (kwFunction *> ident) <*> function
     , sDeclare
     , SWith         <$> (kwWith *> parens expr) <*> stmt
     , SRepeat       <$> (kwRepeat *> expr) <*> stmt

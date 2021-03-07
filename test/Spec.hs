@@ -60,10 +60,12 @@ exprs = describe "expressions parser" $ do
         parse' expr "[foo, bar]" `shouldParse` EArray [foo, bar]
         parse' expr "test([foo, 42 + 42])" `shouldParse` EFuncall "test" [EArray [foo, 42 + 42]]
     it "can parse inline functions" $ do
-        parse' expr "function(foo, bar) {return (foo + 42)}" `shouldParse` EFunction ["foo", "bar"] [SReturn (foo + 42)]
+        parse' expr "function(foo, bar) {return (foo + 42)}" `shouldParse`
+            EFunction (Function ["foo", "bar"] False [SReturn (foo + 42)])
     it "can parse structs" $ do
         parse' expr "{}" `shouldParse` EStruct []
-        parse' expr "{foo : a + 42, bar : \"string\"}" `shouldParse` EStruct [("foo", "a" + lit42), ("bar", litString)]
+        parse' expr "{foo : a + 42, bar : \"string\"}" `shouldParse`
+            EStruct [("foo", "a" + lit42), ("bar", litString)]
     it "must fail on keywords" $ do
         parse' variable `shouldFailOn` "do"
         parse' variable `shouldFailOn` "1 + default"
@@ -73,9 +75,13 @@ stmts = describe "statements parser" $ do
         parse' stmt "var foo" `shouldParse` SDeclare [("foo", Nothing)]
         parse' stmt "var foo, bar" `shouldParse` SDeclare [("foo", Nothing), ("bar", Nothing)]
         parse' stmt "var foo=42" `shouldParse` SDeclare [("foo", Just lit42)]
-        parse' stmt "var foo=2+2, bar, baz=42" `shouldParse` SDeclare [("foo", Just $ 2 + 2), ("bar", Nothing), ("baz", Just lit42)]
+        parse' stmt "var foo=2+2, bar, baz=42" `shouldParse`
+            SDeclare [("foo", Just $ 2 + 2), ("bar", Nothing), ("baz", Just lit42)]
     it "can parse function declarations" $ do
-        parse' stmt "function smth(foo, bar) { return foo + bar; } " `shouldParse` SFunction "smth" ["foo", "bar"] [SReturn (foo + bar)]
+        parse' stmt "function smth(foo, bar) { return foo + bar; } " `shouldParse`
+            SFunction "smth" (Function ["foo", "bar"] False [SReturn (foo + bar)])
+        parse' stmt "function cons(foo) constructor { bar = foo }" `shouldParse`
+            SFunction "cons" (Function ["foo"] True [SAssign "bar" foo])
     it "can parse variable assignments" $ do
         parse' stmt "foo=42" `shouldParse` SAssign "foo" lit42
         parse' stmt "foo+=\"string\"" `shouldParse` SModify Add "foo" litString
@@ -87,6 +93,7 @@ stmts = describe "statements parser" $ do
         parse' stmt "write(\"string\")" `shouldParse` SExpression write_string
         parse' stmt "var foo = sin(3.14)" `shouldParse` SDeclare [("foo", Just sin_pi)]
         parse' stmt "return atan2(1, a)" `shouldParse` SReturn (EFuncall "atan2" [1, EVariable "a"])
+        parse' stmt "foo = new bar()" `shouldParse` SAssign "foo" (ENew "bar" [])
     it "can parse conditionals" $ do
         parse' stmt "if foo==42 exit" `shouldParse` SIf (eBinary Eq foo lit42) SExit Nothing
         parse' stmt "if (foo < 42) exit" `shouldParse` SIf foo_lt_42 SExit Nothing

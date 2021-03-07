@@ -181,7 +181,7 @@ setVar var ty = case var of
     _ -> return () --error "changing non-local variables is not implemented yet"
 
 {-| Lookup for a function signature. -}
-lookupFn :: FunName -> Checker (Maybe Signature)
+lookupFn :: Name -> Checker (Maybe Signature)
 lookupFn name = do
     builtinFn <- bFunctions <$> view sBuiltin
     -- TODO: derive and store script types
