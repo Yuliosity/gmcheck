@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
+module AST where
 
 import Test.Hspec
 import Test.Hspec.Megaparsec
@@ -121,8 +121,7 @@ programs = describe "complex script parser" $ do
         parse' program "while(foo < 42) {while(bar) {write(\"string\");}}" `shouldParse`
             [SWhile foo_lt_42 $ SBlock [SWhile bar $ SBlock [SExpression write_string]]]
 
-main :: IO ()
-main = hspec $ do
+test = hspec $ do
     vars
     exprs
     stmts

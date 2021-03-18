@@ -54,9 +54,9 @@ executables:
     - gmcheck
 
 tests:
-  gmcheck-test:
-    main:                Spec.hs
-    source-dirs:         test
+  gmcheck-parser-test:
+    main:                Main.hs
+    source-dirs:         src/Language/GML/Parser/test
     ghc-options:
     - -threaded
     - -rtsopts
@@ -65,3 +65,5 @@ tests:
     - hspec
     - hspec-megaparsec
     - gmcheck
+    default-extensions:
+    - OverloadedStrings
