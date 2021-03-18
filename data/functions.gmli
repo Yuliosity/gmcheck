@@ -135,11 +135,17 @@ ds_set_precision : real -> void
 //Array [DONE]
 array_create : [size] int ? [value] any -> array<void>
 array_copy : [dst] array<any>, [dst_index] int, [src] array<any>, [src_index] int, [count] int -> void
+array_resize : array<any>, int -> void
 array_equals : array<any>, array<any> -> bool
+array_length : array<any> -> int
+array_length_1d : array<any> -> int //TODO: deprecated
+array_length_2d, array_height_2d : array2<any> -> int //TODO: deprecated
 array_get : array<any>, [index] int -> any
-array_get : array<any>, [index] int, [val] any -> void
-array_length_1d : array<any> -> int
-array_length_2d, array_height_2d : array2<any> -> int
+array_set : array<any>, [index] int, [val] any -> void
+array_insert : array<any>, [index] int * [val] any -> void
+array_push : array<any> * [val] any -> void
+array_pop : array<any> -> any
+//array_sort : array<any>, bool | function<any, any -> any> -> any
 //List
 ds_list_create : void -> list<void>
 ds_list_clear, ds_list_destroy : list<any> -> void
@@ -164,7 +170,40 @@ ds_queue_clear, ds_queue_destroy : queue<any> -> void
 ds_queue_head, ds_queue_tail, ds_queue_dequeue : queue<any> -> any
 ds_queue_empty : queue<any> -> bool
 ds_queue_size : queue<any> -> int
-
+//Grid
+ds_grid_create : [width] int, [height] int -> grid<void>
+ds_grid_destroy : grid<any> -> void
+ds_grid_resize : grid<any>, [width] int, [height] int -> void
+ds_grid_width, ds_grid_height : grid<any> -> int
+ds_grid_get : grid<any>, [x] int, [y] int -> any
+ds_grid_get_max, ds_grid_get_min, ds_grid_get_sum : grid<real>, [x1] int, [y1] int, [x2] int, [y2] int -> real //TODO: or string
+ds_grid_get_mean : grid<real>, [x1] int, [y1] int, [x2] int, [y2] int -> real 
+ds_grid_get_disk_max, ds_grid_get_disk_min, ds_grid_get_disk_sum :
+    grid<real>, [x] int, [y] int, [r] int -> real //TODO: or string
+ds_grid_get_disk_mean : grid<real>, [x] int, [y] int, [r] int -> real
+ds_grid_set : grid<any>, [x] int, [y] int, any -> void
+ds_grid_set_disk : grid<any>, [x] int, [y] int, [r] int, any -> void
+ds_grid_set_grid_region : grid<any>, [source] grid<any>, [x1] int, [y1] int, [x2] int, [y2] int, [xpos] int, [ypos] int -> void
+ds_grid_set_region : grid<any>, [x1] int, [y1] int, [x2] int, [y2] int, any -> void
+ds_grid_add : grid<real>, [x] int, [y] int, real -> void //TODO: or string
+ds_grid_add_disk : grid<real>, [x] int, [y] int, [r] int, real -> void //TODO: or string
+ds_grid_add_grid_region : grid<real>, [source] grid<any>, [x1] int, [y1] int, [x2] int, [y2] int, [xpos] int, [ypos] int -> void //TODO: or string
+ds_grid_add_region : grid<real>, [x1] int, [y1] int, [x2] int, [y2] int, real -> void //TODO: or string
+ds_grid_multiply : grid<real>, [x] int, [y] int, real -> void
+ds_grid_multiply_disk : grid<real>, [x] int, [y] int, [r] int, real -> void
+ds_grid_multiply_grid_region : grid<real>, [source] grid<any>, [x1] int, [y1] int, [x2] int, [y2] int, [xpos] int, [ypos] int -> void
+ds_grid_multiply_region : grid<real>, [x1] int, [y1] int, [x2] int, [y2] int, real -> void
+ds_grid_value_exists : grid<any>, [x1] int, [y1] int, [x2] int, [y2] int, any -> bool
+ds_grid_value_x, ds_grid_value_y : grid<any>, [x1] int, [y1] int, [x2] int, [y2] int, any -> int
+ds_grid_value_disk_exists : grid<real>, [x] int, [y] int, [r] int, any -> bool
+ds_grid_value_disk_x, ds_grid_value_disk_y : grid<real>, [x] int, [y] int, [r] int, any -> int
+ds_grid_clear : grid<any>, any -> void
+ds_grid_copy : grid<any>, [source] grid<any> -> void
+ds_grid_shuffle : grid<any> -> void
+ds_grid_sort : grid<any>, [column] int, [ascending] bool -> void
+ds_grid_write : grid<any> -> string
+ds_grid_read : grid<any>, string ? [legacy] bool -> void
+mp_grid_to_ds_grid : mp_grid, grid<real> -> bool
 /*--Draw--*/
 //Sprites [DONE]
 draw_self : void -> void
@@ -333,20 +372,31 @@ keyboard_unset_map : keycode -> void
 keyboard_get_numlock : void -> bool
 keyboard_set_numlock : bool -> void
 
-/*--Collision [MOSTLY DONE]--*/
-place_free : [x] real, [y] real -> bool
-position_meeting : [x] real, [y] real, object -> bool //TODO: object or instance
+/*--Collisions [DONE]--*/
+place_empty : [x] real, [y] real ? object -> bool
+place_free, position_empty : [x] real, [y] real -> bool
+place_meeting, position_meeting : [x] real, [y] real, object -> bool //TODO: object or instance
 position_change  : [x] real, [y] real, object, [perf] bool -> void
 position_destroy : [x] real, [y] real -> void
-//Primitive collistions
+//Primitive collisions
 collision_point : [x] real, [y] real, object, [prec] bool, [notme] bool -> bool
 collision_line : [x1] real, [y1] real, [x2] real, [y2] real, object, [prec] bool, [notme] bool -> bool
 collision_circle : [x] real, [y] real, [radius] real, object, [prec] bool, [notme] bool -> bool
 collision_ellipse, collision_rectangle :
     [x1] real, [y1] real, [x2] real, [y2] real, [radius] real, object, [prec] bool, [notme] bool -> bool
-//TODO: list versions
-//TODO: prim in prim
-
+//List versions
+collision_point_list : [x] real, [y] real, object, [prec] bool, [notme] bool, list<instance>, [ordered] bool -> int
+collision_line_list : [x1] real, [y1] real, [x2] real, [y2] real, object, [prec] bool, [notme] bool, list<instance>, [ordered] bool -> int
+collision_circle_list : [x] real, [y] real, [radius] real, object, [prec] bool, [notme] bool, list<instance>, [ordered] bool -> int
+collision_ellipse_list, collision_rectangle_list :
+    [x1] real, [y1] real, [x2] real, [y2] real, [radius] real, object, [prec] bool, [notme] bool, list<instance>, [ordered] bool -> bool
+//Primitive in primitive
+point_in_rectangle : [px] real, [py] real, [x1] real, [y1] real, [x2] real, [y2] real -> bool
+point_in_triangle : [px] real, [py] real, [x1] real, [y1] real, [x2] real, [y2] real, [x3] real, [y3] real -> bool
+point_in_circle : [px] real, [py] real, [x] real, [y] real, [radius] real -> bool
+rectangle_in_rectangle: [sx1] real, [sy1] real, [sx2] real, [sy2] real, [dx1] real, [dy1] real, [dx2] real, [dy2] real -> bool
+rectangle_in_triangle: [sx1] real, [sy1] real, [sx2] real, [sy2] real, [dx1] real, [dy1] real, [dx2] real, [dy2] real, [dx3] real, [dy3] real -> bool
+rectangle_in_circle: [sx1] real, [sy1] real, [sx2] real, [sy2] real, [dx] real, [dy] real, [radius] real -> bool
 /*--Movement [DONE]--*/
 motion_add, motion_set : [dir] real, [speed] real -> void
 move_bounce_all, move_bounce_solid : [adv] bool -> void
@@ -570,3 +620,38 @@ window_set_size : [w] int, [h] int -> void
 window_set_rectangle : [x] int, [y] int, [w] int, [h] int -> void
 window_view_mouse_get_x, window_view_mouse_get_y : int -> int //TODO: view
 window_views_mouse_get_x, window_views_mouse_get_y : void -> int
+
+/*--Steam--*/
+//TODO: newtypes
+//API
+steam_initialised, steam_stats_ready : void -> bool
+steam_get_app_id, steam_get_user_account_id : void -> int
+steam_get_user_steam_id : void -> int64
+steam_get_persona_name, steam_current_game_language, steam_available_languages : void -> string
+steam_get_user_persona_name : int -> string
+steam_is_user_logged_on : void -> bool //Returns `string` in the docs
+//Overlay
+steam_is_overlay_enabled, steam_is_overlay_activated : void -> bool
+steam_activate_overlay : overlay -> void
+steam_activate_overlay_browser : string -> void
+steam_activate_overlay_store : int -> void
+steam_activate_overlay_user : string -> int64 -> void
+//Leaderboards
+steam_create_leaderboard : string, leaderboard_sort, leaderboard_display -> int
+steam_upload_score : string, [score] int -> int
+steam_upload_score_buffer : string, [score] int, buffer -> int
+steam_download_scores, steam_download_scores_around_user : string, [start_idx] int, [end_idx] int -> int
+steam_download_friends_scores : string -> int
+//Achievements
+steam_set_achievement, steam_clear_achievement : string -> void
+steam_get_achievement : string -> bool
+steam_get_stat_int : string -> int
+steam_get_stat_float, steam_get_stat_avg_rate : string -> real
+steam_set_stat_int : string, int -> void
+steam_set_stat_float : string, real -> void
+steam_set_stat_avg_rate : string, [session_count] int, [session_length] real -> void
+steam_reset_all_stats, steam_reset_all_stats_achievements : void -> void
+//TODO: Steam cloud
+//DLC
+steam_user_owns_dlc, steam_user_installed_dlc : int64 -> bool
+//TODO: Steam UGC
