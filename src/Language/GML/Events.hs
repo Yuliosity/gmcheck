@@ -5,6 +5,8 @@ Description : GM object events
 Events in Game Maker objects.
 -}
 
+{-# LANGUAGE StrictData #-}
+
 module Language.GML.Events
     ( Key (..), KeyState (..), MouseButton (..)
     , Guid, Stage (..)
@@ -12,6 +14,7 @@ module Language.GML.Events
     ) where
 
 import Data.Char (isAlpha, isHexDigit)
+import Data.Text (Text, pack)
 import Text.Read (Read (..))
 import Text.ParserCombinators.ReadP
 import Text.ParserCombinators.ReadPrec (lift)
@@ -29,21 +32,21 @@ instance Enum MouseButton where
     toEnum = undefined
     fromEnum = undefined
 
-type Guid = String
+type Guid = Text
 
 data Stage = SBegin | SEnd
     deriving (Eq, Ord, Show)
 
 data OtherEvent
     = Outside | Boundary
-    | OutsideView  !Int -- ^ Outside view
-    | BoundaryView !Int -- ^ View boundary
-    | Game !Stage
-    | Room !Stage
+    | OutsideView  Int -- ^ Outside view
+    | BoundaryView Int -- ^ View boundary
+    | Game Stage
+    | Room Stage
     | NoMoreLives | NoMoreHealth
     | AnimationEnd | PathEnd
     | CloseButton
-    | User !Int -- ^ Custom user event
+    | User Int -- ^ Custom user event
     deriving (Eq, Ord, Show)
 
 instance Enum OtherEvent where
@@ -85,22 +88,22 @@ data Event
     = Create
     | Destroy
     | Cleanup
-    | Step | StepExt !Stage
-    | Alarm !Int
-    | Draw | DrawExt !Stage
+    | Step | StepExt Stage
+    | Alarm Int
+    | Draw | DrawExt Stage
     | DrawPre | DrawPost
     | DrawResize
-    | DrawGui | DrawGuiExt !Stage
-    | Collision !Guid
+    | DrawGui | DrawGuiExt Stage
+    | Collision Guid
     | NoMouse
-    | Mouse       !KeyState !MouseButton
-    | MouseGlobal !KeyState !MouseButton
-    | MouseEnter !Stage -- ^ Entering and leaving
+    | Mouse       KeyState MouseButton
+    | MouseGlobal KeyState MouseButton
+    | MouseEnter Stage -- ^ Entering and leaving
     | MouseWheelUp | MouseWheelDown
     | NoKeyboard
-    | Keyboard !KeyState !KeyCode
-    | Gesture !GestureEvent
-    | Other !OtherEvent
+    | Keyboard KeyState KeyCode
+    | Gesture GestureEvent
+    | Other OtherEvent
     --TODO: gesture
     deriving (Eq, Ord, Show)
 
@@ -122,7 +125,7 @@ pEvent = do
             1  -> StepExt SBegin
             2  -> StepExt SEnd
         "Alarm"      -> Alarm code
-        "Collision"  -> Collision arg
+        "Collision"  -> Collision $ pack arg
         "Draw"       -> case code of
             0  -> Draw
             72 -> DrawExt SBegin

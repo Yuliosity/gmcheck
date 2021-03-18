@@ -68,8 +68,8 @@ operator op = (lexeme . try) (string op <* notFollowedBy opSymbol)
 {-| Identifier -}
 ident :: Parser Name
 ident = try $ do
-    i <- lexeme $ (:) <$> (letterChar <|> char '_') <*> many (alphaNumChar <|> char '_')
-    guard (pack i `notElem` reserved)
+    i <- lexeme $ pack <$> ((:) <$> (letterChar <|> char '_') <*> many (alphaNumChar <|> char '_'))
+    guard $ i `notElem` reserved
     return i
 
 -- * Literals
@@ -77,12 +77,13 @@ ident = try $ do
 -- |Number literal.
 lNumber :: Parser Double
 lNumber = 
-    (try (lexeme (L.signed empty L.float))
+    try (lexeme (L.signed empty L.float)
     <|> fromIntegral <$> lexeme (L.signed empty L.decimal))
     <?> "number"
 
 -- |String literal.
-lString :: Parser String
+lString :: Parser Text
 lString =
-    (char '\"' *> manyTill L.charLiteral (char '\"') <* spaces)
+    --TODO: escaped characters
+    pack <$> (char '\"' *> manyTill L.charLiteral (char '\"') <* spaces)
     <?> "string"

@@ -15,18 +15,19 @@ module Language.GML.Project
 import Control.Applicative ((<|>))
 import Control.Monad (forM)
 import qualified Data.Map as M
+import Data.Text (Text, pack)
 import System.Directory
 import System.FilePath
 import System.IO
 
 import Language.GML.Parser.Common (parseFile)
 import Language.GML.Parser.AST
-import Language.GML.Types (Type(TNewtype))
+import Language.GML.Types (Name, Type (TNewtype))
 import Language.GML.Events
 
 {-| Executable script. -}
 data Script = Script
-    { sName :: String
+    { sName :: Name
     , sSource :: Program
     }
     deriving Show
@@ -39,22 +40,22 @@ data Object = Object
     deriving Show
 
 data Project = Project
-    { pResources :: M.Map String Type
-    --, pGuids     :: M.Map String String
-    , pScripts   :: M.Map String Program
-    , pObjects   :: M.Map String Object
+    { pResources :: M.Map Name Type
+    --, pGuids     :: M.Map Guid Name
+    , pScripts   :: M.Map Name Program
+    , pObjects   :: M.Map Name Object
     }
     deriving Show
 
 logTrace :: String -> IO ()
 logTrace = hPutStrLn stderr
 
-loadResources :: FilePath -> String -> IO (M.Map String Type)
+loadResources :: FilePath -> String -> IO (M.Map Name Type)
 loadResources path ty = do
     let rPath = path </> (ty ++ "s")
     rNames <- listDirectory rPath
     logTrace $ "Loading resources from " ++ rPath
-    return $ M.fromList [(res, TNewtype ty) | res <- rNames]
+    return $ M.fromList [(pack res, TNewtype $ pack ty) | res <- rNames]
     <|>
     return M.empty
 
@@ -78,7 +79,7 @@ loadProject path = do
                 '@':xs -> xs --Strip the compatibility script prefix
                 xs     -> xs
         pr <- loadProgram "script" $ sDir </> name </> name' <.> "gml"
-        return (name', pr)
+        return (pack name', pr)
     -- Load objects
     let oDir = path </> "objects"
     oNames <- listDirectory oDir
@@ -87,6 +88,6 @@ loadProject path = do
         events <- forM eNames $ \eName -> do
             pr <- loadProgram "event" $ oDir </> name </> eName
             return (read $ dropExtension eName, pr)
-        return (name, Object (M.fromList events))
-    let resObjects = M.fromList $ zip oNames $ repeat (TNewtype "object")
+        return (pack name, Object (M.fromList events))
+    let resObjects = M.fromList $ zip (map pack oNames) $ repeat (TNewtype "object")
     return $ Project (M.unions $ resObjects : resources) (M.fromList scripts) (M.fromList objects)

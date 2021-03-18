@@ -10,11 +10,12 @@ Type system of GML values.
 module Language.GML.Types where
 
 import Data.List (union)
+import Data.Text (Text, pack)
 {-| Identifier (name). -}
-type Name = String
+type Name = Text
 
 {-| Name of struct fields. -}
-type FieldName = String
+type FieldName = Text
 
 {-| Linear data structure type. In GML any structure descriptor
     is also just a number, but here we want to differ. -}
@@ -46,7 +47,7 @@ data Type
     | TMatrix -- ^ GML pointer, a primitive type
     | TStruct [(FieldName, Type)]
     -- Derived types
-    | TNewtype String -- ^ Represented as just a number, but distinguished here
+    | TNewtype Text -- ^ Represented as just a number, but distinguished here
     -- Vector types
     | TContainer  Container  Type -- ^ Linear container of typed values.
     | TContainer2 Container2 Type -- ^ Two-dimensional container of typed values.
@@ -138,7 +139,7 @@ data Signature = Signature
 allArgs :: Signature -> [Argument]
 allArgs (Signature args more _) = take maxGmlArgs $ args ++ case more of
     OptArgs opt -> opt
-    VarArgs (name, ty) -> map (\i -> (name ++ show i, ty)) [0 ..]
+    VarArgs (name, ty) -> map (\i -> (name <> pack (show i), ty)) [0 ..]
     where
         maxGmlArgs = 16
 
@@ -147,4 +148,4 @@ minArgs (Signature args _ _) = length args
 maxArgs sig = length $ allArgs sig
 
 {-| Enumeration of named constants. -}
-data Enum = Enum !String ![(String, Int)]
+data Enum = Enum !Name ![(Name, Int)]

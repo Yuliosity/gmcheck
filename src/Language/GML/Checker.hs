@@ -19,6 +19,7 @@ import Control.Monad.Trans.RWS
 import Data.Either (isLeft)
 import Data.Foldable (asum)
 import qualified Data.Map as M
+import Data.Text (pack)
 import Debug.Trace
 import Lens.Micro.Platform
 
@@ -279,7 +280,7 @@ derive = \case
                     Nothing -> report (EUndefinedFunction fn) >> return TAny
                     Just pr -> do
                         --Push the stack frame with arguments
-                        let frame = zipWith (\i t -> ("argument" ++ show i, t)) [0..] argsT
+                        let frame = zipWith (\i t -> ("argument" <> pack (show i), t)) [0..] argsT
                         withFrame (fromList frame) $ run pr
                         return TAny --FIXME: return type
                         --Pop the stack frame
@@ -384,7 +385,7 @@ run = mapM_ exec
 
 runObject :: (Name, Object) -> Checker ()
 runObject (name, Object {oEvents}) = do
-    traceM ("Checking " ++ name)
+    traceM $ "Checking " ++ show name
     forM_ (M.toList oEvents) $ \(event, pr) -> do
         cSrc .= SObject name event
         traceM ("-- " ++ show event)

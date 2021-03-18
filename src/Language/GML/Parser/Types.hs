@@ -29,7 +29,7 @@ nametype = do
         Nothing -> case vectorTypes M.!? tyName of
             Just res -> do
                 (subname, subtype) <- between (symbol "<") (symbol ">") nametype
-                return (tyName ++ "<" ++ subname ++ ">", res subtype)
+                return (tyName <> "<" <> subname <> ">", res subtype)
             Nothing -> return (tyName, TNewtype tyName)
     where
         scalarTypes = M.fromList

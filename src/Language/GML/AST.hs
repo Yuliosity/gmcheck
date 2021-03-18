@@ -10,6 +10,7 @@ Everything representing the Game Maker Language source tree.
 module Language.GML.AST where
 
 import Data.String
+import Data.Text (Text)
 
 import Language.GML.Types
 
@@ -73,7 +74,7 @@ data Expr
     -- Values
     = EVariable Variable
     | ENumber   Double          -- ^ Numeric literal
-    | EString   String          -- ^ String literal
+    | EString   Text            -- ^ String literal
     | EArray    [Expr]          -- ^ Array literal
     | EFunction Function        -- ^ Inline function
     | EStruct   [(FieldName, Expr)] -- ^ Struct
@@ -88,7 +89,7 @@ data Expr
 -- Helper instances for writing expressions in code
 
 instance IsString Variable where
-    fromString = VVar --TODO: parse
+    fromString = VVar . fromString --TODO: parse
 
 instance IsString Expr where
     fromString = EVariable . fromString
