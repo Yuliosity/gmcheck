@@ -23,15 +23,18 @@ types = describe "types" $ do
 functions = describe "function types" $ do
     let shouldParseAs = shouldParse . parse' signature_
     it "can parse simple function signatures" $ do
-        "void -> bool" `shouldParseAs` ([] :-> TBool)
-        "int, bool -> string" `shouldParseAs` ([("int", TInt), ("bool", TBool)] :-> TString)
+        "() -> bool" `shouldParseAs` ([] :-> TBool)
+        "int -> bool" `shouldParseAs` ([("int", TInt)] :-> TBool)
+        "(int, bool) -> string" `shouldParseAs` ([("int", TInt), ("bool", TBool)] :-> TString)
         "string -> array<string>" `shouldParseAs` ([("string", TString)] :-> TArray TString)
     it "can parse named arguments" $ do
-        "[x] real, [y] real -> real" `shouldParseAs` ([("x", TReal), ("y", TReal)] :-> TReal)
+        "(string, length:int) -> string" `shouldParseAs` ([("string", TString), ("length", TInt)] :-> TString)
+        "(x: real, y: real) -> real" `shouldParseAs` ([("x", TReal), ("y", TReal)] :-> TReal)
     it "can parse optional arguments" $ do
-        "int ? [opt] int -> bool" `shouldParseAs` Signature [("int", TInt)] (OptArgs [("opt", TInt)]) TBool
+        "(int ? opt: int) -> bool" `shouldParseAs` Signature [("int", TInt)] (OptArgs [("opt", TInt)]) TBool
+        "(? real, opt: int) -> bool" `shouldParseAs` Signature [] (OptArgs [("real", TReal), ("opt", TInt)]) TBool
     it "can parse variadic arguments" $ do
-        "array<int> * [val] int -> void" `shouldParseAs` Signature [("array<int>", TArray TInt)] (VarArgs ("val", TInt)) TVoid
+        "(array<int> * val: int) -> void" `shouldParseAs` Signature [("array<int>", TArray TInt)] (VarArgs ("val", TInt)) TVoid
 
 test = hspec $ do
     types

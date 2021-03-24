@@ -90,18 +90,20 @@ variables = concatMap unpack <$> manyAll vars
 
 arg :: Parser Argument
 arg = do
-    name <- optional $ brackets ident
+    name <- optional (try (ident <* colon))
     (tyName, ty) <- nametype
     return (fromMaybe tyName name, ty)
 
 signature_ :: Parser Signature
 signature_ = do
-    rawArgs <- arg `sepBy` comma
-    let args = case rawArgs of
-                    [(_, TVoid)] -> []
-                    xs -> xs
-    moreArgs <- (VarArgs <$> (symbol "*" *> arg))
-            <|> (OptArgs <$> option [] (symbol "?" *> arg `sepBy1` comma))
+    (args, moreArgs) <- parens (do
+        args <- arg `sepBy` comma
+        moreArgs <- (VarArgs <$> (symbol "*" *> arg))
+                <|> (OptArgs <$> option [] (symbol "?" *> arg `sepBy1` comma))
+        return (args, moreArgs))
+        <|> do
+            arg <- arg
+            return ([arg], OptArgs [])
     symbol "->"
     ret <- type_
     return $ Signature args moreArgs ret

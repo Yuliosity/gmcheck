@@ -15,299 +15,299 @@ int64 : any -> int //TODO: either a real, a string, an int64, an int32, or a ptr
 
 /*--Variable functions [DONE]--*/
 //Instance variables
-variable_instance_exists : instance, string -> bool
+variable_instance_exists : (instance, string) -> bool
 variable_instance_get_names : instance -> array<string> //TODO: or global
 variable_instance_names_count : instance -> int
-variable_instance_get : instance, string -> any
-variable_instance_set : instance, string, any -> void
+variable_instance_get : (instance, string) -> any
+variable_instance_set : (instance, string, any) -> void
 //Global variables
 variable_global_exists : string -> bool
 variable_global_get : string -> any
-variable_global_set : string, any -> void
+variable_global_set : (string, any) -> void
 //Struct variables
-variable_struct_exists : struct, string -> bool
-variable_struct_get : struct, string -> any
-variable_struct_set : struct, string, any -> void
-variable_struct_remove : struct, string -> void
+variable_struct_exists : (struct, string) -> bool
+variable_struct_get : (struct, string) -> any
+variable_struct_set : (struct, string, any) -> void
+variable_struct_remove : (struct, string) -> void
 variable_struct_get_names : struct -> array<string>
 variable_struct_names_count : struct -> int
 
-/*--Methods [DONE]--*/
-//method : any, function -> function //TODO: what should be here?
-method_get_self : function -> instance
-method_get_index : function -> int
+/*--Methods--*/
+//method : (any, function) -> function //TODO: what should be here?
+//method_get_self : function -> instance
+//method_get_index : function -> int
 
-/*--Math [MOSTLY DONE]--*/
+/*--Math MOSTLY [DONE]--*/
 //Arithmetics
 abs, sqr, sqrt, exp, frac : real -> real
 sign : real -> int
 round, floor, ceil : real -> int
 ln, log10, log2 : real -> real //TODO: check range
-logn : [base] real, real -> real //TODO: check range
-power : real, [power] real -> real //TODO: check range
-lerp : real, real, real -> real
-clamp : real, [min] real, [max] real -> real
+logn : (base: real, real) -> real //TODO: check range
+power : (real, power: real) -> real //TODO: check range
+lerp : (real, real, real) -> real
+clamp : (real, min: real, max: real) -> real
 //Epsilon
-math_get_epsilon : void -> real
+math_get_epsilon : () -> real
 math_set_epsilon : real -> void
 //Conversions
 //int64 : real -> int //TODO
 //TODO: Variadic
 //max, min, mean, median, choose : *real -> real //TODO: for ints also
-//Trigonometry. TODO: units and range for angles
+//Trigonometry. TODO: (units and range for angles
 sin, cos, tan : real -> real
 dsin, dcos, dtan : real -> real
 arccos, arcsin, arctan : real -> real
 darccos, darcsin, darctan : real -> real
-arctan2, darctan2 : [y] real, [x] real -> real
+arctan2, darctan2 : (y: real, x: real) -> real
 degtorad, radtodeg : real -> real
 //Random
-random : [high] real -> real
-random_range : [low] real, [high] real -> real
-irandom : [high] int -> int
-irandom_range : [low] int, [high] int -> int
-random_get_seed, randomise : void -> int
+random : (high: real) -> real
+random_range : (low: real, high: real) -> real
+irandom : (high: int) -> int
+irandom_range : (low: int, high: int) -> int
+random_get_seed, randomise : () -> int
 random_set_seed : int -> void
 //Vector
-angle_difference : real, real -> real //TODO: units
-lengthdir_x, lengthdir_y : [len] real, [dir] real -> real
-dot_product, point_direction, point_distance : [x1] real, [y1] real, [x2] real, [y2] real -> real
+angle_difference : (real, real) -> real //TODO: units
+lengthdir_x, lengthdir_y : (len: real, dir: real) -> real
+dot_product, point_direction, point_distance : (x1: real, y1: real, x2: real, y2: real) -> real
 distance_to_object : object -> real
-distance_to_point : [x] real, [y] real -> real
+distance_to_point : (x: real, y: real) -> real
 //TODO: 3D stuff
 
 /*--Datetime [DONE]--*/
-date_current_datetime : void -> date
-date_create_datetime : [year] int, [month] int, [day] int, [hour] int, [minute] int, [second] int -> date
-date_valid_datetime : [year] int, [month] int, [day] int, [hour] int, [minute] int, [second] int -> bool
+date_current_datetime : () -> date
+date_create_datetime : (year: int, month: int, day: int, hour: int, minute: int, second: int) -> date
+date_valid_datetime : (year: int, month: int, day: int, hour: int, minute: int, second: int) -> bool
 date_get_day, date_get_day_of_year, date_get_week, date_get_weekday, date_get_month, date_get_year,
     date_get_hour, date_get_minute, date_get_minute_of_year, date_get_second, date_get_second_of_year : date -> int
-date_get_timezone : void -> int //TODO: timezone
+date_get_timezone : () -> int //TODO: timezone
 date_set_timezone : int -> void //TODO: timezone
-date_inc_year, date_inc_month, date_inc_week, date_inc_day, date_inc_hour, date_inc_minute, date_inc_second : date, int -> date
-date_year_span, date_month_span, date_week_span, date_day_span, date_hour_span, date_minute_span, date_second_span : [date1] date, [date2] date -> int
-date_compare_datetime, date_compare_date, date_compare_time : [date1] date, [date2] date -> int
+date_inc_year, date_inc_month, date_inc_week, date_inc_day, date_inc_hour, date_inc_minute, date_inc_second : (date, int) -> date
+date_year_span, date_month_span, date_week_span, date_day_span, date_hour_span, date_minute_span, date_second_span : (date1: date, date2: date) -> int
+date_compare_datetime, date_compare_date, date_compare_time : (date1: date, date2: date) -> int
 date_date_of, date_time_of : date -> date
 date_datetime_string, date_date_string, date_time_string : date -> string
 date_days_in_month, date_days_in_year : date -> int
 date_leap_year, date_is_today : date -> bool
-get_timer : void -> real
+get_timer : () -> real
 
 /*--Matrix [DONE]--*/
 matrix_build :
-    [x] real, [y] real, [z] real,
-    [xrotation] real, [yrotation] real, [zrotation] real,
-    [xscale] real, [yscale] real, [zscale] real -> matrix
-matrix_build_identity : void -> matrix
+    (x: real, y: real, z: real,
+    xrotation: real, yrotation: real, zrotation: real,
+    xscale: real, yscale: real, zscale: real) -> matrix
+matrix_build_identity : () -> matrix
 matrix_build_lookat :
-    [xfrom] real, [yfrom] real, [zfrom] real,
-    [xto] real, [yto] real, [zto] real,
-    [xup] real, [yup] real, [zup] real -> matrix
+    (xfrom: real, yfrom: real, zfrom: real,
+    xto: real, yto: real, zto: real,
+    xup: real, yup: real, zup: real) -> matrix
 matrix_build_projection_ortho, matrix_build_projection_perspective :
-    [width] real, [height] real, [znear] real, [zfar] real -> matrix
-matrix_build_projection_perspective_fov : [fov_y] real, [aspect] real, [znear] real, [zfar] real -> matrix
+    (width: real, height: real, znear: real, zfar: real) -> matrix
+matrix_build_projection_perspective_fov : (fov_y: real, aspect: real, znear: real, zfar: real) -> matrix
 matrix_get : matrix -> array<real>
-matrix_multiply : [m1] matrix, [m2] matrix -> matrix
-matrix_set : int, matrix -> void //TODO: matrix_type
-matrix_stack_clear, matrix_stack_pop : void -> void
-matrix_stack_is_empty : void -> bool
+matrix_multiply : (m1: matrix, m2: matrix) -> matrix
+matrix_set : (int, matrix) -> void //TODO: matrix_type
+matrix_stack_clear, matrix_stack_pop : () -> void
+matrix_stack_is_empty : () -> bool
 matrix_stack_push, matrix_stack_set : matrix -> void
-matrix_stack_top : void -> matrix
-matrix_transform_vertex : matrix, [x] real, [y] real, [z] real -> array<real>
+matrix_stack_top : () -> matrix
+matrix_transform_vertex : (matrix, x: real, y: real, z: real) -> array<real>
 
 /*--String [DONE]--*/
 //Access
-string_char_at : string, int -> char
-string_byte_at : string, int -> int
-string_ord_at  : string, int -> keycode
+string_char_at : (string, int) -> char
+string_byte_at : (string, int) -> int
+string_ord_at  : (string, int) -> keycode
 string_length : string -> int
 //Transform
-string_format : real, [tot] int, [dec] int -> string
-string_copy, string_delete : string, [index] int, [count] int -> string
-string_count : [substr] string, string -> int
-string_replace, string_replace_all : string, [substr] string, [newstr] string -> string
+string_format : (real, tot: int, dec: int) -> string
+string_copy, string_delete : (string, index: int, count: int) -> string
+string_count : (substr: string, string) -> int
+string_replace, string_replace_all : (string, substr: string, newstr: string) -> string
 string_lower, string_upper, string_letters, string_digits, string_lettersdigits : string -> string
-string_repeat : string, [count] int -> string
+string_repeat : (string, count: int) -> string
 
 /*--Containers--*/
-ds_exists : [id] int, ds_type -> bool
+ds_exists : (id: int, ds_type) -> bool
 ds_set_precision : real -> void
 //Array [DONE]
-array_create : [size] int ? [value] any -> array<void>
-array_copy : [dst] array<any>, [dst_index] int, [src] array<any>, [src_index] int, [count] int -> void
-array_resize : array<any>, int -> void
-array_equals : array<any>, array<any> -> bool
-array_length : array<any> -> int
-array_length_1d : array<any> -> int //TODO: deprecated
-array_length_2d, array_height_2d : array2<any> -> int //TODO: deprecated
-array_get : array<any>, [index] int -> any
-array_set : array<any>, [index] int, [val] any -> void
-array_insert : array<any>, [index] int * [val] any -> void
-array_push : array<any> * [val] any -> void
-array_pop : array<any> -> any
-//array_sort : array<any>, bool | function<any, any -> any> -> any
+array_create : (size: int ? value: any) -> array<void>
+array_copy : (dst: array<any>, dst_index: int, src: array<any>, src_index: int, count: int) -> void
+array_resize : (array<any>, int) -> void
+array_equals : (array<any>, array<any>) -> bool
+array_length : (array<any>) -> int
+array_length_1d : (array<any>) -> int //TODO: deprecated
+array_length_2d, array_height_2d : (array2<any>) -> int //TODO: deprecated
+array_get : (array<any>, index: int) -> any
+array_set : (array<any>, index: int, val: any) -> void
+array_insert : (array<any>, index: int * val: any) -> void
+array_push : (array<any> * val: any) -> void
+array_pop : (array<any>) -> any
+//array_sort : (array<any>, bool | function<any, any) -> any>) -> any
 //List
-ds_list_create : void -> list<void>
-ds_list_clear, ds_list_destroy : list<any> -> void
-ds_list_size : list<any> -> int
-ds_list_add : list<any> * [val] any -> void
-ds_list_sort : list<any>, [ascend] bool -> void
+ds_list_create : () -> list<void>
+ds_list_clear, ds_list_destroy : (list<any>) -> void
+ds_list_size : (list<any>) -> int
+ds_list_add : (list<any> * val: any) -> void
+ds_list_sort : (list<any>, ascend: bool) -> void
 //Map [DONE]
-ds_map_create : void -> map<void>
-ds_map_exists : map<any>, [key] any -> bool
-ds_map_find_first, ds_map_find_last : map<any> -> any
-ds_map_find_next, ds_map_find_previous : map<any>, [key] any -> any
-ds_map_add : map<any>, [key] any * [val] any -> void
-ds_map_add_map : map<any>, [key] any, [val] map<any> -> void
-ds_map_replace : map<any>, [key] any, [val] any -> void
-ds_map_delete : map<any>, [key] any -> void
-ds_map_clear, ds_map_destroy : map<any> -> void
-ds_map_copy : map<any>, map<any> -> void
+ds_map_create : () -> map<void>
+ds_map_exists : (map<any>, key: any) -> bool
+ds_map_find_first, ds_map_find_last : (map<any>) -> any
+ds_map_find_next, ds_map_find_previous : (map<any>, key: any) -> any
+ds_map_add : (map<any>, key: any * val: any) -> void
+ds_map_add_map : (map<any>, key: any, val: map<any>) -> void
+ds_map_replace : (map<any>, key: any, val: any) -> void
+ds_map_delete : (map<any>, key: any) -> void
+ds_map_clear, ds_map_destroy : (map<any>) -> void
+ds_map_copy : (map<any>, map<any>) -> void
 //Queue
-ds_queue_create : void -> queue<void>
-ds_queue_enqueue : queue<any> * [val] any -> void
-ds_queue_clear, ds_queue_destroy : queue<any> -> void
-ds_queue_head, ds_queue_tail, ds_queue_dequeue : queue<any> -> any
-ds_queue_empty : queue<any> -> bool
-ds_queue_size : queue<any> -> int
+ds_queue_create : () -> queue<void>
+ds_queue_enqueue : (queue<any> * val: any) -> void
+ds_queue_clear, ds_queue_destroy : (queue<any>) -> void
+ds_queue_head, ds_queue_tail, ds_queue_dequeue : (queue<any>) -> any
+ds_queue_empty : (queue<any>) -> bool
+ds_queue_size : (queue<any>) -> int
 //Grid
-ds_grid_create : [width] int, [height] int -> grid<void>
-ds_grid_destroy : grid<any> -> void
-ds_grid_resize : grid<any>, [width] int, [height] int -> void
-ds_grid_width, ds_grid_height : grid<any> -> int
-ds_grid_get : grid<any>, [x] int, [y] int -> any
-ds_grid_get_max, ds_grid_get_min, ds_grid_get_sum : grid<real>, [x1] int, [y1] int, [x2] int, [y2] int -> real //TODO: or string
-ds_grid_get_mean : grid<real>, [x1] int, [y1] int, [x2] int, [y2] int -> real 
+ds_grid_create : (width: int, height: int) -> grid<void>
+ds_grid_destroy : (grid<any>) -> void
+ds_grid_resize : (grid<any>, width: int, height: int) -> void
+ds_grid_width, ds_grid_height : (grid<any>) -> int
+ds_grid_get : (grid<any>, x: int, y: int) -> any
+ds_grid_get_max, ds_grid_get_min, ds_grid_get_sum : (grid<real>, x1: int, y1: int, x2: int, y2: int) -> real //TODO: or string
+ds_grid_get_mean : (grid<real>, x1: int, y1: int, x2: int, y2: int) -> real 
 ds_grid_get_disk_max, ds_grid_get_disk_min, ds_grid_get_disk_sum :
-    grid<real>, [x] int, [y] int, [r] int -> real //TODO: or string
-ds_grid_get_disk_mean : grid<real>, [x] int, [y] int, [r] int -> real
-ds_grid_set : grid<any>, [x] int, [y] int, any -> void
-ds_grid_set_disk : grid<any>, [x] int, [y] int, [r] int, any -> void
-ds_grid_set_grid_region : grid<any>, [source] grid<any>, [x1] int, [y1] int, [x2] int, [y2] int, [xpos] int, [ypos] int -> void
-ds_grid_set_region : grid<any>, [x1] int, [y1] int, [x2] int, [y2] int, any -> void
-ds_grid_add : grid<real>, [x] int, [y] int, real -> void //TODO: or string
-ds_grid_add_disk : grid<real>, [x] int, [y] int, [r] int, real -> void //TODO: or string
-ds_grid_add_grid_region : grid<real>, [source] grid<any>, [x1] int, [y1] int, [x2] int, [y2] int, [xpos] int, [ypos] int -> void //TODO: or string
-ds_grid_add_region : grid<real>, [x1] int, [y1] int, [x2] int, [y2] int, real -> void //TODO: or string
-ds_grid_multiply : grid<real>, [x] int, [y] int, real -> void
-ds_grid_multiply_disk : grid<real>, [x] int, [y] int, [r] int, real -> void
-ds_grid_multiply_grid_region : grid<real>, [source] grid<any>, [x1] int, [y1] int, [x2] int, [y2] int, [xpos] int, [ypos] int -> void
-ds_grid_multiply_region : grid<real>, [x1] int, [y1] int, [x2] int, [y2] int, real -> void
-ds_grid_value_exists : grid<any>, [x1] int, [y1] int, [x2] int, [y2] int, any -> bool
-ds_grid_value_x, ds_grid_value_y : grid<any>, [x1] int, [y1] int, [x2] int, [y2] int, any -> int
-ds_grid_value_disk_exists : grid<real>, [x] int, [y] int, [r] int, any -> bool
-ds_grid_value_disk_x, ds_grid_value_disk_y : grid<real>, [x] int, [y] int, [r] int, any -> int
-ds_grid_clear : grid<any>, any -> void
-ds_grid_copy : grid<any>, [source] grid<any> -> void
-ds_grid_shuffle : grid<any> -> void
-ds_grid_sort : grid<any>, [column] int, [ascending] bool -> void
-ds_grid_write : grid<any> -> string
-ds_grid_read : grid<any>, string ? [legacy] bool -> void
-mp_grid_to_ds_grid : mp_grid, grid<real> -> bool
+    (grid<real>, x: int, y: int, r: int) -> real //TODO: or string
+ds_grid_get_disk_mean : (grid<real>, x: int, y: int, r: int) -> real
+ds_grid_set : (grid<any>, x: int, y: int, any) -> void
+ds_grid_set_disk : (grid<any>, x: int, y: int, r: int, any) -> void
+ds_grid_set_grid_region : (grid<any>, source: grid<any>, x1: int, y1: int, x2: int, y2: int, xpos: int, ypos: int) -> void
+ds_grid_set_region : (grid<any>, x1: int, y1: int, x2: int, y2: int, any) -> void
+ds_grid_add : (grid<real>, x: int, y: int, real) -> void //TODO: or string
+ds_grid_add_disk : (grid<real>, x: int, y: int, r: int, real) -> void //TODO: or string
+ds_grid_add_grid_region : (grid<real>, source: grid<any>, x1: int, y1: int, x2: int, y2: int, xpos: int, ypos: int) -> void //TODO: or string
+ds_grid_add_region : (grid<real>, x1: int, y1: int, x2: int, y2: int, real) -> void //TODO: or string
+ds_grid_multiply : (grid<real>, x: int, y: int, real) -> void
+ds_grid_multiply_disk : (grid<real>, x: int, y: int, r: int, real) -> void
+ds_grid_multiply_grid_region : (grid<real>, source: grid<any>, x1: int, y1: int, x2: int, y2: int, xpos: int, ypos: int) -> void
+ds_grid_multiply_region : (grid<real>, x1: int, y1: int, x2: int, y2: int, real) -> void
+ds_grid_value_exists : (grid<any>, x1: int, y1: int, x2: int, y2: int, any) -> bool
+ds_grid_value_x, ds_grid_value_y : (grid<any>, x1: int, y1: int, x2: int, y2: int, any) -> int
+ds_grid_value_disk_exists : (grid<real>, x: int, y: int, r: int, any) -> bool
+ds_grid_value_disk_x, ds_grid_value_disk_y : (grid<real>, x: int, y: int, r: int, any) -> int
+ds_grid_clear : (grid<any>, any) -> void
+ds_grid_copy : (grid<any>, source: grid<any>) -> void
+ds_grid_shuffle : (grid<any>) -> void
+ds_grid_sort : (grid<any>, column: int, ascending: bool) -> void
+ds_grid_write : (grid<any>) -> string
+ds_grid_read : (grid<any>, string ? legacy: bool) -> void
+mp_grid_to_ds_grid : (mp_grid, grid<real>) -> bool
 /*--Draw--*/
 //Sprites [DONE]
-draw_self : void -> void
-draw_sprite : sprite, [subimg] int, [x] real, [y] real -> void
-draw_sprite_pos : sprite, [subimg] int, [x1] real, [y1] real, [x2] real, [y2] real, [x3] real, [y3] real, [x4] real, [y4] real, alpha -> void
-draw_sprite_ext : sprite, [subimg] int, [x] real, [y] real, [xscale] real, [yscale] real, [rot] real, color, [alpha] alpha -> void
-draw_sprite_stretched : sprite, [subimg] int, [x] real, [y] real, [width] real, [height] real -> void
-draw_sprite_stretched_ext : sprite, [subimg] int, [x] real, [y] real, [width] real, [height] real, color, alpha -> void
-draw_sprite_tiled : sprite, [subimg] int, [x] real, [y] real -> void
-draw_sprite_tiled_ext : sprite, [subimg] int, [x] real, [y] real, [xscale] real, [yscale] real, color, alpha -> void
-draw_sprite_part : sprite, [subimg] real, [left] real, [top] real, [width] real, [height] real, [x] real, [y] real -> void
+draw_self : () -> void
+draw_sprite : (sprite, subimg: int, x: real, y: real) -> void
+draw_sprite_pos : (sprite, subimg: int, x1: real, y1: real, x2: real, y2: real, x3: real, y3: real, x4: real, y4: real, alpha) -> void
+draw_sprite_ext : (sprite, subimg: int, x: real, y: real, xscale: real, yscale: real, rot: real, color, alpha: alpha) -> void
+draw_sprite_stretched : (sprite, subimg: int, x: real, y: real, width: real, height: real) -> void
+draw_sprite_stretched_ext : (sprite, subimg: int, x: real, y: real, width: real, height: real, color, alpha) -> void
+draw_sprite_tiled : (sprite, subimg: int, x: real, y: real) -> void
+draw_sprite_tiled_ext : (sprite, subimg: int, x: real, y: real, xscale: real, yscale: real, color, alpha) -> void
+draw_sprite_part : (sprite, subimg: real, left: real, top: real, width: real, height: real, x: real, y: real) -> void
 draw_sprite_part_ext :
-    sprite, [subimg] real, [left] real, [top] real, [width] real, [height] real,
-    [x] real, [y] real, [xscale] real, [yscale] real, color, alpha -> void
+    (sprite, subimg: real, left: real, top: real, width: real, height: real,
+    x: real, y: real, xscale: real, yscale: real, color, alpha) -> void
 draw_sprite_general :
-    sprite, [subimg] real, [left] real, [top] real, [width] real, [height] real,
-    [x] real, [y] real, [xscale] real, [yscale] real,
-    [c1] color, [c2] color, [c3] color, [c4] color, alpha -> void
-//Primitives [MOSTLY DONE]
-draw_point : [x] real, [y] real -> void
-draw_line : [x1] real, [y1] real, [x2] real, [y2] real -> void
-draw_line_width : [x1] real, [y1] real, [x2] real, [y2] real, [width] real -> void
-draw_rectangle, draw_roundrect, draw_ellipse : [x1] real, [y1] real, [x2] real, [y2] real, [outline] bool -> void
-draw_roundrect_ext : [x1] real, [y1] real, [x2] real, [y2] real, [radiusx] real, [radiusy] bool, [outline] bool -> void
-draw_triangle : [x1] real, [y1] real, [x2] real, [y2] real, [x3] real, [y3] real, [outline] bool -> void
-draw_circle : [x] real, [y] real, [radius] real, [outline] bool -> void
+    (sprite, subimg: real, left: real, top: real, width: real, height: real,
+    x: real, y: real, xscale: real, yscale: real,
+    c1: color, c2: color, c3: color, c4: color, alpha) -> void
+//Primitives MOSTLY [DONE]
+draw_point : (x: real, y: real) -> void
+draw_line : (x1: real, y1: real, x2: real, y2: real) -> void
+draw_line_width : (x1: real, y1: real, x2: real, y2: real, width: real) -> void
+draw_rectangle, draw_roundrect, draw_ellipse : (x1: real, y1: real, x2: real, y2: real, outline: bool) -> void
+draw_roundrect_ext : (x1: real, y1: real, x2: real, y2: real, radiusx: real, radiusy: bool, outline: bool) -> void
+draw_triangle : (x1: real, y1: real, x2: real, y2: real, x3: real, y3: real, outline: bool) -> void
+draw_circle : (x: real, y: real, radius: real, outline: bool) -> void
 draw_set_circle_precision : int -> void
-draw_arrow : [x1] real, [y1] real, [x2] real, [y2] real, [size] real -> void
-draw_button : [x1] real, [y1] real, [x2] real, [y2] real, [up] bool -> void
-draw_path : path, [x] real, [y] real, [absolute] bool -> void
+draw_arrow : (x1: real, y1: real, x2: real, y2: real, size: real) -> void
+draw_button : (x1: real, y1: real, x2: real, y2: real, up: bool) -> void
+draw_path : (path, x: real, y: real, absolute: bool) -> void
 draw_healthbar :
-    [x1] real, [y1] real, [x2] real, [y2] real, [amount] real,
-    [backcol] color, [mincol] color, [maxcol] color, [direction] int,
-    [showback] bool, [showborder] bool -> void
+    (x1: real, y1: real, x2: real, y2: real, amount: real,
+    backcol: color, mincol: color, maxcol: color, direction: int,
+    showback: bool, showborder: bool) -> void
 //TODO: colored versions
 //Text
 string_width, string_height : string -> int
-string_width_ext, string_height_ext : string, [sep] int, [max] int -> int
-draw_text : [x] real, [y] real, string -> void
-draw_highscore : [x1] real, [y1] real, [x2] real, [y2] real -> void
+string_width_ext, string_height_ext : (string, sep: int, max: int) -> int
+draw_text : (x: real, y: real, string) -> void
+draw_highscore : (x1: real, y1: real, x2: real, y2: real) -> void
 //Colors [DONE]
-draw_getpixel : [x] int, [y] int -> color
-draw_getpixel_ext : [x] int, [y] int -> int //TODO: RGBA?
-draw_get_alpha : void -> alpha
+draw_getpixel : (x: int, y: int) -> color
+draw_getpixel_ext : (x: int, y: int) -> int //TODO: RGBA?
+draw_get_alpha : () -> alpha
 draw_set_alpha : alpha -> void
-draw_get_color : void -> color
+draw_get_color : () -> color
 draw_set_color, draw_clear_color : color -> void
-make_color_rgb : [r] real, [g] real, [b] real -> color
-make_color_hsv : [h] real, [s] real, [v] real -> color
-merge_color : color, color, alpha -> color
+make_color_rgb : (r: real, g: real, b: real) -> color
+make_color_hsv : (h: real, s: real, v: real) -> color
+merge_color : (color, color, alpha) -> color
 color_get_red, color_get_green, color_get_blue : color -> real
 color_get_hue, color_get_saturation, color_get_value : color -> real
 //Tiles
-draw_tile : tileset, [tile] int, [frame] int, [x] int, [y] int -> void //Returns `real` in the docs
-draw_tilemap : [id] int, [x] int, [y] int -> void
+draw_tile : (tileset, tile: int, frame: int, x: int, y: int) -> void //Returns `real` in the docs
+draw_tilemap : (id: int, x: int, y: int) -> void
 //Surfaces
-draw_surface : surface, [x] int, [y] int -> void
-draw_surface_ext : surface, [x] int, [y] int, [xscale] real, [yscale] real, [rot] real, color, alpha -> void
-surface_create : [w] int, [h] int -> surface
-surface_create_ext : [name] string, [w] int, [h] int -> surface
+draw_surface : (surface, x: int, y: int) -> void
+draw_surface_ext : (surface, x: int, y: int, xscale: real, yscale: real, rot: real, color, alpha) -> void
+surface_create : (w: int, h: int) -> surface
+surface_create_ext : (name: string, w: int, h: int) -> surface
 surface_exists : surface -> bool
 surface_free : surface -> void
 surface_depth_disable : bool -> void
-surface_get_depth_disable : void -> bool
+surface_get_depth_disable : () -> bool
 surface_get_width, surface_get_height : surface -> int
-surface_get_target : void -> surface //TODO: option
+surface_get_target : () -> surface //TODO: option
 surface_get_target_ext : int -> surface //TODO: option
 surface_get_texture : surface -> texture
-surface_copy : [dst] surface, [x] int, [y] int, surface -> void
-surface_copy_part : [dst] surface, [x] int, [y] int, surface, [xs] int, [ys] int, [ws] int, [hs] int -> void
+surface_copy : (dst: surface, x: int, y: int, surface) -> void
+surface_copy_part : (dst: surface, x: int, y: int, surface, xs: int, ys: int, ws: int, hs: int) -> void
 
 /*--Cameras [DONE]--*/
-camera_create : void -> camera
-camera_create_view : [room_x] int, [room_y] int, [width] int, [height] int ?
-    [angle] real, object, [x_speed] real, [y_speed] real, [x_border] int, [y_border] int -> camera //TODO: object or instance
+camera_create : () -> camera
+camera_create_view : (room_x: int, room_y: int, width: int, height: int ?
+    angle: real, object, x_speed: real, y_speed: real, x_border: int, y_border: int) -> camera //TODO: object or instance
 camera_destroy : camera -> void //Returns `camera` in the docs
 camera_apply : camera -> void
-camera_get_active, camera_get_default : void -> camera
+camera_get_active, camera_get_default : () -> camera
 camera_get_begin_script, camera_get_end_script, camera_get_update_script : camera -> script
 camera_get_proj_mat, camera_get_view_mat : camera -> matrix
 camera_get_view_border_x, camera_get_view_border_y, camera_get_view_width, camera_get_view_height,
     camera_get_view_x, camera_get_view_y : camera -> int
 camera_get_view_angle, camera_get_view_speed_x, camera_get_view_speed_y : camera -> real
 camera_get_view_target : camera -> object //TODO: object or instance
-camera_set_begin_script, camera_set_end_script, camera_set_update_script : camera, script -> void
+camera_set_begin_script, camera_set_end_script, camera_set_update_script : (camera, script) -> void
 camera_set_default : camera -> void
-camera_set_proj_mat, camera_set_view_mat : camera, matrix -> void
-camera_set_view_angle, camera_set_view_speed_x, camera_set_view_speed_y : camera, real -> void
-camera_set_view_border, camera_set_view_pos : camera, [x] int, [y] int -> void
-camera_set_view_size : camera, [width] int, [height] int -> void
-camera_set_view_target : camera, object -> void //TODO: object or instance
+camera_set_proj_mat, camera_set_view_mat : (camera, matrix) -> void
+camera_set_view_angle, camera_set_view_speed_x, camera_set_view_speed_y : (camera, real) -> void
+camera_set_view_border, camera_set_view_pos : (camera, x: int, y: int) -> void
+camera_set_view_size : (camera, width: int, height: int) -> void
+camera_set_view_target : (camera, object) -> void //TODO: object or instance
 //Views [DONE]
-view_get_camera : [viewport] int -> camera
-view_get_hport, view_get_wport, view_get_xport, view_get_yport : [viewport] int -> int
-view_get_surface_id : [viewport] int -> surface //TODO: option
-view_get_visible : [viewport] int -> bool
-view_get_camera : [viewport] int, camera -> void
-view_set_hport, view_set_wport, view_set_xport, view_set_yport : [viewport] int, int -> void
-view_set_surface_id : [viewport] int, surface -> void //Returns `real` in the docs
-view_get_visible : [viewport] int, bool -> void
+view_get_camera : (viewport: int) -> camera
+view_get_hport, view_get_wport, view_get_xport, view_get_yport : (viewport: int) -> int
+view_get_surface_id : (viewport: int) -> surface //TODO: option
+view_get_visible : (viewport: int) -> bool
+view_get_camera : (viewport: int, camera) -> void
+view_set_hport, view_set_wport, view_set_xport, view_set_yport : (viewport: int, int) -> void
+view_set_surface_id : (viewport: int, surface) -> void //Returns `real` in the docs
+view_get_visible : (viewport: int, bool) -> void
 
 /*--3D [DONE]--*/
 //Textures
-draw_texture_flush : void -> void
+draw_texture_flush : () -> void
 texture_debug_messages : bool -> void
 texture_flush, texture_prefetch : texture -> void
 texture_get_width, texture_get_height : texture -> alpha
@@ -315,169 +315,168 @@ texture_get_texel_width, texture_get_texel_height : texture -> int
 texture_get_uvs : texture -> array<alpha>
 texture_global_scale : int -> void //TODO: pow2integer
 texture_is_ready : texture -> bool
-texture_set_stage : [slot] int, texture -> void
+texture_set_stage : (slot: int, texture) -> void
 texturegroup_get_fonts : string -> array<font>
 texturegroup_get_sprites : string -> array<sprite>
 texturegroup_get_tilesets : string -> array<tileset>
 texturegroup_get_textures : string -> array<texture>
 //Primitive drawing
 draw_primitive_begin : primitive -> void
-draw_primitive_begin_texture : primitive, texture -> void
-draw_primitive_end : void -> void
-draw_vertex : [x] real, [y] real -> void
-draw_vertex_color : [x] real, [y] real, color, alpha -> void
-draw_vertex_texture : [x] real, [y] real, [xtex] real, [ytex] real -> void
-draw_vertex_texture_color : [x] real, [y] real, [xtex] real, [ytex] real, color, alpha -> void
+draw_primitive_begin_texture : (primitive, texture) -> void
+draw_primitive_end : () -> void
+draw_vertex : (x: real, y: real) -> void
+draw_vertex_color : (x: real, y: real, color, alpha) -> void
+draw_vertex_texture : (x: real, y: real, xtex: real, ytex: real) -> void
+draw_vertex_texture_color : (x: real, y: real, xtex: real, ytex: real, color, alpha) -> void
 //Primitive building
-vertex_create_buffer : void -> ptr
-vertex_create_buffer_ext : [size] int -> ptr
-vertex_create_buffer_from_buffer : ptr, vformat -> ptr
-vertex_create_buffer_from_buffer_ext : ptr, vformat, [offset] int, [vertices] int -> ptr
+vertex_create_buffer : () -> ptr
+vertex_create_buffer_ext : (size: int) -> ptr
+vertex_create_buffer_from_buffer : (ptr, vformat) -> ptr
+vertex_create_buffer_from_buffer_ext : (ptr, vformat, offset: int, vertices: int) -> ptr
 vertex_delete_buffer : ptr -> void
 vertex_get_buffer_size, vertex_get_number : ptr -> int
-vertex_begin : ptr, vformat -> void
+vertex_begin : (ptr, vformat) -> void
 vertex_end, vertex_freeze : ptr -> void
-vertex_argb : ptr, int -> void //TODO: argb
-vertex_color : ptr, color, alpha -> void
-vertex_float1 : ptr, real -> void
-vertex_float2 : ptr, real, real -> void
-vertex_float3 : ptr, real, real, real -> void
-vertex_float4 : ptr, real, real, real, real -> void
-vertex_normal : ptr, [nx] real, [ny] real, [nz] real -> void
-vertex_position : ptr, [x] real, [y] real -> void
-vertex_position_3d : ptr, [x] real, [y] real, [z] real -> void
-vertex_texcoord : ptr, [u] alpha, [v] alpha -> void
-vertex_ubyte4 : ptr, int, int, int, int -> void
-vertex_submit : ptr, int, texture -> void //TODO: primitive
+vertex_argb : (ptr, int) -> void //TODO: argb
+vertex_color : (ptr, color, alpha) -> void
+vertex_float1 : (ptr, real) -> void
+vertex_float2 : (ptr, real, real) -> void
+vertex_float3 : (ptr, real, real, real) -> void
+vertex_float4 : (ptr, real, real, real, real) -> void
+vertex_normal : (ptr, nx: real, ny: real, nz: real) -> void
+vertex_position : (ptr, x: real, y: real) -> void
+vertex_position_3d : (ptr, x: real, y: real, z: real) -> void
+vertex_texcoord : (ptr, u: alpha, v: alpha) -> void
+vertex_ubyte4 : (ptr, int, int, int, int) -> void
+vertex_submit : (ptr, int, texture) -> void //TODO: primitive
 //Vertex format
-vertex_format_begin : void -> void
-vertex_format_end : void -> vformat
+vertex_format_begin : () -> void
+vertex_format_end : () -> vformat
 vertex_format_delete : vformat -> void
-vertex_format_add_color, vertex_format_add_normal, vertex_format_add_position, vertex_format_add_position_3d, vertex_format_add_texcoord : void -> void
-vertex_format_add_custom : vertex_type, vertex_usage -> void
+vertex_format_add_color, vertex_format_add_normal, vertex_format_add_position, vertex_format_add_position_3d, vertex_format_add_texcoord : () -> void
+vertex_format_add_custom : (vertex_type, vertex_usage) -> void
 
 /*--Mouse [DONE]--*/
 mouse_check_button, mouse_check_button_pressed, mouse_check_button_released : mbutton -> bool
 mouse_clear : mbutton -> void //Returns `bool` in the docs
-mouse_wheel_up, mouse_wheel_down : void -> bool
+mouse_wheel_up, mouse_wheel_down : () -> bool
 
 /*--Keyboard [DONE]--*/
-io_clear : void -> void
+io_clear : () -> void
 keyboard_check, keyboard_check_direct, keyboard_check_pressed, keyboard_check_released : keycode -> bool
 keyboard_clear : keycode -> void
 keyboard_key_press, keyboard_key_release : keycode -> void
 keyboard_get_map : keycode -> keycode
-keyboard_set_map : [dst] keycode, [src] keycode -> void
+keyboard_set_map : (dst: keycode, src: keycode) -> void
 keyboard_unset_map : keycode -> void
-keyboard_get_numlock : void -> bool
+keyboard_get_numlock : () -> bool
 keyboard_set_numlock : bool -> void
 
 /*--Collisions [DONE]--*/
-place_empty : [x] real, [y] real ? object -> bool
-place_free, position_empty : [x] real, [y] real -> bool
-place_meeting, position_meeting : [x] real, [y] real, object -> bool //TODO: object or instance
-position_change  : [x] real, [y] real, object, [perf] bool -> void
-position_destroy : [x] real, [y] real -> void
+place_empty : (x: real, y: real ? object) -> bool
+place_free, position_empty : (x: real, y: real) -> bool
+place_meeting, position_meeting : (x: real, y: real, object) -> bool //TODO: object or instance
+position_change  : (x: real, y: real, object, perf: bool) -> void
+position_destroy : (x: real, y: real) -> void
 //Primitive collisions
-collision_point : [x] real, [y] real, object, [prec] bool, [notme] bool -> bool
-collision_line : [x1] real, [y1] real, [x2] real, [y2] real, object, [prec] bool, [notme] bool -> bool
-collision_circle : [x] real, [y] real, [radius] real, object, [prec] bool, [notme] bool -> bool
+collision_point : (x: real, y: real, object, prec: bool, notme: bool) -> bool
+collision_line : (x1: real, y1: real, x2: real, y2: real, object, prec: bool, notme: bool) -> bool
+collision_circle : (x: real, y: real, radius: real, object, prec: bool, notme: bool) -> bool
 collision_ellipse, collision_rectangle :
-    [x1] real, [y1] real, [x2] real, [y2] real, [radius] real, object, [prec] bool, [notme] bool -> bool
+    (x1: real, y1: real, x2: real, y2: real, radius: real, object, prec: bool, notme: bool) -> bool
 //List versions
-collision_point_list : [x] real, [y] real, object, [prec] bool, [notme] bool, list<instance>, [ordered] bool -> int
-collision_line_list : [x1] real, [y1] real, [x2] real, [y2] real, object, [prec] bool, [notme] bool, list<instance>, [ordered] bool -> int
-collision_circle_list : [x] real, [y] real, [radius] real, object, [prec] bool, [notme] bool, list<instance>, [ordered] bool -> int
+collision_point_list : (x: real, y: real, object, prec: bool, notme: bool, list<instance>, ordered: bool) -> int
+collision_line_list : (x1: real, y1: real, x2: real, y2: real, object, prec: bool, notme: bool, list<instance>, ordered: bool) -> int
+collision_circle_list : (x: real, y: real, radius: real, object, prec: bool, notme: bool, list<instance>, ordered: bool) -> int
 collision_ellipse_list, collision_rectangle_list :
-    [x1] real, [y1] real, [x2] real, [y2] real, [radius] real, object, [prec] bool, [notme] bool, list<instance>, [ordered] bool -> bool
+    (x1: real, y1: real, x2: real, y2: real, radius: real, object, prec: bool, notme: bool, list<instance>, ordered: bool) -> bool
 //Primitive in primitive
-point_in_rectangle : [px] real, [py] real, [x1] real, [y1] real, [x2] real, [y2] real -> bool
-point_in_triangle : [px] real, [py] real, [x1] real, [y1] real, [x2] real, [y2] real, [x3] real, [y3] real -> bool
-point_in_circle : [px] real, [py] real, [x] real, [y] real, [radius] real -> bool
-rectangle_in_rectangle: [sx1] real, [sy1] real, [sx2] real, [sy2] real, [dx1] real, [dy1] real, [dx2] real, [dy2] real -> bool
-rectangle_in_triangle: [sx1] real, [sy1] real, [sx2] real, [sy2] real, [dx1] real, [dy1] real, [dx2] real, [dy2] real, [dx3] real, [dy3] real -> bool
-rectangle_in_circle: [sx1] real, [sy1] real, [sx2] real, [sy2] real, [dx] real, [dy] real, [radius] real -> bool
+point_in_rectangle : (px: real, py: real, x1: real, y1: real, x2: real, y2: real) -> bool
+point_in_triangle : (px: real, py: real, x1: real, y1: real, x2: real, y2: real, x3: real, y3: real) -> bool
+point_in_circle : (px: real, py: real, x: real, y: real, radius: real) -> bool
+rectangle_in_rectangle: (sx1: real, sy1: real, sx2: real, sy2: real, dx1: real, dy1: real, dx2: real, dy2: real) -> bool
+rectangle_in_triangle: (sx1: real, sy1: real, sx2: real, sy2: real, dx1: real, dy1: real, dx2: real, dy2: real, dx3: real, dy3: real) -> bool
+rectangle_in_circle: (sx1: real, sy1: real, sx2: real, sy2: real, dx: real, dy: real, radius: real) -> bool
 /*--Movement [DONE]--*/
-motion_add, motion_set : [dir] real, [speed] real -> void
-move_bounce_all, move_bounce_solid : [adv] bool -> void
-move_contact_all, move_contact_solid, move_outside_all, move_outside_solid : [dir] real, [maxdist] real -> void
-move_random, move_snap : [hsnap] real, [vsnap] real -> void
-place_snapped : [hsnap] real, [vsnap] real -> bool
-move_towards_point : [x] real, [y] real, [speed] real -> void
-move_wrap : [hor] bool, [vert] bool, [margin] real -> void
+motion_add, motion_set : (dir: real, speed: real) -> void
+move_bounce_all, move_bounce_solid : (adv: bool) -> void
+move_contact_all, move_contact_solid, move_outside_all, move_outside_solid : (dir: real, maxdist: real) -> void
+move_random, move_snap : (hsnap: real, vsnap: real) -> void
+place_snapped : (hsnap: real, vsnap: real) -> bool
+move_towards_point : (x: real, y: real, speed: real) -> void
+move_wrap : (hor: bool, vert: bool, margin: real) -> void
 
-/*--Instance [MOSTLY DONE]--*/
+/*--Instance MOSTLY [DONE]--*/
 //Create, transform, destroy [DONE]
-instance_create_depth : [x] real, [y] real, [depth] int, object -> instance
-instance_create_layer : [x] real, [y] real, layer, object -> instance
-instance_destroy : ? object -> void
-instance_change : object, [perf] bool -> void
-instance_copy : [perf] bool -> void
+instance_create_depth : (x: real, y: real, depth: int, object) -> instance
+instance_create_layer : (x: real, y: real, layer, object) -> instance
+instance_destroy : (? object) -> void
+instance_change : (object, perf: bool) -> void
+instance_copy : (perf: bool) -> void
 //Activating [DONE]
-instance_activate_all : void -> void
-instance_activate_layer,  instance_deactivate_layer  : layer  -> void
+instance_activate_all : () -> void
+instance_activate_layer,  instance_deactivate_layer  : (layer ) -> void
 instance_activate_object, instance_deactivate_object : object -> void
 instance_activate_region :
-    [left] real, [top] real, [width] real, [height] real, [inside] bool -> void
+    (left: real, top: real, width: real, height: real, inside: bool) -> void
 instance_deactivate_region :
-    [left] real, [top] real, [width] real, [height] real, [inside] bool, [notme] bool -> void
+    (left: real, top: real, width: real, height: real, inside: bool, notme: bool) -> void
 //Search
 //TODO: object or instance
 instance_exists : object -> bool
-instance_find : object, [n] int -> instance 
-instance_furthest, instance_nearest : [x] real, [y] real, object -> instance
+instance_find : (object, n: int) -> instance 
+instance_furthest, instance_nearest : (x: real, y: real, object) -> instance
 instance_number : object -> int
 instance_id_get : int -> instance
 //Collision check [DONE]
-instance_place, instance_position : [x] real, [y] real, object -> instance
-instance_place_list, instance_position_list : [x] real, [y] real, list<instance>, [ordered] bool -> int
+instance_place, instance_position : (x: real, y: real, object) -> instance
+instance_place_list, instance_position_list : (x: real, y: real, list<instance>, ordered: bool) -> int
 
 /*--Layers [DONE]--*/
-layer_add_instance : layer, instance -> void
-layer_create : [depth] int ? [name] string -> layer_id
-layer_depth : layer, [depth] int -> void
+layer_add_instance : (layer, instance) -> void
+layer_create : (depth: int ? name: string) -> layer_id
+layer_depth : (layer, depth: int) -> void
 layer_destroy : layer -> void
 layer_destroy_instances : layer -> instance
-layer_element_move : element, layer -> void
+layer_element_move : (element, layer) -> void
 layer_exists : layer -> bool
 layer_instance_get_instance : element -> instance
-layer_is_draw_depth_forced : void -> bool
-layer_has_instance : layer, instance -> bool //TODO: or object
+layer_is_draw_depth_forced : () -> bool
+layer_has_instance : (layer, instance) -> bool //TODO: or object
 //Getters
-layer_get_all : void -> array<layer>
+layer_get_all : () -> array<layer>
 layer_get_all_elements : layer -> array<element>
 layer_get_depth : layer -> int
 layer_get_element_layer : element -> layer_id
 layer_get_element_type : element -> element_type
-layer_get_forced_depth : void -> int
-layer_get_hspeed, layer_get_vspeed : void -> real //Returns `N/A` in the docs
+layer_get_forced_depth : () -> int
+layer_get_hspeed, layer_get_vspeed : () -> real //Returns `N/A` in the docs
 layer_get_id : string -> layer_id
 layer_get_id_at_depth : int -> layer_id
 layer_get_name : layer_id -> string
 layer_get_script_begin, layer_get_script_end : layer -> script //TODO: option
 layer_get_shader : layer -> shader //TODO: option
-layer_get_target_room : void -> room
+layer_get_target_room : () -> room
 layer_get_visible : layer -> bool
 layer_get_x, layer_get_y : layer -> real
 //Setters
-layer_hspeed, layer_vspeed : layer, real -> void
-layer_reset_target_room : void -> void
-layer_script_begin, layer_script_end : layer, script -> void
+layer_hspeed, layer_vspeed : (layer, real) -> void
+layer_reset_target_room : () -> void
+layer_script_begin, layer_script_end : (layer, script) -> void
 layer_set_target_room : room -> void
-layer_set_visible : layer, bool -> void
-layer_shader      : layer, shader -> void
-layer_x, layer_y  : layer, real -> void
+layer_set_visible : (layer, bool) -> void
+layer_shader      : (layer, shader) -> void
+layer_x, layer_y  : (layer, real) -> void
 //Background
-layer_background_create : layer, sprite -> element
-layer_background_exists : layer, element -> bool
+layer_background_create : (layer, sprite) -> element
+layer_background_exists : (layer, element) -> bool
 layer_background_destroy : element -> void
-layer_background_alpha  : element, alpha  -> void
-layer_background_blend  : element, color  -> void
-layer_background_sprite : element, sprite -> void
-layer_background_speed, layer_background_xscale, layer_background_yscale : element, real -> void
+layer_background_alpha  : (element, alpha ) -> void
+layer_background_blend  : (element, color ) -> void
+layer_background_sprite : (element, sprite) -> void
+layer_background_speed, layer_background_xscale, layer_background_yscale : (element, real) -> void
 layer_background_stretch, layer_background_visible,
-    layer_background_htiled, layer_background_vtiled : element, bool -> void
-layer_background_get_xscale
+    layer_background_htiled, layer_background_vtiled : (element, bool) -> void
 layer_background_get_alpha  : element -> alpha
 layer_background_get_blend  : element -> color
 layer_background_get_index  : element -> int
@@ -487,59 +486,59 @@ layer_background_get_stretch, layer_background_get_visible,
     layer_background_get_htiled, layer_background_get_vtiled : element -> bool
 layer_background_get_id : layer -> element
 //Sprite
-layer_sprite_create : layer, [x] real, [y] real, sprite -> element
-layer_sprite_exists : layer, element -> bool
+layer_sprite_create : (layer, x: real, y: real, sprite) -> element
+layer_sprite_exists : (layer, element) -> bool
 layer_sprite_destroy : element -> void
-layer_sprite_alpha  : element, alpha  -> void
+layer_sprite_alpha  : (element, alpha ) -> void
 layer_sprite_angle, layer_sprite_speed, layer_sprite_x, layer_sprite_y,
-    layer_sprite_xscale, layer_sprite_yscale : element, real -> void
-layer_sprite_blend  : element, color  -> void
-layer_sprite_change : element, sprite -> void
-layer_sprite_index  : element, int    -> void
+    layer_sprite_xscale, layer_sprite_yscale : (element, real) -> void
+layer_sprite_blend  : (element, color ) -> void
+layer_sprite_change : (element, sprite) -> void
+layer_sprite_index  : (element, int   ) -> void
 layer_sprite_get_alpha  : element -> alpha
 layer_sprite_get_blend  : element -> color
-layer_sprite_get_id     : element, [asset] string -> sprite
+layer_sprite_get_id     : (element, asset: string) -> sprite
 layer_sprite_get_index  : element -> int
 layer_sprite_get_sprite : element -> sprite
 layer_sprite_get_angle, layer_sprite_get_speed, layer_sprite_get_x, layer_sprite_get_y,
     layer_sprite_get_xscale, layer_sprite_get_yscale : element -> real
 //Tilemap
-layer_tilemap_create : layer, [x] real, [y] real, tileset, [width] int, [height] int -> element
+layer_tilemap_create : (layer, x: real, y: real, tileset, width: int, height: int) -> element
 layer_tilemap_destroy : element -> void
-layer_tilemap_exists : layer, element -> bool
+layer_tilemap_exists : (layer, element) -> bool
 layer_tilemap_get_id : layer -> element
 
 /*--Sprites [DONE]--*/
-sprite_add : [filename] string, [imgnum] int, [removeback] bool, [smooth] bool, [xorig] int, [yorig] int -> sprite
-sprite_add_from_surface : sprite, surface, [x] int, [y] int, [w] int, [h] int, [removeback] bool, [smooth] bool -> void
-sprite_create_from_surface : surface, [x] int, [y] int, [w] int, [h] int, [removeback] bool, [smooth] bool, [xorig] int, [yorig] int -> sprite
-sprite_assign : [dst] sprite, [src] sprite -> void
-sprite_collision_mask : sprite, [sepmasks] bool, [bboxmode] int, [bbleft] int, [bbtop] int, [bbright] int, [bbbottom] int, bbox_kind, [tolerance] int -> void
+sprite_add : (filename: string, imgnum: int, removeback: bool, smooth: bool, xorig: int, yorig: int) -> sprite
+sprite_add_from_surface : (sprite, surface, x: int, y: int, w: int, h: int, removeback: bool, smooth: bool) -> void
+sprite_create_from_surface : (surface, x: int, y: int, w: int, h: int, removeback: bool, smooth: bool, xorig: int, yorig: int) -> sprite
+sprite_assign : (dst: sprite, src: sprite) -> void
+sprite_collision_mask : (sprite, sepmasks: bool, bboxmode: int, bbleft: int, bbtop: int, bbright: int, bbbottom: int, bbox_kind, tolerance: int) -> void
 sprite_delete : sprite -> void
 sprite_duplicate : sprite -> sprite
 sprite_duplicate : sprite -> sprite
 sprite_exists : sprite -> bool //Returns `void` in the docs
 sprite_flush, sprite_prefetch : sprite -> int
-sprite_flush_multi, sprite_prefetch_multi : array<sprite> -> int
+sprite_flush_multi, sprite_prefetch_multi : (array<sprite>) -> int
 sprite_get_bbox_left, sprite_get_bbox_top, sprite_get_bbox_right, sprite_get_bbox_bottom,
     sprite_get_width, sprite_get_height, sprite_get_number, sprite_get_xoffset, sprite_get_yoffset : sprite -> int
 sprite_get_name : sprite -> string
 sprite_get_speed : sprite -> real
 sprite_get_speed_type : sprite -> speed_type
-sprite_get_texture : sprite, [subimg] int -> texture
-sprite_get_tpe : sprite, [index] int -> int
+sprite_get_texture : (sprite, subimg: int) -> texture
+sprite_get_tpe : (sprite, index: int) -> int
 sprite_get_uvs : sprite -> array<real>
-sprite_merge : sprite, sprite -> bool
-sprite_replace : sprite, [filename] string, [imgnumb] int, [removeback] bool, [smooth] bool, [xorig] int, [yorig] int -> sprite
-sprite_save : sprite, [subimg] int, [filename] string -> void
-sprite_save_strip : sprite, [filename] string -> void
-sprite_set_alpha_from_sprite : sprite, [mask] sprite -> void
-sprite_set_bbox : sprite, [left] int, [top] int, [right] int, [bottom] int -> void
-sprite_set_bbox_mode : sprite, bbox_mode -> void
-sprite_set_cache_size : sprite, [max] int -> void
-sprite_set_cache_size_ext : sprite, [subimg] int, [max] int -> void
-sprite_set_offset : sprite, [xoff] int, [yoff] int -> void
-sprite_set_speed : sprite, [speed] real, speed_type -> void //Returns `constant` in the docs
+sprite_merge : (sprite, sprite) -> bool
+sprite_replace : (sprite, filename: string, imgnumb: int, removeback: bool, smooth: bool, xorig: int, yorig: int) -> sprite
+sprite_save : (sprite, subimg: int, filename: string) -> void
+sprite_save_strip : (sprite, filename: string) -> void
+sprite_set_alpha_from_sprite : (sprite, mask: sprite) -> void
+sprite_set_bbox : (sprite, left: int, top: int, right: int, bottom: int) -> void
+sprite_set_bbox_mode : (sprite, bbox_mode) -> void
+sprite_set_cache_size : (sprite, max: int) -> void
+sprite_set_cache_size_ext : (sprite, subimg: int, max: int) -> void
+sprite_set_offset : (sprite, xoff: int, yoff: int) -> void
+sprite_set_speed : (sprite, speed: real, speed_type) -> void //Returns `constant` in the docs
 tileset_get_name : tileset -> string
 tileset_get_texture : tileset -> texture
 tileset_get_uvs : tileset -> array<real>
@@ -553,13 +552,13 @@ object_get_mask   : object -> sprite
 object_get_name   : object -> string
 object_get_parent : object -> object //TODO: -100, lol
 object_get_persistent, object_get_physics, object_get_solid, object_get_visible : object -> bool
-object_is_ancestor : object, [parent] object -> bool
-object_set_mask : object, sprite -> void
-object_set_persistent, object_set_solid, object_set_visible : object, bool -> void
+object_is_ancestor : (object, parent: object) -> bool
+object_set_mask : (object, sprite) -> void
+object_set_persistent, object_set_solid, object_set_visible : (object, bool) -> void
 
 /*--Events [DONE]--*/
-event_inherited : void -> void
-event_perform : event, [sub] int -> void
+event_inherited : () -> void
+event_perform : (event, sub: int) -> void
 event_user : int -> void
 
 /*--Rooms--*/
@@ -567,90 +566,90 @@ event_user : int -> void
 //Navigation
 room_goto : room -> void
 room_next, room_previous : room -> room
-room_goto_next, room_goto_previous : void -> void
-room_restart : void -> void
+room_goto_next, room_goto_previous : () -> void
+room_restart : () -> void
 //Checking
 room_exists : room -> bool
 //Modification [DONE]
-room_add : void -> room
-room_assign : [index] room, room -> void
+room_add : () -> room
+room_assign : (index: room, room) -> void
 room_duplicate : room -> void
-room_set_background_color : room, color, [show] bool -> void
-room_set_height : room, [height] real -> void
-room_set_width  : room,  [width] real -> void
-room_set_persistent : room, bool -> void
-room_set_camera : room, [viewport] int, [camera] int -> void
-room_set_viewport : room, [viewport] int, [vis] bool, [xport] int, [yport] int, [wport] int, [hport] int -> void
-room_instance_add : room, [x] real, [y] real, object -> void
+room_set_background_color : (room, color, show: bool) -> void
+room_set_height : (room, height: real) -> void
+room_set_width  : (room,  width: real) -> void
+room_set_persistent : (room, bool) -> void
+room_set_camera : (room, viewport: int, camera: int) -> void
+room_set_viewport : (room, viewport: int, vis: bool, xport: int, yport: int, wport: int, hport: int) -> void
+room_instance_add : (room, x: real, y: real, object) -> void
 room_instance_clear : room -> void
 
 /*--Game [DONE]--*/
-game_load, game_save : [filename] string -> void
-game_load_buffer, game_save_buffer : [buffer] int -> void //TODO: buffer
-game_end, game_restart : void -> void
-game_get_speed : [type] int -> real
+game_load, game_save : (filename: string) -> void
+game_load_buffer, game_save_buffer : (buffer: int) -> void //TODO: buffer
+game_end, game_restart : () -> void
+game_get_speed : (type: int) -> real
 
 /*--Display [DONE]--*/
-display_reset : [aa] int, [vsync] bool -> void
-display_get_dpi_x, display_get_dpi_y, display_get_sleep_margin : void -> real
-display_get_width, display_get_height, display_get_gui_width, display_get_gui_height : void -> int
-display_get_orientation : void -> orientation
-display_get_timing_orientation : void -> timing_method
-display_mouse_get_x, display_mouse_get_y : void -> real
-display_mouse_set : [x] real, [y] real -> void
-display_set_gui_maximize : ? [xscale] real, [yscale] real , [xoffset] real, [yoffset] real -> void
-display_set_gui_size : [width] int, [height] int -> void
-display_set_ui_visibility : [flags] int -> void
+display_reset : (aa: int, vsync: bool) -> void
+display_get_dpi_x, display_get_dpi_y, display_get_sleep_margin : () -> real
+display_get_width, display_get_height, display_get_gui_width, display_get_gui_height : () -> int
+display_get_orientation : () -> orientation
+display_get_timing_orientation : () -> timing_method
+display_mouse_get_x, display_mouse_get_y : () -> real
+display_mouse_set : (x: real, y: real) -> void
+display_set_gui_maximize : (? xscale: real, yscale: real , xoffset: real, yoffset: real) -> void
+display_set_gui_size : (width: int, height: int) -> void
+display_set_ui_visibility : (flags: int) -> void
 
 /*--Window [DONE]--*/
-window_center : void -> void
-window_device : void -> ptr //TODO: deprecated
-window_get_caption : void -> string
+window_center : () -> void
+window_device : () -> ptr //TODO: deprecated
+window_get_caption : () -> string
 window_set_caption : string -> void 
-window_get_color : void -> color //returns N/A in the manual
+window_get_color : () -> color //returns N/A in the manual
 window_set_color : color -> void
-window_get_cursor : void -> int //TODO: enum
+window_get_cursor : () -> int //TODO: enum
 window_set_cursor : int -> void //TODO: enum
-window_get_fullscreen : void -> bool
+window_get_fullscreen : () -> bool
 window_set_fullscreen : bool -> void
-window_get_width, window_get_height, window_get_x, window_get_y : void -> int
-window_get_visible_rects : [x1] int, [y1] int, [x2] int, [y2] int -> array<int>
-window_setposition : [x] int, [y] int -> void
-window_set_size : [w] int, [h] int -> void
-window_set_rectangle : [x] int, [y] int, [w] int, [h] int -> void
+window_get_width, window_get_height, window_get_x, window_get_y : () -> int
+window_get_visible_rects : (x1: int, y1: int, x2: int, y2: int) -> array<int>
+window_setposition : (x: int, y: int) -> void
+window_set_size : (w: int, h: int) -> void
+window_set_rectangle : (x: int, y: int, w: int, h: int) -> void
 window_view_mouse_get_x, window_view_mouse_get_y : int -> int //TODO: view
-window_views_mouse_get_x, window_views_mouse_get_y : void -> int
+window_views_mouse_get_x, window_views_mouse_get_y : () -> int
 
 /*--Steam--*/
 //TODO: newtypes
 //API
-steam_initialised, steam_stats_ready : void -> bool
-steam_get_app_id, steam_get_user_account_id : void -> int
-steam_get_user_steam_id : void -> int64
-steam_get_persona_name, steam_current_game_language, steam_available_languages : void -> string
+steam_initialised, steam_stats_ready : () -> bool
+steam_get_app_id, steam_get_user_account_id : () -> int
+steam_get_user_steam_id : () -> int64
+steam_get_persona_name, steam_current_game_language, steam_available_languages : () -> string
 steam_get_user_persona_name : int -> string
-steam_is_user_logged_on : void -> bool //Returns `string` in the docs
+steam_is_user_logged_on : () -> bool //Returns `string` in the docs
 //Overlay
-steam_is_overlay_enabled, steam_is_overlay_activated : void -> bool
+steam_is_overlay_enabled, steam_is_overlay_activated : () -> bool
 steam_activate_overlay : overlay -> void
 steam_activate_overlay_browser : string -> void
 steam_activate_overlay_store : int -> void
-steam_activate_overlay_user : string -> int64 -> void
+steam_activate_overlay_user : (string, int64) -> void
 //Leaderboards
-steam_create_leaderboard : string, leaderboard_sort, leaderboard_display -> int
-steam_upload_score : string, [score] int -> int
-steam_upload_score_buffer : string, [score] int, buffer -> int
-steam_download_scores, steam_download_scores_around_user : string, [start_idx] int, [end_idx] int -> int
+steam_create_leaderboard : (string, leaderboard_sort, leaderboard_display) -> int
+steam_upload_score : (string, score: int) -> int
+steam_upload_score_buffer : (string, score: int, buffer) -> int
+steam_download_scores, steam_download_scores_around_user : (string, start_idx: int, end_idx: int) -> int
 steam_download_friends_scores : string -> int
 //Achievements
 steam_set_achievement, steam_clear_achievement : string -> void
 steam_get_achievement : string -> bool
 steam_get_stat_int : string -> int
 steam_get_stat_float, steam_get_stat_avg_rate : string -> real
-steam_set_stat_int : string, int -> void
-steam_set_stat_float : string, real -> void
-steam_set_stat_avg_rate : string, [session_count] int, [session_length] real -> void
-steam_reset_all_stats, steam_reset_all_stats_achievements : void -> void
+steam_set_stat_int : (string, int) -> void
+steam_set_stat_float : (string, real) -> void
+steam_set_stat_avg_rate : (string, session_count: int, session_length: real) -> void
+steam_reset_all_stats, steam_reset_all_stats_achievements : () -> void
 //TODO: Steam cloud
 //DLC
 steam_user_owns_dlc, steam_user_installed_dlc : int64 -> bool
