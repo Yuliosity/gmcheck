@@ -6,8 +6,10 @@ A parser for signatures of built-in function and variables. See the self-descrip
 -}
 
 module Language.GML.Parser.Types
-    ( VarType (..), variables, functions, enums )
-    where
+    ( VarType (..)
+    , type_, signature_
+    , variables, functions, enums
+    ) where
 
 import Prelude hiding (Enum)
 
@@ -62,8 +64,10 @@ nametype = do
             , ("stack",   TStack)
             ]
 
+type_ = snd <$> nametype
+
 names :: Parser [Name]
-names = sepBy1 ident (symbol ",")
+names = ident `sepBy1` comma
 
 unpack :: ([a], b) -> [(a, b)]
 unpack (xs, y) = [(x, y) | x <- xs]
@@ -75,8 +79,8 @@ type VarType = (Type, Bool)
 vars :: Parser ([Name], VarType)
 vars = do
     isConst <- option False $ True <$ keyword "const"
-    names <- names <* symbol ":"
-    (_, ty) <- nametype
+    names <- names <* colon
+    ty <- type_
     return (names, (ty, isConst))
 
 variables :: Parser [(Name, VarType)]
@@ -90,21 +94,20 @@ arg = do
     (tyName, ty) <- nametype
     return (fromMaybe tyName name, ty)
 
-sigs :: Parser ([Name], Signature)
-sigs = do
-    names <- names <* symbol ":"
-    rawArgs <- arg `sepBy` symbol ","
+signature_ :: Parser Signature
+signature_ = do
+    rawArgs <- arg `sepBy` comma
     let args = case rawArgs of
                     [(_, TVoid)] -> []
                     xs -> xs
     moreArgs <- (VarArgs <$> (symbol "*" *> arg))
-            <|> (OptArgs <$> option [] (symbol "?" *> arg `sepBy1` symbol ","))
+            <|> (OptArgs <$> option [] (symbol "?" *> arg `sepBy1` comma))
     symbol "->"
-    (_, ret) <- nametype
-    return (names, Signature args moreArgs ret)
+    ret <- type_
+    return $ Signature args moreArgs ret
 
 functions :: Parser [(Name, Signature)]
-functions = concatMap unpack <$> manyAll sigs
+functions = concatMap unpack <$> manyAll ((,) <$> names <* colon <*> signature_)
 
 -- * Parsing enums
 

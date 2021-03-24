@@ -77,7 +77,7 @@ ident = try $ do
 -- |Number literal.
 lNumber :: Parser Double
 lNumber = 
-    try (lexeme (L.signed empty L.float)
+    (try (lexeme (L.signed empty L.float))
     <|> fromIntegral <$> lexeme (L.signed empty L.decimal))
     <?> "number"
 

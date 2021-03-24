@@ -136,6 +136,8 @@ data Signature = Signature
     Type             -- ^ Return type
     deriving (Eq, Show)
 
+pattern (:->) args ret = Signature args (OptArgs []) ret
+
 allArgs :: Signature -> [Argument]
 allArgs (Signature args more _) = take maxGmlArgs $ args ++ case more of
     OptArgs opt -> opt
