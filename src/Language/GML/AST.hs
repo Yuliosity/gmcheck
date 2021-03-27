@@ -65,9 +65,16 @@ data BinOp
 
 -- * Expressions
 
-{-| Anonymous function (possibly a constructor) with arguments and a body -}
-data Function = Function [Name] Bool Block    
+{-| Anonymous function (possibly a constructor) with arguments and a body. -}
+data Function = Function [Name] FunctionKind Block
     deriving (Eq, Show)
+
+{-| A plain function or a possibly inherited constructor. -}
+data FunctionKind = PlainFunction | Constructor (Maybe Funcall)
+    deriving (Eq, Show)
+
+{-| Function/constructor call. |-}
+type Funcall = (Name, [Expr])
 
 {-| Expression which can be evaluated to a value. -}
 data Expr
@@ -82,8 +89,8 @@ data Expr
     | EUnary    UnOp  Expr      -- ^ Unary expression
     | EBinary   BinOp Expr Expr -- ^ Binary expression
     | ETernary  Expr  Expr Expr -- ^ Ternary conditional [cond ? t : f]
-    | EFuncall  Name [Expr]     -- ^ Function/script call with arguments
-    | ENew      Name [Expr]     -- ^ Constructor call with arguments
+    | EFuncall  Funcall     -- ^ Function/script call with arguments
+    | ENew      Funcall     -- ^ Constructor call with arguments
     deriving (Eq, Show)
 
 -- Helper instances for writing expressions in code
@@ -100,8 +107,8 @@ instance Num Expr where
     (-) = eBinary Sub
     (*) = eBinary Mul
     negate = EUnary UNeg
-    abs x = EFuncall "abs" [x]
-    signum x = EFuncall "sign" [x]
+    abs x = EFuncall ("abs", [x])
+    signum x = EFuncall ("sign", [x])
 
 instance Fractional Expr where
     fromRational = ENumber . fromRational

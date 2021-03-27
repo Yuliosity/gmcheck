@@ -11,8 +11,8 @@ import Language.GML.Parser.AST
 lit42 = ENumber 42
 litPi = ENumber 3.14
 litString = EString "string"
-sin_pi = EFuncall "sin" [litPi]
-write_string = EFuncall "write" [litString]
+sin_pi = EFuncall ("sin", [litPi])
+write_string = EFuncall ("write", [litString])
 foo = EVariable "foo"
 foo_42 = VArray "foo" lit42
 foo_lt_42 = EBinary (BComp Less) foo lit42
@@ -53,15 +53,15 @@ exprs = describe "expressions parser" $ do
         parse' expr "foo++" `shouldParse` EUnary UPostInc foo
         parse' expr "foo-- - --foo" `shouldParse` (EUnary UPostDec foo - EUnary UPreDec foo)
     it "can parse function calls" $ do
-        parse' expr "rand()" `shouldParse` EFuncall "rand" []
+        parse' expr "rand()" `shouldParse` EFuncall ("rand", [])
         parse' expr "sin(3.14)" `shouldParse` sin_pi
-        parse' expr "cat(foo, bar)" `shouldParse` EFuncall "cat" [foo, bar]
+        parse' expr "cat(foo, bar)" `shouldParse` EFuncall ("cat", [foo, bar])
     it "can parse array literals" $ do
         parse' expr "[foo, bar]" `shouldParse` EArray [foo, bar]
-        parse' expr "test([foo, 42 + 42])" `shouldParse` EFuncall "test" [EArray [foo, 42 + 42]]
+        parse' expr "test([foo, 42 + 42])" `shouldParse` EFuncall ("test", [EArray [foo, 42 + 42]])
     it "can parse inline functions" $ do
         parse' expr "function(foo, bar) {return (foo + 42)}" `shouldParse`
-            EFunction (Function ["foo", "bar"] False [SReturn (foo + 42)])
+            EFunction (Function ["foo", "bar"] PlainFunction [SReturn (foo + 42)])
     it "can parse structs" $ do
         parse' expr "{}" `shouldParse` EStruct []
         parse' expr "{foo : a + 42, bar : \"string\"}" `shouldParse`
@@ -79,9 +79,11 @@ stmts = describe "statements parser" $ do
             SDeclare [("foo", Just $ 2 + 2), ("bar", Nothing), ("baz", Just lit42)]
     it "can parse function declarations" $ do
         parse' stmt "function smth(foo, bar) { return foo + bar; } " `shouldParse`
-            SFunction "smth" (Function ["foo", "bar"] False [SReturn (foo + bar)])
+            SFunction "smth" (Function ["foo", "bar"] PlainFunction [SReturn (foo + bar)])
         parse' stmt "function cons(foo) constructor { bar = foo }" `shouldParse`
-            SFunction "cons" (Function ["foo"] True [SAssign "bar" foo])
+            SFunction "cons" (Function ["foo"] (Constructor Nothing) [SAssign "bar" foo])
+        parse' stmt "function cons(foo): parent(foo, 42) constructor { bar = foo }" `shouldParse`
+            SFunction "cons" (Function ["foo"] (Constructor $ Just ("parent", [foo, lit42])) [SAssign "bar" foo])
     it "can parse variable assignments" $ do
         parse' stmt "foo=42" `shouldParse` SAssign "foo" lit42
         parse' stmt "foo+=\"string\"" `shouldParse` SModify Add "foo" litString
@@ -92,8 +94,8 @@ stmts = describe "statements parser" $ do
     it "can parse function calls" $ do
         parse' stmt "write(\"string\")" `shouldParse` SExpression write_string
         parse' stmt "var foo = sin(3.14)" `shouldParse` SDeclare [("foo", Just sin_pi)]
-        parse' stmt "return atan2(1, a)" `shouldParse` SReturn (EFuncall "atan2" [1, EVariable "a"])
-        parse' stmt "foo = new bar()" `shouldParse` SAssign "foo" (ENew "bar" [])
+        parse' stmt "return atan2(1, a)" `shouldParse` SReturn (EFuncall ("atan2", [1, EVariable "a"]))
+        parse' stmt "foo = new bar()" `shouldParse` SAssign "foo" (ENew ("bar", []))
     it "can parse conditionals" $ do
         parse' stmt "if foo==42 exit" `shouldParse` SIf (eBinary Eq foo lit42) SExit Nothing
         parse' stmt "if (foo < 42) exit" `shouldParse` SIf foo_lt_42 SExit Nothing

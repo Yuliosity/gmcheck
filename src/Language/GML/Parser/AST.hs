@@ -54,8 +54,12 @@ variable = do
     return nest2
 
 function = Function
-    <$> (parens $ ident `sepBy` comma)
-    <*> option False (kwConstructor $> True)
+    <$> parens (ident `sepBy` comma)
+    <*> choice
+        [ colon *> (Constructor . Just <$> funcall) <* kwConstructor
+        , kwConstructor $> Constructor Nothing
+        , return PlainFunction
+        ]
     <*> block
 
 -- * Expressions
@@ -121,8 +125,8 @@ eTerm = choice
     , EArray <$> brackets (expr `sepBy1` comma)
     , EStruct <$> braces (((,) <$> ident <*> (colon *> expr)) `sepBy` comma)
     , EFunction <$> (kwFunction *> function)
-    , uncurry ENew <$> (kwNew *> funcall)
-    , try (uncurry EFuncall <$> funcall)
+    , ENew <$> (kwNew *> funcall)
+    , try (EFuncall <$> funcall)
     , EVariable <$> variable
     ]
 

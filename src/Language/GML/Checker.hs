@@ -260,7 +260,7 @@ derive = \case
             report (WTernaryDiff e1T e2T)
             return $ e1T <> e2T
 
-    EFuncall fn args -> do
+    EFuncall (fn, args) -> do
         argsT <- mapM derive args
         msig <- lookupFn fn
         case msig of
