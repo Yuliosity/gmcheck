@@ -8,7 +8,7 @@ A parser for signatures of built-in function and variables. See the self-descrip
 module Language.GML.Parser.Types
     ( VarType
     , type_, signature_
-    , variables, functions, enums
+    , variables, signatures, enums
     ) where
 
 import Prelude hiding (Enum)
@@ -23,7 +23,8 @@ import Language.GML.Parser.Common
 import Language.GML.Parser.Lexer
 
 nametype :: Parser (Name, Type)
-nametype = do
+nametype =
+    try function <|> do
     tyName <- ident
     -- TODO: flatten
     case scalarTypes M.!? tyName of
@@ -51,6 +52,7 @@ nametype = do
             , ("alpha",   TAlpha)
             , ("instance",TInstance)
             , ("layer",   TUnknown [TNewtype "layer_id", TString])
+            , ("exception", TException)
             ]
 
         vectorTypes = M.fromList
@@ -63,6 +65,14 @@ nametype = do
             , ("queue",   TQueue)
             , ("stack",   TStack)
             ]
+
+function = do
+    --TODO: parse single argument without parens
+    args <- parens (arg `sepBy` comma)
+    symbol "->"
+    ret <- type_
+    --TODO: show function type
+    return $ ("function", TFunction args ret)
 
 type_ = snd <$> nametype
 
@@ -86,7 +96,7 @@ vars = do
 variables :: Parser [(Name, VarType)]
 variables = concatMap unpack <$> manyAll vars
 
--- * Parsing function signatures
+-- * Parsing builtin function signatures
 
 arg :: Parser Argument
 arg = do
@@ -94,6 +104,7 @@ arg = do
     (tyName, ty) <- nametype
     return (fromMaybe tyName name, ty)
 
+-- Difference between this and [function] is that it can handle optional and variadic arguments
 signature_ :: Parser Signature
 signature_ = do
     (args, moreArgs) <- parens (do
@@ -108,8 +119,8 @@ signature_ = do
     ret <- type_
     return $ Signature args moreArgs ret
 
-functions :: Parser [(Name, Signature)]
-functions = concatMap unpack <$> manyAll ((,) <$> names <* colon <*> signature_)
+signatures :: Parser [(Name, Signature)]
+signatures = concatMap unpack <$> manyAll ((,) <$> names <* colon <*> signature_)
 
 -- * Parsing enums
 

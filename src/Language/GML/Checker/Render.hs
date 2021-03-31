@@ -87,13 +87,19 @@ instance ToMarkup Type where
         TAny    -> "any"
         TUnknown opt -> do "{"; markupOpt opt; "}"
         TVoid   -> "void"
+        TBool   -> "bool"
+        TInt    -> "int"
         TReal   -> "real"
         TString -> "string"
         TPtr    -> "ptr"
         TMatrix -> "matrix"
+        TStruct fields -> do
+            "{"
+            forM_ fields (\(name, ty) -> do toMarkup name; ":"; toMarkup ty)
+            "}"
         TFunction args ret -> do
             "("
-            forM_ args (\(name, ty) -> do toMarkup name; ";"; toMarkup ty)
+            forM_ args (\(name, ty) -> do toMarkup name; ":"; toMarkup ty)
             ") -> "
             toMarkup ret
         TNewtype n -> toMarkup n

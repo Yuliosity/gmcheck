@@ -5,6 +5,7 @@ typeof : any -> string
 instanceof : struct -> string
 
 /*--Type conversion [DONE]--*/
+ansi_char : int -> char
 chr : keycode -> char
 ord : char -> keycode
 real   : string -> real
@@ -36,6 +37,7 @@ variable_struct_names_count : struct -> int
 //method : (any, function) -> function //TODO: what should be here?
 //method_get_self : function -> instance
 //method_get_index : function -> int
+exception_unhandled_handler : ((exception) -> void) -> void
 
 /*--Math MOSTLY [DONE]--*/
 //Arithmetics
@@ -121,6 +123,8 @@ string_char_at : (string, int) -> char
 string_byte_at : (string, int) -> int
 string_ord_at  : (string, int) -> keycode
 string_length : string -> int
+string_pos, string_last_pos : (substr: string, string) -> int
+string_pos_ext, string_last_pos_ext : (substr: string, string, start_pos: int) -> int
 //Transform
 string_format : (real, tot: int, dec: int) -> string
 string_copy, string_delete : (string, index: int, count: int) -> string
@@ -128,6 +132,7 @@ string_count : (substr: string, string) -> int
 string_replace, string_replace_all : (string, substr: string, newstr: string) -> string
 string_lower, string_upper, string_letters, string_digits, string_lettersdigits : string -> string
 string_repeat : (string, count: int) -> string
+string_hash_to_newline : string -> string
 
 /*--Containers--*/
 ds_exists : (id: int, ds_type) -> bool
@@ -145,7 +150,7 @@ array_set : (array<any>, index: int, val: any) -> void
 array_insert : (array<any>, index: int * val: any) -> void
 array_push : (array<any> * val: any) -> void
 array_pop : (array<any>) -> any
-//array_sort : (array<any>, bool | function<any, any) -> any>) -> any
+//array_sort : (array<any>, bool | (any, any) -> any) -> any
 //List
 ds_list_create : () -> list<void>
 ds_list_clear, ds_list_destroy : (list<any>) -> void
@@ -560,6 +565,12 @@ object_set_persistent, object_set_solid, object_set_visible : (object, bool) -> 
 event_inherited : () -> void
 event_perform : (event, sub: int) -> void
 event_user : int -> void
+
+/*--Scripts [DONE]--*/
+script_execute : (script * args) -> any
+script_execute_ext : (script, args: array<any> ? offset: int, num_args: int) -> any
+script_get_name : script -> string
+script_exists : script -> bool
 
 /*--Rooms--*/
 //TODO: viewports

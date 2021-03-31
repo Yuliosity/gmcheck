@@ -53,6 +53,7 @@ data Type
     | TContainer  Container  Type -- ^ Linear container of typed values.
     | TContainer2 Container2 Type -- ^ Two-dimensional container of typed values.
     deriving (Eq, Show)
+--FIXME: compare functions ignoring argument names
 
 indexType :: Container -> Type
 indexType = \case

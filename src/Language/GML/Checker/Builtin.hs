@@ -39,7 +39,7 @@ loadBuiltin :: FilePath -> IO Builtin
 loadBuiltin dir = do
     en <- parseFile enums $ dir </> "enums.gmli"
     let enumValues = M.fromList [(name, (TNewtype ty, True)) | Enum ty opts <- en, (name, _) <- opts]
-    fs <- M.fromList <$> parseFile functions (dir </> "functions.gmli")
+    fs <- M.fromList <$> parseFile signatures (dir </> "functions.gmli")
     let loadVars file = M.fromList <$> parseFile variables file
     [globVars, instVars] <- mapM (\file -> loadVars (dir </> file))
         ["global.gmli", "instance.gmli"]

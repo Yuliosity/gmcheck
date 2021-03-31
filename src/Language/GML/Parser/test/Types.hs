@@ -5,7 +5,7 @@ import Test.Hspec.Megaparsec
 import Text.Megaparsec
 
 import Language.GML.Types
-import Language.GML.Parser.Types hiding (functions)
+import Language.GML.Parser.Types hiding (signatures)
 
 parse' p = parse (p <* eof) "test"
 
@@ -19,8 +19,13 @@ types = describe "types" $ do
         "list<grid<string>>" `shouldParseAs` TList (TGrid TString)
     it "can parse newtypes" $ do
         "sprite" `shouldParseAs` TNewtype "sprite"
+    it "can parse function types" $ do
+        "(int) -> int" `shouldParseAs` TFunction [("int", TInt)] TInt
+        "() -> bool" `shouldParseAs` TFunction [] TBool
+        "(flag: bool, fun: (int) -> int) -> int" `shouldParseAs`
+            TFunction [("flag", TBool), ("fun", TFunction [("int", TInt)] TInt)] TInt
 
-functions = describe "function types" $ do
+signatures = describe "signatures" $ do
     let shouldParseAs = shouldParse . parse' signature_
     it "can parse simple function signatures" $ do
         "() -> bool" `shouldParseAs` ([] :-> TBool)
@@ -38,4 +43,4 @@ functions = describe "function types" $ do
 
 test = hspec $ do
     types
-    functions
+    signatures
