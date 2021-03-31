@@ -48,14 +48,14 @@ keyword :: Text -> Parser ()
 keyword kw = (lexeme . try) (string kw <* notFollowedBy alphaNumChar) $> ()
 
 reserved =
-    [ "begin", "break", "case", "constructor", "continue", "default", "delete", "do"
-    , "else", "end", "enum", "exit", "for", "function", "globalvar", "if", "new"
-    , "repeat", "return", "static", "switch", "throw", "until", "var", "while", "with"
+    [ "begin", "break", "case", "catch", "constructor", "continue", "default", "delete", "do"
+    , "else", "end", "enum", "exit", "finally", "for", "function", "globalvar", "if", "new"
+    , "repeat", "return", "static", "switch", "throw", "try", "until", "var", "while", "with"
     ]
 
-[ kwBegin, kwBreak, kwCase, kwConstructor, kwContinue, kwDefault, kwDelete, kwDo
-    , kwElse, kwEnd, kwEnum, kwExit, kwFor, kwFunction, kwGlobalvar, kwIf, kwNew
-    , kwRepeat, kwReturn, kwStatic, kwSwitch, kwThrow, kwUntil, kwVar, kwWhile, kwWith
+[     kwBegin, kwBreak, kwCase, kwCatch, kwConstructor, kwContinue, kwDefault, kwDelete, kwDo
+    , kwElse, kwEnd, kwEnum, kwExit, kwFinally, kwFor, kwFunction, kwGlobalvar, kwIf, kwNew
+    , kwRepeat, kwReturn, kwStatic, kwSwitch, kwThrow, kwTry, kwUntil, kwVar, kwWhile, kwWith
     ] = map keyword reserved
 
 -- * Operators

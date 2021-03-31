@@ -158,7 +158,7 @@ sSwitch = do
         body <- many stmt
         optional semicolon
         return (cases, body)
-    return $ SSwitch cond branches 
+    return $ SSwitch cond branches
 
 forInit :: Parser Stmt
 forInit = sDeclare <|> sAssign
@@ -182,6 +182,7 @@ stmt = (choice
     , SReturn     <$> (kwReturn *> expr)
     , SThrow      <$> (kwThrow  *> expr)
     , sSwitch
+    , STry <$> (kwTry *> block) <*> optional ((,) <$> (kwCatch *> parens ident) <*> block) <*> optional (kwFinally *> block),
     , try sAssign
     , SExpression <$> expr
     ] <?> "statement")

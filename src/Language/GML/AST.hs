@@ -134,27 +134,28 @@ eBinary = EBinary . toBin
 {-| Statement (instruction). -}
 data Stmt
     = SExpression Expr -- ^ Calling an expression (typically a function/script with side effects)
-    -- Ddeclarations and modification
-    | SDeclare [(Name, Maybe Expr)] -- ^ Declaring local variable(s)
-    | SAssign Variable Expr         -- ^ Assigning a new variable, possibly declaring it in-place
-    | SModify NumOp Variable Expr   -- ^ Modifying an existing variable
+    -- Declarations and modification
+    | SDeclare [(Name, Maybe Expr)] -- ^ Declaring local variable(s) with `var`
+    | SAssign Variable Expr         -- ^ Assigning a variable with `=`, possibly declaring it in-place
+    | SModify NumOp Variable Expr   -- ^ Modifying an existing variable with an operator like `+=` or `^=`
     | SFunction Name Function       -- ^ Declaring a function (possibly constructor) with arguments and a body
     | SDelete Name                  -- ^ Delete operator
     -- Control flow structures
     | SBlock   Block           -- ^ Nested sequence of statements
     | SWith    Expr Stmt       -- ^ Switching the execution context into an another instance
-    | SRepeat  Expr Stmt       -- ^ Repeating some instructions several times
+    | SRepeat  Expr Stmt       -- ^ `repeat`ing some instructions several times
     | SWhile   Expr Stmt       -- ^ Loop with a pre-condition
     | SDoUntil Stmt Expr       -- ^ Loop with a post-condition
-    | SFor     Stmt Expr Stmt Stmt    -- ^ For loop. TODO: limit the first header stmt to assign or declare, and the second one to assign
-    | SIf      Expr Stmt (Maybe Stmt) -- ^ Conditional. If the `else` branch is missing, the second statement is [Nothing].
-    | SSwitch  Expr [([Expr], Block)] -- ^ Switch-case. For the default branch, the case list is empty.
+    | SFor     Stmt Expr Stmt Stmt    -- ^ [for] loop. TODO: limit the first header stmt to assign or declare, and the second one to assign
+    | SIf      Expr Stmt (Maybe Stmt) -- ^ `if` conditional, with mandatory `then` branch and optional `else` branch
+    | SSwitch  Expr [([Expr], Block)] -- ^ Switch-case. For the default branch, the case list is empty
+    | STry     Block (Maybe (Name, Block)) (Maybe Block) -- ^ `try` block, with optional `catch` and optional `finally` blocks
     -- Control flow redirection
-    | SBreak       -- ^ Break from a loop or switch-case
-    | SContinue    -- ^ Continue to the next loop iteration
-    | SExit        -- ^ Exit from a script/event without a result
-    | SReturn Expr -- ^ Return the result from a script
-    | SThrow  Expr -- ^ Throw an exception
+    | SBreak       -- ^ `break` from a loop or `switch`-`case`
+    | SContinue    -- ^ `continue` to the next loop iteration
+    | SExit        -- ^ `exit` from a script/event without a result
+    | SReturn Expr -- ^ `return` the result from a function
+    | SThrow  Expr -- ^ `throw` an exception
     deriving (Eq, Show)
 
 {-| A block is a sequence of statements, typically in braces. -}

@@ -115,6 +115,13 @@ stmts = describe "statements parser" $ do
             SSwitch foo [([0, 1], [SModify Add "foo" lit42, SBreak])]
         parse' stmt "switch(foo) {case 1 + 1: foo += 42 break default: write(\"string\")}" `shouldParse`
             SSwitch foo [([1 + 1], [SModify Add "foo" lit42, SBreak]), ([], [SExpression write_string])]
+    it "can parse try-catch-finally" $ do
+        parse' stmt "try {throw 42} catch(foo) {}" `shouldParse`
+            STry [SThrow lit42] (Just ("foo", [])) Nothing
+        parse' stmt "try {throw 42} finally {return 42}" `shouldParse`
+            STry [SThrow lit42] Nothing (Just [SReturn lit42])
+        parse' stmt "try {throw 42} catch(foo) {} finally {return 42}" `shouldParse`
+            STry [SThrow lit42] (Just ("foo", [])) (Just [SReturn lit42])
 
 programs = describe "complex script parser" $ do
     it "can parse multi-lines" $ do
