@@ -120,6 +120,14 @@ pattern TArray2, TGrid :: Type -> Type
 pattern TArray2 t = TContainer2 SArray2 t
 pattern TGrid t = TContainer2 SGrid t
 
+{-| Runtime exception. -}
+pattern TException = TStruct
+    [ ("message", TString)
+    , ("longMessage", TString)
+    , ("script", TString)
+    , ("stacktrace", TArray TString)
+    ] 
+
 {-| Possibly named function argument. -}
 type Argument = (Name, Type)
 

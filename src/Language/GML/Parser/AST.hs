@@ -182,7 +182,7 @@ stmt = (choice
     , SReturn     <$> (kwReturn *> expr)
     , SThrow      <$> (kwThrow  *> expr)
     , sSwitch
-    , STry <$> (kwTry *> block) <*> optional ((,) <$> (kwCatch *> parens ident) <*> block) <*> optional (kwFinally *> block),
+    , STry <$> (kwTry *> block) <*> optional ((,) <$> (kwCatch *> parens ident) <*> block) <*> optional (kwFinally *> block)
     , try sAssign
     , SExpression <$> expr
     ] <?> "statement")

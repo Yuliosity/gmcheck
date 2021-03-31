@@ -67,7 +67,7 @@ emptyContext :: Context
 emptyContext = Context
     { _cSrc     = SScript ""
     , _cScope   = []
-    , _cLocal   = [emptyMem]
+    , _cLocal   = []
     , _cObjects = M.singleton "global" emptyMem
     }
 
@@ -86,7 +86,7 @@ withFrame mem action = do
 withScope :: Name -> Checker () -> Checker ()
 withScope name action = do
     cScope %= (name :)
-    withFrame emptyMem action
+    action
     cScope %= tail
 
 setLocal :: Name -> Type -> Checker ()
@@ -376,12 +376,23 @@ exec = \case
 
     SBlock stmts -> run stmts
 
+    STry block mcatch mfinally -> do
+        run block
+        case mcatch of
+            Nothing -> return ()
+            Just (e, body) -> withFrame (fromList [(e, TException)]) $ run body
+        case mfinally of
+            Nothing -> return ()
+            Just body -> run body
+
+    SThrow expr -> checkType "thrown exception" TException expr
+
     --TODO: for break/continue/exit/return/throw, check that it's the last statement in a block
 
     _ -> return ()
 
 run :: Program -> Checker ()
-run = mapM_ exec
+run stmts = withFrame emptyMem $ mapM_ exec stmts
 
 runObject :: (Name, Object) -> Checker ()
 runObject (name, Object {oEvents}) = do
@@ -389,7 +400,7 @@ runObject (name, Object {oEvents}) = do
     forM_ (M.toList oEvents) $ \(event, pr) -> do
         cSrc .= SObject name event
         traceM ("-- " ++ show event)
-        withScope "name" $ run pr
+        withScope name $ run pr
 
 runProject :: Checker ()
 runProject = do
