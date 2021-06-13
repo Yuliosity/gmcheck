@@ -15,8 +15,10 @@ import Prelude hiding (Enum)
 
 import Data.Maybe (fromMaybe)
 import qualified Data.Map.Strict as M
+import qualified Data.Text as T
 
 import Text.Megaparsec
+import Text.Megaparsec.Char (char)
 
 import Language.GML.Types
 import Language.GML.Parser.Common
@@ -27,13 +29,14 @@ nametype =
     try function <|> do
     tyName <- ident
     -- TODO: flatten
-    case scalarTypes M.!? tyName of
-        Just res -> return (tyName, res)
-        Nothing -> case vectorTypes M.!? tyName of
-            Just res -> do
+    case tyName of
+        -- TODO: better rule for type variables
+        _ | T.length tyName == 1 -> return (tyName, TTypeVar tyName)
+        _ | Just res <- scalarTypes M.!? tyName -> return (tyName, res)
+        _ | Just res <- vectorTypes M.!? tyName -> do
                 (subname, subtype) <- between (symbol "<") (symbol ">") nametype
                 return (tyName <> "<" <> subname <> ">", res subtype)
-            Nothing -> return (tyName, TNewtype tyName)
+        _ -> return (tyName, TNewtype tyName)
     where
         scalarTypes = M.fromList
             -- Base types
@@ -72,7 +75,7 @@ function = do
     symbol "->"
     ret <- type_
     --TODO: show function type
-    return $ ("function", TFunction args ret)
+    return ("function", TFunction args ret)
 
 type_ = snd <$> nametype
 

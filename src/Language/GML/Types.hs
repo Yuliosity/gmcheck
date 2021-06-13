@@ -52,6 +52,8 @@ data Type
     -- Vector types
     | TContainer  Container  Type -- ^ Linear container of typed values.
     | TContainer2 Container2 Type -- ^ Two-dimensional container of typed values.
+    -- Generic types, only in function signatures
+    | TTypeVar Name
     deriving (Eq, Show)
 --FIXME: compare functions ignoring argument names
 

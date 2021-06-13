@@ -24,6 +24,10 @@ types = describe "types" $ do
         "() -> bool" `shouldParseAs` TFunction [] TBool
         "(flag: bool, fun: (int) -> int) -> int" `shouldParseAs`
             TFunction [("flag", TBool), ("fun", TFunction [("int", TInt)] TInt)] TInt
+    let tyvarT = TTypeVar "T"
+    it "can parse type variables" $ do
+        "array<T>" `shouldParseAs` TArray tyvarT
+        "(a: T, b: T) -> T" `shouldParseAs` TFunction [("a", tyvarT), ("b", tyvarT)] tyvarT
 
 signatures = describe "signatures" $ do
     let shouldParseAs = shouldParse . parse' signature_
