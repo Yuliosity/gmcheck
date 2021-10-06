@@ -5,14 +5,11 @@ Description : GM Project
 Datatypes representing the whole Game Maker project and functions for loading its codebase.
 -}
 
-{-# LANGUAGE DerivingStrategies 
-           , GeneralizedNewtypeDeriving 
-           , BlockArguments 
-           , DeriveAnyClass 
-           , DeriveGeneric 
+{-# LANGUAGE DerivingStrategies
+           , BlockArguments
+           , TypeApplications 
            #-}
 
-{-# LANGUAGE TypeApplications #-}
 module Language.GML.Project
     ( Script (..)
     , Object (..)
@@ -58,7 +55,7 @@ newtype RoomConfig = RoomConfig { instanceCreationOrder::[Text] }
   deriving Show
 
 instance Yaml.FromYAML RoomConfig where
-  parseYAML = Yaml.withMap "RoomConfig" \m ->  RoomConfig 
+  parseYAML = Yaml.withMap "RoomConfig" \m ->  RoomConfig
     <$> m Yaml..: "instanceCreationOrder"
 
 
@@ -103,7 +100,7 @@ loadScripts path = do
         pr <- loadProgram "script" $ dir </> name </> name' <.> "gml"
         return (pack name', pr)
     pure (M.fromList scripts)
-  
+
 loadObjects :: FilePath -> IO ([FilePath], M.Map Name Object)
 loadObjects path = do
     let dir = path </> "objects"
@@ -119,7 +116,7 @@ loadObjects path = do
 
 
 loadRooms :: FilePath -> IO ([FilePath], M.Map Name RoomObject)
-loadRooms path = do 
+loadRooms path = do
     let dir = path </> "rooms"
     names  <- listDirectory dir
     rooms <- forM names \name -> do
@@ -127,13 +124,13 @@ loadRooms path = do
         let configName = head $ filter (isExtensionOf "yy") files
         let creationCodeName = find (isExtensionOf "gml") files
 
-        creationCode <- traverse 
-                  (\codename -> loadProgram "creation code" (dir </> name </> codename)) 
+        creationCode <- traverse
+                  (\codename -> loadProgram "creation code" (dir </> name </> codename))
                   creationCodeName
-        
-        config <- fromRight (RoomConfig []) 
-                . Yaml.decode1Strict @RoomConfig 
-                <$> BS.readFile (dir </> name </> configName) 
+
+        config <- fromRight (RoomConfig [])
+                . Yaml.decode1Strict @RoomConfig
+                <$> BS.readFile (dir </> name </> configName)
 
         pure (pack name, RoomObject config creationCode)
     pure (names, M.fromList rooms)
