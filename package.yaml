@@ -33,6 +33,7 @@ dependencies:
 - parser-combinators
 - text
 - transformers
+- HsYAML
 
 library:
   default-extensions:
