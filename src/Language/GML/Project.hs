@@ -5,10 +5,10 @@ Description : GM Project
 Datatypes representing the whole Game Maker project and functions for loading its codebase.
 -}
 
-{-# LANGUAGE DerivingStrategies
-           , BlockArguments
-           , TypeApplications 
-           #-}
+{-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE BlockArguments #-}
+{-# LANGUAGE TypeApplications #-}
+           
 
 module Language.GML.Project
     ( Script (..)
