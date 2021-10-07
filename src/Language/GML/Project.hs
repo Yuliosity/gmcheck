@@ -51,16 +51,12 @@ data Object = Object
     deriving Show
 
 
-newtype RoomConfig = RoomConfig { instanceCreationOrder::[Text] }
+data RoomObject = RoomObject { instanceCreationOrder::[Text], creationCode :: Maybe Program}
   deriving Show
 
-instance Yaml.FromYAML RoomConfig where
-  parseYAML = Yaml.withMap "RoomConfig" \m ->  RoomConfig
-    <$> m Yaml..: "instanceCreationOrder"
-
-
-data RoomObject = RoomObject RoomConfig (Maybe Program)
-  deriving Show
+instance Yaml.FromYAML RoomObject where
+  parseYAML = Yaml.withMap "RoomObject" \m ->  RoomConfig
+    <$> m Yaml..: "instanceCreationOrder" <*> pure Nothing
 
 data Project = Project
     { pResources :: M.Map Name Type
@@ -88,7 +84,6 @@ loadProgram what path = do
     logTrace $ "Loading " ++ what ++ " from " ++ path
     parseFile program path
 
-
 loadScripts :: FilePath -> IO (M.Map Name Program)
 loadScripts path = do
     let dir = path </> "scripts"
@@ -113,8 +108,6 @@ loadObjects path = do
         return (pack name, Object (M.fromList events))
     pure (names, M.fromList objects)
 
-
-
 loadRooms :: FilePath -> IO ([FilePath], M.Map Name RoomObject)
 loadRooms path = do
     let dir = path </> "rooms"
@@ -123,19 +116,14 @@ loadRooms path = do
         files <- listDirectory (dir </> name)
         let configName = head $ filter (isExtensionOf "yy") files
         let creationCodeName = find (isExtensionOf "gml") files
-
         creationCode <- traverse
-                  (\codename -> loadProgram "creation code" (dir </> name </> codename))
-                  creationCodeName
-
+            (\codename -> loadProgram "creation code" (dir </> name </> codename))
+            creationCodeName
         config <- fromRight (RoomConfig [])
-                . Yaml.decode1Strict @RoomConfig
+                . Yaml.decode1Strict @RoomObject
                 <$> BS.readFile (dir </> name </> configName)
-
-        pure (pack name, RoomObject config creationCode)
+        pure (pack name, config{creationCode = creationCode})
     pure (names, M.fromList rooms)
-
-
 
 createResoursesMap :: [FilePath] -> Type -> M.Map Name Type
 createResoursesMap names resType = M.fromList $ zip (map pack names) $ repeat resType
