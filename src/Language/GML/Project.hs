@@ -14,7 +14,6 @@ module Language.GML.Project
     ( Script (..)
     , Object (..)
     , RoomObject (..)
-    , RoomConfig (..)
     , Project (..)
     , loadProject
     ) where
@@ -55,7 +54,7 @@ data RoomObject = RoomObject { instanceCreationOrder::[Text], creationCode :: Ma
   deriving Show
 
 instance Yaml.FromYAML RoomObject where
-  parseYAML = Yaml.withMap "RoomObject" \m ->  RoomConfig
+  parseYAML = Yaml.withMap "RoomObject" \m ->  RoomObject
     <$> m Yaml..: "instanceCreationOrder" <*> pure Nothing
 
 data Project = Project
@@ -119,7 +118,7 @@ loadRooms path = do
         creationCode <- traverse
             (\codename -> loadProgram "creation code" (dir </> name </> codename))
             creationCodeName
-        config <- fromRight (RoomConfig [])
+        config <- fromRight (RoomObject [] Nothing)
                 . Yaml.decode1Strict @RoomObject
                 <$> BS.readFile (dir </> name </> configName)
         pure (pack name, config{creationCode = creationCode})
