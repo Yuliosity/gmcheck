@@ -41,8 +41,8 @@ data OtherEvent
     = Outside | Boundary
     | OutsideView  Int -- ^ Outside view
     | BoundaryView Int -- ^ View boundary
-    | Game Stage
-    | Room Stage
+    | GameEvent Stage
+    | RoomEvent Stage
     | NoMoreLives | NoMoreHealth
     | AnimationEnd | PathEnd
     | CloseButton
@@ -53,10 +53,10 @@ instance Enum OtherEvent where
     toEnum = \case
         0  -> Outside
         1  -> Boundary
-        2  -> Game SBegin
-        3  -> Game SEnd
-        4  -> Room SBegin
-        5  -> Room SEnd
+        2  -> GameEvent SBegin
+        3  -> GameEvent SEnd
+        4  -> RoomEvent SBegin
+        5  -> RoomEvent SEnd
         6  -> NoMoreLives
         7  -> AnimationEnd
         8  -> PathEnd
@@ -65,6 +65,7 @@ instance Enum OtherEvent where
         n  | n <= 25  -> User         $ n - 10
         n  | n <= 47  -> OutsideView  $ n - 40
         n  | n <= 57  -> BoundaryView $ n - 50
+        n  -> error $ "Unknown event id: " ++ show n
     fromEnum = undefined
 
 data GestureEvent
@@ -124,6 +125,7 @@ pEvent = do
             0  -> Step
             1  -> StepExt SBegin
             2  -> StepExt SEnd
+            n  -> error $ "Unknown Step subid: " ++ show n
         "Alarm"      -> Alarm code
         "Collision"  -> Collision $ pack arg
         "Draw"       -> case code of
@@ -136,6 +138,7 @@ pEvent = do
             65 -> DrawResize
             76 -> DrawPre
             77 -> DrawPost
+            n  -> error $ "Unknown Draw subid: " ++ show n
         "Other"      -> Other $ toEnum code
         "KeyPress"   -> Keyboard Press   keycode
         "Keyboard"   -> Keyboard Hold    keycode
@@ -164,4 +167,6 @@ pEvent = do
             58 -> MouseGlobal Release MMiddle
             60 -> MouseWheelUp
             61 -> MouseWheelDown
+            n  -> error $ "Unknown Mouse subid: " ++ show n
         "Gesture"    -> Gesture $ toEnum code
+        s -> error $ "Unknown event name: " ++ s

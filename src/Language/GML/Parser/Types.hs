@@ -18,7 +18,6 @@ import qualified Data.Map.Strict as M
 import qualified Data.Text as T
 
 import Text.Megaparsec
-import Text.Megaparsec.Char (char)
 
 import Language.GML.Types
 import Language.GML.Parser.Common

@@ -9,7 +9,7 @@ import Control.Monad (forM_)
 import Data.ByteString.Lazy as BS
 import qualified Data.Map.Strict as M
 import Text.Blaze.Html5 as H
-import Text.Blaze.Html5.Attributes as A
+--import Text.Blaze.Html5.Attributes as A
 import Text.Blaze.Html.Renderer.Utf8
 
 import Language.GML.Checker.Errors
@@ -105,6 +105,7 @@ instance ToMarkup Type where
         TNewtype n -> toMarkup n
         TContainer  con ty -> do toMarkup con; "<"; toMarkup ty; ">"
         TContainer2 con ty -> do toMarkup con; "<"; toMarkup ty; ">"
+        TTypeVar n -> toMarkup n
         where
             markupOpt [] = mempty
             markupOpt [x] = toMarkup x

@@ -5,14 +5,11 @@ module Language.GML.Parser.Common
     , parseFile
     ) where
 
-import Data.Functor (($>))
 import Data.Text (Text)
 import qualified Data.Text.IO as T (readFile)
 import Data.Void (Void)
 
 import Text.Megaparsec
-import Text.Megaparsec.Char
-import qualified Text.Megaparsec.Char.Lexer as L
 
 type Parser = Parsec Void Text
 type Error = ParseErrorBundle Text Void
