@@ -24,36 +24,55 @@ data Variable
     | VContainer2 Container2 Variable (Expr, Expr) -- ^ 2D data structure accessor
     deriving (Eq, Show)
 
-{-| One-dimensional array, indexed by a number. -}
+{-| One-dimensional array, indexed by a number: `a[b]`. -}
 pattern VArray  v e = VContainer  SArray  v e
 
-{-| Two-dimensional array, indexed by two numbers. Legacy in GMS 2.3. -}
+{-| Two-dimensional array, indexed by two numbers: `a[b, c]`. Legacy in GMS 2.3. -}
 pattern VArray2 v e = VContainer2 SArray2 v e
 
 -- * Operators
 
 {-| Arithetical and logical operations, used in both modification assignment and binary operations. -}
 data NumOp
-    = Add | Sub | Mul | Div
-    | Mod | IntDiv
-    | Shr | Shl | BitAnd | BitOr | BitXor
+    = Add -- ^ Addition, `x + `y`
+    | Sub -- ^ Subtraction, `x - y`
+    | Mul -- ^ Multiplication, `x * y`
+    | Div -- ^ Division, `x / y`
+    | Mod -- ^ Modulus, `x mod y`
+    | IntDiv -- ^ Integral division, `x div y`
+    | Shr -- ^ Bit shift right, `x << y`
+    | Shl -- ^ Bit shift left, `x >> y`
+    | BitAnd -- ^ Bitwise and, `x & y`
+    | BitOr  -- ^ Bitwise or, `x | y`
+    | BitXor -- ^ Bitwise xor, `CHECK`
     deriving (Eq, Show)
 
 {-| Boolean operations. -}
 data BoolOp
-    = And | Or | Xor
+    = And -- ^ Logical AND, `x && y` or `x and y`
+    | Or  -- ^ Logical OR, `x || y` or `x or y`
+    | Xor
     deriving (Eq, Show)
 
 {-| Comparison operators. -}
 data CompOp
-    = Eq | NotEq | Less | Greater | LessEq | GreaterEq
+    = Eq        -- ^ Equality: `a == b` (or `a = b` in expression context)
+    | NotEq     -- ^ Unequality: `a != b`
+    | Less      -- ^ Less than: `a < b`
+    | Greater   -- ^ Greater than: `a > b`
+    | LessEq    -- ^ Less or equal: `a <= b`
+    | GreaterEq -- ^ Greater or equal: `a >= b`
     deriving (Eq, Show)
 
 {-| Unary operators, in order of precedence. -}
 data UnOp
-    = UBitNeg | UNeg | UNot
-    | UPreInc  | UPreDec
-    | UPostInc | UPostDec
+    = UBitNeg  -- ^ Bit negation: `~a`
+    | UNeg     -- ^ Arithmetical negation: `-a`
+    | UNot     -- ^ Boolean negation: `!a`
+    | UPreInc  -- ^ Prefix increment: `++a`
+    | UPreDec  -- ^ Prefix decrement: `--a`
+    | UPostInc -- ^ Postfix increment: `a++`
+    | UPostDec -- ^ Postfix decrement: `a--`
     deriving (Eq, Show)
 
 {-| Any binary operator. -}
