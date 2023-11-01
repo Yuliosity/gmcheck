@@ -8,7 +8,7 @@ GMCheck is best compiled and run using [Haskell Stack](https://haskellstack.org)
 
 `stack build`
 
-`stack exec -- -o path-to-report.html path-do-gms-project-directory/`
+`stack exec gmcheck-exe -- -o path-to-report.html path-do-gms-project-directory/`
 
 ## Features and Plans
 
