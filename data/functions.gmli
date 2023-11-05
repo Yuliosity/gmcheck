@@ -245,11 +245,15 @@ draw_healthbar :
     backcol: color, mincol: color, maxcol: color, direction: int,
     showback: bool, showborder: bool) -> void
 //TODO: colored versions
+draw_set_colour: (col: color) -> void
+draw_rectangle_color: (x1:real, y1: real, x2: real, y2: real, col1: color, col2: color, col3: color, col: color, outline: bool) -> void
 //Text
 string_width, string_height : string -> int
 string_width_ext, string_height_ext : (string, sep: int, max: int) -> int
 draw_text : (x: real, y: real, string) -> void
 draw_highscore : (x1: real, y1: real, x2: real, y2: real) -> void
+draw_set_halign: (halign: horizontal_aligment) -> void
+draw_set_valign: (halign: vertical_aligment) -> void
 //Colors [DONE]
 draw_getpixel : (x: int, y: int) -> color
 draw_getpixel_ext : (x: int, y: int) -> int //TODO: RGBA?
@@ -257,6 +261,7 @@ draw_get_alpha : () -> alpha
 draw_set_alpha : alpha -> void
 draw_get_color : () -> color
 draw_set_color, draw_clear_color : color -> void
+draw_clear: (col: color) -> void
 make_color_rgb : (r: real, g: real, b: real) -> color
 make_color_hsv : (h: real, s: real, v: real) -> color
 merge_color : (color, color, alpha) -> color
@@ -627,6 +632,7 @@ window_set_fullscreen : bool -> void
 window_get_width, window_get_height, window_get_x, window_get_y : () -> int
 window_get_visible_rects : (x1: int, y1: int, x2: int, y2: int) -> array<int>
 window_setposition : (x: int, y: int) -> void
+window_set_position : (x: real, y: real) -> void
 window_set_size : (w: int, h: int) -> void
 window_set_rectangle : (x: int, y: int, w: int, h: int) -> void
 window_view_mouse_get_x, window_view_mouse_get_y : int -> int //TODO: view
@@ -666,3 +672,45 @@ steam_reset_all_stats, steam_reset_all_stats_achievements : () -> void
 //DLC
 steam_user_owns_dlc, steam_user_installed_dlc : int64 -> bool
 //TODO: Steam UGC
+
+/*GPU Control */
+gpu_set_alphatestenable: (enable: bool) -> void
+gpu_set_alphatestref: (val: real) -> void
+gpu_set_texrepeat: (enable: bool) -> void
+gpu_set_ztestenable: (enable: bool) -> void
+gpu_set_zwriteenable: (enable: bool) -> void
+
+/* File system */
+file_exists : (fname: string) -> bool
+file_delete : (fname: string) -> bool
+file_rename : (oldname: string, newname: string) -> bool
+file_copy : (fname: string, newname: string) -> void
+file_find_first: (mask: string, attr: file_attributes) -> string
+file_find_next: () -> string
+file_find_close: () -> void
+file_attributes: (fname: string, attr: file_attributes) -> bool
+filename_name: (fname: string) -> string
+filename_path: (fname: string) -> string
+filename_dir: (fname: string) -> string
+filename_drive: (fname: string) -> string
+filename_ext: (fname: string) -> string
+filename_change_ext: (fname: string, newext: string) -> string
+get_open_filename: (filter: string, fname: string) -> string
+get_open_filename_ext: (filter: string, fname: string, directory: string, caption: string) -> string
+get_save_filename: (filter: string, fname: string) -> string
+get_save_filename_ext: (filter: string, fname: string, directory: string, caption: string) -> string
+
+/* Text files */
+file_text_open_read: (fname: string) -> file
+file_text_open_write: (fname: string) -> file
+file_text_open_append: (fname: string) -> file
+file_text_open_from_string: (content: string) -> file
+file_text_read_real: (fileid: file) -> real
+file_text_read_string: (fileid: file) -> string
+file_text_readln: (fileid: file) -> string
+file_text_write_real: (fileid: file, val: real) -> real
+file_text_write_string: (fileid: file, val: string) -> real
+file_text_writeln: (fileid: file) -> real
+file_text_eoln: (fileid: file) -> bool
+file_text_eof: (fileid: file) -> bool
+file_text_close: (fileid: file) -> void

@@ -7,6 +7,7 @@ surface
 texture
 tileset
 vformat
+file
 //Resources
 font
 object

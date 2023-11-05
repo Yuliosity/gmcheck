@@ -61,6 +61,18 @@ enum event {
     ev_gui, ev_gui_begin, ev_gui_end
 }
 
+enum file_attributes {
+    fa_none, fa_readonly, fa_hidden, fa_sysfile, fa_volumeid, fa_directory, fa_directory
+}
+
+enum horizontal_aligment {
+    fa_left, fa_center, fa_right
+}
+
+enum vertical_aligment {
+    fa_top, fa_middle, fa_bottom
+}
+
 enum keycode {
     vk_nokey, vk_anykey, vk_left, vk_right, vk_up, vk_down,
     vk_enter, vk_escape, vk_space, vk_shift, vk_control, vk_alt,

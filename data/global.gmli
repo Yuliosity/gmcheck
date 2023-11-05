@@ -45,3 +45,5 @@ const room_first, room_last : room
 room_height, room_width : int
 room_persistent : bool
 room_speed : int
+
+const debug_mode: bool
