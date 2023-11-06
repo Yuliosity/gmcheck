@@ -62,14 +62,14 @@ enum event {
 }
 
 enum file_attributes {
-    fa_none, fa_readonly, fa_hidden, fa_sysfile, fa_volumeid, fa_directory, fa_directory
+    fa_none, fa_readonly, fa_hidden, fa_sysfile, fa_volumeid, fa_directory, fa_archive
 }
 
-enum horizontal_aligment {
+enum horizontal_alignment {
     fa_left, fa_center, fa_right
 }
 
-enum vertical_aligment {
+enum vertical_alignment {
     fa_top, fa_middle, fa_bottom
 }
 

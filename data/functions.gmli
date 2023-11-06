@@ -252,8 +252,8 @@ string_width, string_height : string -> int
 string_width_ext, string_height_ext : (string, sep: int, max: int) -> int
 draw_text : (x: real, y: real, string) -> void
 draw_highscore : (x1: real, y1: real, x2: real, y2: real) -> void
-draw_set_halign: (halign: horizontal_aligment) -> void
-draw_set_valign: (halign: vertical_aligment) -> void
+draw_set_halign: (halign: horizontal_alignment) -> void
+draw_set_valign: (halign: vertical_alignment) -> void
 //Colors [DONE]
 draw_getpixel : (x: int, y: int) -> color
 draw_getpixel_ext : (x: int, y: int) -> int //TODO: RGBA?
