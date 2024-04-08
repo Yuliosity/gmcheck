@@ -143,8 +143,9 @@ instance ToMarkup Error where
 
 instance ToMarkup Source where
     toMarkup = \case
-        SScript name -> toMarkup name
-        SObject name event -> toMarkup name >> " : " >> toMarkup event
+        SrcScript name -> toMarkup name
+        SrcObject name event -> toMarkup name >> " : " >> toMarkup event
+        SrcRoom name -> toMarkup name >> " creation code"
 
 renderLog :: Log -> Html
 renderLog = ul . mapM_ (li . toHtml)

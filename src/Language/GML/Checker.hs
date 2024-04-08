@@ -17,7 +17,7 @@ import Prelude hiding (lookup)
 import Control.Monad
 import Control.Monad.Trans.RWS
 import Data.Either (isLeft)
-import Data.Foldable (asum)
+import Data.Foldable (asum, for_)
 import qualified Data.Map as M
 import Data.Text (pack)
 import Debug.Trace
@@ -65,7 +65,7 @@ makeLenses ''Context
 
 emptyContext :: Context
 emptyContext = Context
-    { _cSrc     = SScript ""
+    { _cSrc     = SrcScript ""
     , _cScope   = []
     , _cLocal   = []
     , _cObjects = M.singleton "global" emptyMem
@@ -394,9 +394,7 @@ exec = \case
         case mcatch of
             Nothing -> return ()
             Just (e, body) -> withFrame (fromList [(e, TException)]) $ run body
-        case mfinally of
-            Nothing -> return ()
-            Just body -> run body
+        for_ mfinally run
 
     SThrow expr -> checkType "thrown exception" TException expr
 
@@ -413,7 +411,7 @@ runObject :: (Name, Object) -> Checker ()
 runObject (name, Object {oEvents}) = do
     traceM $ "Checking " ++ show name
     forM_ (M.toList oEvents) $ \(event, pr) -> do
-        cSrc .= SObject name event
+        cSrc .= SrcObject name event
         traceM ("-- " ++ show event)
         withScope name $ run pr
 

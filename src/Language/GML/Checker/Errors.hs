@@ -1,12 +1,15 @@
 {-# LANGUAGE StrictData #-}
 
-module Language.GML.Checker.Errors where
+module Language.GML.Checker.Errors
+  ( module Language.GML.Checker.Errors
+  , Source (..)
+  ) where
 
 import qualified Data.Map.Strict as M
 import qualified Data.Set as S
 
 import Language.GML.AST
-import Language.GML.Events (Event) 
+import Language.GML.Location
 import Language.GML.Types
 
 data Error
@@ -86,10 +89,6 @@ fromList = S.fromList
 
 inSet :: Error -> ErrorSet -> Bool
 inSet err = S.member (errNum err)
-
-{-| Source script. -}
-data Source = SScript !Name | SObject !Name !Event
-    deriving (Eq, Ord)
 
 {-| Errors report. -}
 newtype Report = Report (M.Map Source [Error])
