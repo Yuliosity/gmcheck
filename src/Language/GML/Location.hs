@@ -4,7 +4,11 @@ import Language.GML.Events (Event)
 import Language.GML.Types (Name)
 
 {-| A code position inside a source. -}
--- data Pos = Pos {row :: !Int, col :: !Int}
+data Pos = Pos !Int !Int
+    deriving (Eq, Ord, Show)
+
+zeroPos :: Pos
+zeroPos = Pos 0 0
 
 {-| A code source. -}
 data Source
@@ -14,9 +18,12 @@ data Source
     | SrcObject !Name !Event
     -- | Room creation code
     | SrcRoom   !Name 
-    deriving (Eq, Ord)
+    deriving (Eq, Ord, Show)
 
 {-| A global code location inside the project. -}
-data Loc = Loc {source :: !Source, row :: !Int, col :: !Int}
+data Location = Location {source :: !Source, row :: !Int, col :: !Int}
+    deriving (Eq, Ord, Show)
 
-data Located a = Located {unLoc :: !a, getLoc :: Loc}
+{-| A code entity with a position (without source). -}
+data Located a = Located {getPos :: !Pos, unLoc :: !a}
+    deriving (Eq, Ord, Show)

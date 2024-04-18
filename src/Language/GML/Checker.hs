@@ -95,11 +95,14 @@ setLocal k v =
     cLocal %= \(f:fs) -> M.insert k v f : fs
 
 report :: Error -> Checker ()
-report err = do
+report = reportPos zeroPos
+
+reportPos :: Pos -> Error -> Checker ()
+reportPos pos err = do
     noErr <- inSet err <$> view sDisabledErrors
     unless noErr $ do
         src <- use cSrc
-        tell $ singleError src err
+        tell $ singleError src $ Located pos err
 
 {-| Lookup for a builtin variable. -}
 lookupBuiltin :: Name -> Checker (Maybe (Type, Bool))
@@ -212,10 +215,10 @@ checkCond = checkType "conditional" TBool
 {-| Deriving the expression type. -}
 derive :: Expr -> Checker Type
 derive = \case
-    EVariable var -> do
+    EVariable (Located pos var) -> do
         mty <- lookup var
         case mty of
-            Nothing -> report (EUndefinedVar var) >> return TVoid
+            Nothing -> reportPos pos (EUndefinedVar var) >> return TVoid
             Just ty -> return ty
 
     ENumber _ -> return TReal

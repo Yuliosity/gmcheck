@@ -128,7 +128,7 @@ eTerm = choice
     , EFunction <$> (kwFunction *> function)
     , ENew <$> (kwNew *> funcall)
     , try (EFuncall <$> funcall)
-    , EVariable <$> variable
+    , EVariable <$> located variable
     ]
 
 expr :: Parser Expr

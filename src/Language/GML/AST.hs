@@ -7,11 +7,15 @@ Everything representing the Game Maker Language source tree.
 
 {-# LANGUAGE PatternSynonyms #-}
 
-module Language.GML.AST where
+module Language.GML.AST
+    ( module Language.GML.Location
+    , module Language.GML.AST
+    ) where
 
 import Data.String
 import Data.Text (Text)
 
+import Language.GML.Location
 import Language.GML.Types
 
 -- * GML values
@@ -98,7 +102,7 @@ type Funcall = (Name, [Expr])
 {-| Expression which can be evaluated to a value. -}
 data Expr
     -- Values
-    = EVariable Variable
+    = EVariable (Located Variable)
     | ENumber   Double          -- ^ Numeric literal
     | EString   Text            -- ^ String literal
     | EArray    [Expr]          -- ^ Array literal
@@ -118,7 +122,7 @@ instance IsString Variable where
     fromString = VVar . fromString --TODO: parse
 
 instance IsString Expr where
-    fromString = EVariable . fromString
+    fromString str = EVariable $ Located zeroPos (fromString str) 
 
 instance Num Expr where
     fromInteger = ENumber . fromInteger

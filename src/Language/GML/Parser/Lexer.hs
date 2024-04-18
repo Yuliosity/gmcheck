@@ -12,6 +12,7 @@ import qualified Text.Megaparsec.Char.Lexer as L
 
 import Language.GML.Parser.Common
 import Language.GML.Types (Name)
+import Language.GML.Location
 
 {-| Spaces and comments skipper. -}
 spaces :: Parser ()
@@ -74,7 +75,7 @@ ident = try $ do
 
 -- |Number literal.
 lNumber :: Parser Double
-lNumber = 
+lNumber =
     (try (lexeme (L.signed empty L.float))
     <|> fromIntegral <$> lexeme (L.signed empty L.decimal))
     <?> "number"
@@ -85,3 +86,7 @@ lString =
     --TODO: escaped characters
     pack <$> (char '\"' *> manyTill L.charLiteral (char '\"') <* spaces)
     <?> "string"
+
+located :: Parser a -> Parser (Located a)
+located p = Located . toPos <$> getSourcePos <*> p where
+    toPos (SourcePos _file line col) = Pos (unPos line) (unPos col)

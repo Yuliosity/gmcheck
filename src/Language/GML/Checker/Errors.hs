@@ -9,7 +9,6 @@ import qualified Data.Map.Strict as M
 import qualified Data.Set as S
 
 import Language.GML.AST
-import Language.GML.Location
 import Language.GML.Types
 
 data Error
@@ -21,7 +20,7 @@ data Error
     | WTernaryDiff Type Type
     -- | Data structure is not destroyed
     | WDataStructureLeak Variable
-    -- | Function always throw an exception
+    -- | Function always throws an exception
     | WAlwaysThrow Name
     -- | Unreachable code after returns or throws
     | WUnreachable -- TODO: position
@@ -81,7 +80,6 @@ errNum = \case
 
     _ -> 0
 
-type Log = [Error]
 type ErrorSet = S.Set Int
 
 fromList :: [Int] -> ErrorSet
@@ -90,8 +88,11 @@ fromList = S.fromList
 inSet :: Error -> ErrorSet -> Bool
 inSet err = S.member (errNum err)
 
+type LocError = Located Error
+type Log = [LocError]
+
 {-| Errors report. -}
-newtype Report = Report (M.Map Source [Error])
+newtype Report = Report (M.Map Source Log)
 
 instance Semigroup Report where
     (Report m1) <> (Report m2) = Report (M.unionWith (++) m1 m2)
@@ -99,8 +100,8 @@ instance Semigroup Report where
 instance Monoid Report where
     mempty = Report M.empty
 
-singleError :: Source -> Error -> Report
+singleError :: Source -> LocError -> Report
 singleError src err = Report $ M.singleton src [err]
 
-addError :: Source -> Error -> Report -> Report
+addError :: Source -> LocError -> Report -> Report
 addError src err (Report map) = Report $ M.insertWith (++) src [err] map

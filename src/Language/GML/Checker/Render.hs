@@ -144,11 +144,16 @@ instance ToMarkup Error where
 instance ToMarkup Source where
     toMarkup = \case
         SrcScript name -> toMarkup name
-        SrcObject name event -> toMarkup name >> " : " >> toMarkup event
-        SrcRoom name -> toMarkup name >> " creation code"
+        SrcObject name event -> toMarkup event >> " of " >> toMarkup name
+        SrcRoom name -> "Creation code of" >> toMarkup name
+
+instance ToMarkup Pos where
+    toMarkup (Pos 0 0) = "<unknown pos>"
+    toMarkup (Pos line col) = toMarkup line >> ":" >> toMarkup col
 
 renderLog :: Log -> Html
-renderLog = ul . mapM_ (li . toHtml)
+renderLog log = ul $ mapM_ renderError log where
+    renderError (Located _pos err) = li $ toMarkup _pos >> " : " >> toMarkup err
 
 htmlReport :: Report -> Html
 htmlReport (Report logs) = docTypeHtml $ do
