@@ -6,6 +6,7 @@ A rudimentary and conservative typechecker for the GML project codebase.
 It tries to derive types of variables and expressions based on their assignment order.
 -}
 
+{-# LANGUAGE ImplicitParams #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module Language.GML.Checker
@@ -95,14 +96,14 @@ setLocal k v =
     cLocal %= \(f:fs) -> M.insert k v f : fs
 
 report :: Error -> Checker ()
-report = reportPos zeroPos
+report = let ?pos = zeroPos in reportPos
 
-reportPos :: Pos -> Error -> Checker ()
-reportPos pos err = do
+reportPos :: (?pos :: Pos) => Error -> Checker ()
+reportPos err = do
     noErr <- inSet err <$> view sDisabledErrors
     unless noErr $ do
         src <- use cSrc
-        tell $ singleError src $ Located pos err
+        tell $ singleError src $ Located ?pos err
 
 {-| Lookup for a builtin variable. -}
 lookupBuiltin :: Name -> Checker (Maybe (Type, Bool))
@@ -216,9 +217,10 @@ checkCond = checkType "conditional" TBool
 derive :: Expr -> Checker Type
 derive = \case
     EVariable (Located pos var) -> do
+        let ?pos = pos
         mty <- lookup var
         case mty of
-            Nothing -> reportPos pos (EUndefinedVar var) >> return TVoid
+            Nothing -> reportPos (EUndefinedVar var) >> return TVoid
             Just ty -> return ty
 
     ENumber _ -> return TReal
@@ -308,8 +310,9 @@ scriptDerive = go where
     go (stmt:rest) = case stmt of
 -}
 
-execAssignModify :: Maybe NumOp -> Variable -> Expr -> Checker ()
-execAssignModify op var expr = do
+execAssignModify :: Maybe NumOp -> Located Variable -> Expr -> Checker ()
+execAssignModify op (Located pos var) expr = do
+    let ?pos = pos
     varT <- lookup var
     exprT <- derive expr
 
@@ -319,12 +322,12 @@ execAssignModify op var expr = do
         VVar name -> do
             builtin <- lookupBuiltin name
             case builtin of
-                Just (_, True) -> report (EAssignConst var)
+                Just (_, True) -> reportPos (EAssignConst var)
                 _ -> return ()
         _ -> return ()
 
     -- Check if the assigned expression doesn't return a value
-    when (exprT == TVoid) $ report (ENoResult var)
+    when (exprT == TVoid) $ reportPos (ENoResult var)
     case op of
         -- Assignment: "a = 5"
         Nothing -> do
@@ -337,13 +340,13 @@ execAssignModify op var expr = do
         -- Modification: "a += 5" etc.
         Just op -> do
             case varT of
-                Nothing -> report (EUndefinedVar var)
+                Nothing -> reportPos (EUndefinedVar var)
                 -- Assuming that all modifying operators preserve the type, don't check the change
                 -- TODO: refactor copy-pasta with binary derive
                 Just ty ->
                     when (isLeft $ deriveOp (BNum op) ty exprT) $
                         --FIXME: report assignment operators differently
-                        report (EBadBinary (BNum op) ty exprT)
+                        reportPos (EBadBinary (BNum op) ty exprT)
 
 exec :: Stmt -> Checker ()
 exec = \case
