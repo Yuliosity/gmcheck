@@ -159,8 +159,8 @@ data Stmt
     = SExpression Expr -- ^ Calling an expression (typically a function/script with side effects)
     -- Declarations and modification
     | SDeclare [(Name, Maybe Expr)] -- ^ Declaring local variable(s) with `var`
-    | SAssign Variable Expr         -- ^ Assigning a variable with `=`, possibly declaring it in-place
-    | SModify NumOp Variable Expr   -- ^ Modifying an existing variable with an operator like `+=` or `^=`
+    | SAssign (Located Variable) Expr -- ^ Assigning a variable with `=`, possibly declaring it in-place
+    | SModify NumOp (Located Variable) Expr   -- ^ Modifying an existing variable with an operator like `+=` or `^=`
     | SFunction Name Function       -- ^ Declaring a function (possibly constructor) with arguments and a body
     | SDelete Name                  -- ^ Delete operator
     -- Control flow structures

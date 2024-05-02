@@ -87,17 +87,25 @@ loadProgram what path = do
     logTrace $ "Loading " ++ what ++ " from " ++ path
     parseFile program path
 
+withDirectory :: FilePath -> (FilePath -> IO a) -> IO [a]
+withDirectory dir load = do
+    ok <- doesDirectoryExist dir
+    if ok
+    then do
+        fnames <- listDirectory dir
+        forM fnames load
+    else pure []
+
 loadScripts :: FilePath -> IO (M.Map Name Program)
 loadScripts path = do
     let dir = path </> "scripts"
-    names <- listDirectory dir
-    scripts <- forM names $ \name -> do
+    scripts <- withDirectory dir $ \name -> do
         let name' = case name of
-                '@':xs -> xs --Strip the compatibility script prefix
-                xs     -> xs
+                    '@':xs -> xs --Strip the compatibility script prefix
+                    xs     -> xs
         pr <- loadProgram "script" $ dir </> name </> name' <.> "gml"
         return (pack name', pr)
-    pure (M.fromList scripts)
+    pure $ M.fromList scripts
 
 loadObjects :: FilePath -> IO ([FilePath], M.Map Name Object)
 loadObjects path = do

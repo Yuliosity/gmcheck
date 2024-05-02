@@ -139,7 +139,7 @@ expr = makeExprParser eTerm opTable <* spaces <?> "expression"
 sDeclare = SDeclare <$> (kwVar *> (((,) <$> varName <*> optional (symbol "=" *> expr)) `sepBy1` comma))
 
 sAssign = do
-    var <- variable
+    var <- located variable
     op <- choice (map (\(c, s) -> c <$ symbol s) ops) <?> "assignment operator" 
     op var <$> expr
     where
