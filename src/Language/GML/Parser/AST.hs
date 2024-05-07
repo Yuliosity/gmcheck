@@ -151,6 +151,8 @@ expr = makeExprParser eTerm opTable <* spaces <?> "expression"
 
 sDeclare = SDeclare <$> (kwVar *> (((,) <$> varName <*> optional (symbol "=" *> expr)) `sepBy1` comma))
 
+sEnum = SEnum <$> (kwEnum *> ident) <*> braces (ident `sepBy` comma)
+
 sAssign = do
     var <- located variable
     op <- choice (map (\(c, s) -> c <$ symbol s) ops) <?> "assignment operator" 
@@ -188,6 +190,7 @@ stmt = (choice
     , SBreak <$ kwBreak, SContinue <$ kwContinue, SExit <$ kwExit
     , SFunction   <$> (kwFunction *> ident) <*> function
     , sDeclare
+    , sEnum
     , SWith       <$> (kwWith *> parens expr) <*> stmt
     , SRepeat     <$> (kwRepeat *> expr) <*> stmt
     , SWhile      <$> (kwWhile  *> expr) <*> stmt

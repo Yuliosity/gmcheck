@@ -129,6 +129,10 @@ stmts = describe "statements parser" $ do
             STry [SThrow lit42] Nothing (Just [SReturn lit42])
         parse' stmt "try {throw 42} catch(foo) {} finally {return 42}" `shouldParse`
             STry [SThrow lit42] (Just ("foo", [])) (Just [SReturn lit42])
+    it "can parse enums" $ do
+        parse' stmt "enum foo {}" `shouldParse` SEnum "foo" []
+        parse' stmt "enum foo {a, b, c}" `shouldParse`
+            SEnum "foo" ["a", "b", "c"]
 
 programs = describe "complex script parser" $ do
     it "can parse multi-lines" $ do

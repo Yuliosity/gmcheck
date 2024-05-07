@@ -172,6 +172,7 @@ data Stmt
     | SModify ModifyOp (Located Variable) Expr   -- ^ Modifying an existing variable with an operator like `+=` or `^=`
     | SFunction Name Function       -- ^ Declaring a function (possibly constructor) with arguments and a body
     | SDelete Name                  -- ^ Delete operator
+    | SEnum     Name [FieldName]    -- ^ Enum: `enum foo { a, b, c }`
     -- Control flow structures
     | SBlock   Block           -- ^ Nested sequence of statements
     | SWith    Expr Stmt       -- ^ Switching the execution context into an another instance
