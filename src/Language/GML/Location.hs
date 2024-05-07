@@ -1,5 +1,7 @@
 module Language.GML.Location where
 
+import Data.Function (on)
+
 import Language.GML.Events (Event)
 import Language.GML.Types (Name)
 
@@ -26,4 +28,10 @@ data Location = Location {source :: !Source, row :: !Int, col :: !Int}
 
 {-| A code entity with a position (without source). -}
 data Located a = Located {getPos :: !Pos, unLoc :: !a}
-    deriving (Eq, Ord, Show)
+    deriving (Show)
+
+instance Eq a => Eq (Located a) where
+    (==) = (==) `on` unLoc
+
+instance Ord a => Ord (Located a) where
+    compare = compare `on` unLoc

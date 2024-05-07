@@ -28,6 +28,14 @@ data Variable
     | VContainer2 Container2 Variable (Expr, Expr) -- ^ 2D data structure accessor
     deriving (Eq, Show)
 
+{-| Prepend a qualifier for a variable, e.g. a[2] -> c.a[2] -}
+qualify :: Name -> Variable -> Variable
+qualify obj = \case
+    VVar name              -> VField (VVar obj) name
+    VField var name        -> VField (qualify obj var) name
+    VContainer  c var expr -> VContainer  c (qualify obj var) expr
+    VContainer2 c var expr -> VContainer2 c (qualify obj var) expr
+
 {-| One-dimensional array, indexed by a number: `a[b]`. -}
 pattern VArray  v e = VContainer  SArray  v e
 
@@ -37,36 +45,49 @@ pattern VArray2 v e = VContainer2 SArray2 v e
 -- * Operators
 
 {-| Arithetical and logical operations, used in both modification assignment and binary operations. -}
-data NumOp
-    = Add -- ^ Addition, `x + `y`
-    | Sub -- ^ Subtraction, `x - y`
-    | Mul -- ^ Multiplication, `x * y`
-    | Div -- ^ Division, `x / y`
-    | Mod -- ^ Modulus, `x mod y`
+data BinOp
+    = Add    -- ^ Addition, `x + `y`
+    | Sub    -- ^ Subtraction, `x - y`
+    | Mul    -- ^ Multiplication, `x * y`
+    | Div    -- ^ Division, `x / y`
+    | Mod    -- ^ Modulus, `x % y` or `x mod y`
     | IntDiv -- ^ Integral division, `x div y`
-    | Shr -- ^ Bit shift right, `x << y`
-    | Shl -- ^ Bit shift left, `x >> y`
+    | Shr    -- ^ Bit shift right, `x << y`
+    | Shl    -- ^ Bit shift left, `x >> y`
     | BitAnd -- ^ Bitwise and, `x & y`
     | BitOr  -- ^ Bitwise or, `x | y`
     | BitXor -- ^ Bitwise xor, `CHECK`
-    deriving (Eq, Show)
-
-{-| Boolean operations. -}
-data BoolOp
-    = And -- ^ Logical AND, `x && y` or `x and y`
+    {-| Boolean operations. -}
+    | And -- ^ Logical AND, `x && y` or `x and y`
     | Or  -- ^ Logical OR, `x || y` or `x or y`
-    | Xor
-    deriving (Eq, Show)
-
-{-| Comparison operators. -}
-data CompOp
-    = Eq        -- ^ Equality: `a == b` (or `a = b` in expression context)
+    | Xor -- ^ Logical XOR, `x ^^ y`
+    {-| Comparison operators. -}
+    | Eq        -- ^ Equality: `a == b` (or `a = b` in expression context)
     | NotEq     -- ^ Unequality: `a != b`
     | Less      -- ^ Less than: `a < b`
     | Greater   -- ^ Greater than: `a > b`
     | LessEq    -- ^ Less or equal: `a <= b`
     | GreaterEq -- ^ Greater or equal: `a >= b`
     deriving (Eq, Show)
+
+{-| Modify operators, in assignments. -}
+data ModifyOp
+    = MAdd -- ^ Addition, `x += `y`
+    | MSub -- ^ Subtraction, `x -= y`
+    | MMul -- ^ Multiplication, `x *= y`
+    | MDiv -- ^ Division, `x /= y`
+    | MBitAnd -- ^ Bitwise and, `x &= y`
+    | MBitOr  -- ^ Bitwise or, `x |= y`
+    deriving (Eq, Show)
+
+modifyToBin :: ModifyOp -> BinOp
+modifyToBin = \case
+    MAdd -> Add
+    MSub -> Sub
+    MMul -> Mul
+    MDiv -> Div
+    MBitAnd -> BitAnd
+    MBitOr -> BitOr
 
 {-| Unary operators, in order of precedence. -}
 data UnOp
@@ -77,13 +98,6 @@ data UnOp
     | UPreDec  -- ^ Prefix decrement: `--a`
     | UPostInc -- ^ Postfix increment: `a++`
     | UPostDec -- ^ Postfix decrement: `a--`
-    deriving (Eq, Show)
-
-{-| Any binary operator. -}
-data BinOp
-    = BNum  NumOp
-    | BComp CompOp
-    | BBool BoolOp
     deriving (Eq, Show)
 
 -- * Expressions
@@ -124,33 +138,21 @@ instance IsString Variable where
 instance IsString Expr where
     fromString str = EVariable $ Located zeroPos (fromString str) 
 
+instance IsString a => IsString (Located a) where
+    fromString = Located zeroPos . fromString
+
 instance Num Expr where
     fromInteger = ENumber . fromInteger
-    (+) = eBinary Add
-    (-) = eBinary Sub
-    (*) = eBinary Mul
+    (+) = EBinary Add
+    (-) = EBinary Sub
+    (*) = EBinary Mul
     negate = EUnary UNeg
     abs x = EFuncall ("abs", [x])
     signum x = EFuncall ("sign", [x])
 
 instance Fractional Expr where
     fromRational = ENumber . fromRational
-    (/) = eBinary Div
-
-class Binary a where
-    toBin :: a -> BinOp
-
-instance Binary NumOp where
-    toBin = BNum
-
-instance Binary CompOp where
-    toBin = BComp
-
-instance Binary BoolOp where
-    toBin = BBool
-
-eBinary :: Binary a => a -> Expr -> Expr -> Expr
-eBinary = EBinary . toBin
+    (/) = EBinary Div
 
 -- * Statements
 
@@ -160,7 +162,7 @@ data Stmt
     -- Declarations and modification
     | SDeclare [(Name, Maybe Expr)] -- ^ Declaring local variable(s) with `var`
     | SAssign (Located Variable) Expr -- ^ Assigning a variable with `=`, possibly declaring it in-place
-    | SModify NumOp (Located Variable) Expr   -- ^ Modifying an existing variable with an operator like `+=` or `^=`
+    | SModify ModifyOp (Located Variable) Expr   -- ^ Modifying an existing variable with an operator like `+=` or `^=`
     | SFunction Name Function       -- ^ Declaring a function (possibly constructor) with arguments and a body
     | SDelete Name                  -- ^ Delete operator
     -- Control flow structures

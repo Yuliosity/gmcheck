@@ -44,7 +44,7 @@ data Error
     | EBadBinary BinOp Type Type
     -- | Wrong operand(s) of an assignment operator
     -- TODO: unify?
-    | EBadModify NumOp Type Type
+    | EBadModify ModifyOp Type Type
     -- | Wrong index type of a container
     | EBadIndex  Container Type
     | EBadIndex2 Container2 Type

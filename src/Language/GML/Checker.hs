@@ -60,7 +60,7 @@ data Context = Context
     , _cLocal   :: !Stack   -- ^ Stack of local variable frames
     --, eGlobals :: Memory -- TODO: globals
     , _cObjects :: !(M.Map Name Memory)
-    }
+    } deriving (Show)
 
 makeLenses ''Context
 
@@ -183,7 +183,10 @@ setVar var ty = case var of
     VVar name -> setLocal name ty
     VContainer  con (VVar name) _ -> setLocal name $ TContainer  con ty
     VContainer2 con (VVar name) _ -> setLocal name $ TContainer2 con ty
+    VField (VVar name) field -> do
+        cObjects . at name . non M.empty . at field .= Just ty
     _ -> return () --error "changing non-local variables is not implemented yet"
+
 
 {-| Lookup for a function signature. -}
 lookupFn :: Name -> Checker (Maybe Signature)
@@ -192,20 +195,26 @@ lookupFn name = do
     -- TODO: derive and store script types
     return $ M.lookup name builtinFn
 
+isCompOp = (`elem` [Less, LessEq, Eq, NotEq, Greater, GreaterEq])
+isNumOp = (`elem` [Add, Sub, Mul, Div])
+isBoolOp = (`elem` [And, Or, Xor])
+
 {-| Try to derive a result type of a binary operator application.
     In case of impossible combinations, returns `Left` with the expected result. -}
 deriveOp :: BinOp -> Type -> Type -> Either Type Type
-deriveOp (BComp _) t t2 | t == t2   = Right TBool
-                        | otherwise = Left  TBool
-deriveOp (BNum Add) TString TString = Right TString
-deriveOp (BNum Add) TString _       = Left  TString
-deriveOp (BNum Add) _       TString = Left  TString
-deriveOp (BNum Div) TInt    TInt    = Right TReal
-deriveOp (BNum  _)  TInt    TInt    = Right TInt
-deriveOp (BNum  _)  TReal   TReal   = Right TReal
-deriveOp (BNum  _)  _       _       = Left  TReal
-deriveOp (BBool _)  TInt    TInt    = Right TBool
-deriveOp (BBool _)  _       _       = Left  TBool
+deriveOp op t t2 | isCompOp op = if t == t2 then Right TBool else Left TBool
+deriveOp Add TString TString = Right TString
+deriveOp Add TString _       = Left  TString
+deriveOp Add _       TString = Left  TString
+deriveOp Div TInt    TInt    = Right TReal
+deriveOp op a b | isNumOp op = case (a, b) of
+    (TInt, TInt)   -> Right TInt
+    (TReal, TReal) -> Right TReal
+    _              -> Left  TReal
+deriveOp op a b | isBoolOp op = case (a, b) of
+    (TInt, TInt)   -> Right TBool
+    _              -> Left TBool
+deriveOp _ _ _ = error "deriveOp: unreachable"
 
 checkType descr ty expr = do
     varT <- derive expr
@@ -310,7 +319,7 @@ scriptDerive = go where
     go (stmt:rest) = case stmt of
 -}
 
-execAssignModify :: Maybe NumOp -> Located Variable -> Expr -> Checker ()
+execAssignModify :: Maybe ModifyOp -> Located Variable -> Expr -> Checker ()
 execAssignModify op (Located pos var) expr = do
     let ?pos = pos
     varT <- lookup var
@@ -336,7 +345,11 @@ execAssignModify op (Located pos var) expr = do
                     report $ WChangeType var ty exprT
                 --It is a freshly declared instance variable
                 _ -> return ()
-            setVar var exprT
+            src <- use cSrc
+            case src of
+                SrcObject obj _ -> setVar (qualify obj var) exprT
+                -- FIXME: src for scripts
+                _ -> setVar var exprT
         -- Modification: "a += 5" etc.
         Just op -> do
             case varT of
@@ -344,9 +357,11 @@ execAssignModify op (Located pos var) expr = do
                 -- Assuming that all modifying operators preserve the type, don't check the change
                 -- TODO: refactor copy-pasta with binary derive
                 Just ty ->
-                    when (isLeft $ deriveOp (BNum op) ty exprT) $
+                    when (isLeft $ deriveOp (modifyToBin op) ty exprT) $
                         --FIXME: report assignment operators differently
-                        reportPos (EBadBinary (BNum op) ty exprT)
+                        reportPos (EBadModify op ty exprT)
+
+
 
 exec :: Stmt -> Checker ()
 exec = \case
@@ -419,6 +434,8 @@ runObject (name, Object {oEvents}) = do
     forM_ (M.toList oEvents) $ \(event, pr) -> do
         cSrc .= SrcObject name event
         traceM ("-- " ++ show event)
+        con <- get
+        traceShowM con
         withScope name $ run pr
 
 runProject :: Checker ()

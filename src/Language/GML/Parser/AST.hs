@@ -109,9 +109,9 @@ opTable =
         ]
     ]
 
-binary, binaryK :: Binary a => Text -> a -> Operator Parser Expr
-binary  name op = InfixL  (eBinary op <$ operator name)
-binaryK name op = InfixL  (eBinary op <$ keyword name)
+binary, binaryK :: Text -> BinOp -> Operator Parser Expr
+binary  name op = InfixL  (EBinary op <$ operator name)
+binaryK name op = InfixL  (EBinary op <$ keyword name)
 
 prefix, postfix :: Text -> UnOp -> Operator Parser Expr
 prefix  name op = Prefix  (EUnary op <$ operator name)
@@ -145,9 +145,9 @@ sAssign = do
     where
         ops =
             [ (SAssign, "="), (SAssign, ":=")
-            , (SModify Add, "+="), (SModify Sub, "-=")
-            , (SModify Mul, "*="), (SModify Div, "/=")
-            , (SModify BitOr, "|="), (SModify BitAnd, "&="), (SModify BitXor, "^=")
+            , (SModify MAdd, "+="), (SModify MSub, "-=")
+            , (SModify MMul, "*="), (SModify MDiv, "/=")
+            , (SModify MBitOr, "|="), (SModify MBitAnd, "&=")
             ]
 
 sSwitch = do
