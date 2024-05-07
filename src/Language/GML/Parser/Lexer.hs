@@ -47,14 +47,18 @@ keyword :: Text -> Parser ()
 keyword kw = (lexeme . try) (string kw <* notFollowedBy alphaNumChar) $> ()
 
 reserved =
-    [ "begin", "break", "case", "catch", "constructor", "continue", "default", "delete", "do"
-    , "else", "end", "enum", "exit", "finally", "for", "function", "globalvar", "if", "new"
-    , "repeat", "return", "static", "switch", "throw", "try", "until", "var", "while", "with"
+    [ "begin", "break", "case", "catch", "constructor", "continue", "default"
+    , "delete", "do", "else", "end", "enum", "exit", "finally", "for", "false"
+    , "function", "globalvar", "if", "infinity", "NaN", "new", "pi", "pointer_null"
+    , "pointer_invalid", "repeat", "return", "static", "switch", "throw", "true"
+    , "try", "undefined", "until", "var", "while", "with"
     ]
 
-[     kwBegin, kwBreak, kwCase, kwCatch, kwConstructor, kwContinue, kwDefault, kwDelete, kwDo
-    , kwElse, kwEnd, kwEnum, kwExit, kwFinally, kwFor, kwFunction, kwGlobalvar, kwIf, kwNew
-    , kwRepeat, kwReturn, kwStatic, kwSwitch, kwThrow, kwTry, kwUntil, kwVar, kwWhile, kwWith
+[     kwBegin, kwBreak, kwCase, kwCatch, kwConstructor, kwContinue, kwDefault
+    , kwDelete, kwDo, kwElse, kwEnd, kwEnum, kwExit, kwFinally, kwFor, kwFalse
+    , kwFunction, kwGlobalvar, kwIf, kwInfinity, kwNaN, kwNew, kwPi, kwPointerNull
+    , kwPointerInvalid, kwRepeat, kwReturn, kwStatic, kwSwitch, kwThrow, kwTrue
+    , kwTry, kwUndefined, kwUntil, kwVar, kwWhile, kwWith
     ] = map keyword reserved
 
 -- * Operators

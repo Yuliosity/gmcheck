@@ -203,6 +203,8 @@ isBoolOp = (`elem` [And, Or, Xor])
     In case of impossible combinations, returns `Left` with the expected result. -}
 deriveOp :: BinOp -> Type -> Type -> Either Type Type
 deriveOp op t t2 | isCompOp op = if t == t2 then Right TBool else Left TBool
+deriveOp Nullish TVoid a     = Right a
+deriveOp Nullish a _         = Right a
 deriveOp Add TString TString = Right TString
 deriveOp Add TString _       = Left  TString
 deriveOp Add _       TString = Left  TString
@@ -225,6 +227,9 @@ checkCond = checkType "conditional" TBool
 {-| Deriving the expression type. -}
 derive :: Expr -> Checker Type
 derive = \case
+    EUndefined -> pure TVoid
+    EBool _    -> pure TBool
+    EPointer   -> pure TPointer
     EVariable (Located pos var) -> do
         let ?pos = pos
         mty <- lookup var

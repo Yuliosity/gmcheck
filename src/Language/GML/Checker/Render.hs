@@ -56,6 +56,7 @@ instance ToMarkup BinOp where
         LessEq    -> "<="
         Greater   -> ">"
         GreaterEq -> ">="
+        Nullish   -> "??"
 
 instance ToMarkup ModifyOp where
     toMarkup = \case
@@ -65,6 +66,7 @@ instance ToMarkup ModifyOp where
         MDiv -> "/="
         MBitAnd -> "&="
         MBitOr  -> "|="
+        MNullish -> "??="
 
 instance ToMarkup Container where
     toMarkup = \case
@@ -82,9 +84,10 @@ instance ToMarkup Container2 where
 
 instance ToMarkup Type where
     toMarkup = \case
+        TPointer -> "pointer"
         TAny    -> "any"
         TUnknown opt -> do "{"; markupOpt opt; "}"
-        TVoid   -> "void"
+        TVoid   -> "undefined"
         TBool   -> "bool"
         TInt    -> "int"
         TReal   -> "real"

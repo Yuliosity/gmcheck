@@ -100,6 +100,8 @@ opTable =
         , binary ">=" GreaterEq
         , binary ">"  Greater
         ]
+    ,   [ binary  "??"  Nullish
+        ]
     ,   [ binary  "&&"  And
         , binaryK "and" And
         , binary  "||"  Or
@@ -119,8 +121,19 @@ postfix name op = Postfix (EUnary op <$ operator name)
 
 funcall = (,) <$> funName <*> parens (expr `sepBy` comma)
 
+kwValues :: Parser Expr
+kwValues = choice
+    [ kwUndefined $> EUndefined
+    , kwTrue $> EBool True
+    , kwFalse $> EBool False
+    , kwPointerNull $> EPointer --FIXME
+    , kwPointerInvalid $> EPointer --FIXME
+    , kwPi $> ENumber pi
+    ]
+
 eTerm = choice
     [ parens expr
+    , kwValues
     , ENumber <$> lNumber
     , EString <$> lString
     , EArray <$> brackets (expr `sepBy1` comma)
@@ -148,6 +161,7 @@ sAssign = do
             , (SModify MAdd, "+="), (SModify MSub, "-=")
             , (SModify MMul, "*="), (SModify MDiv, "/=")
             , (SModify MBitOr, "|="), (SModify MBitAnd, "&=")
+            , (SModify MNullish, "??=")
             ]
 
 sSwitch = do

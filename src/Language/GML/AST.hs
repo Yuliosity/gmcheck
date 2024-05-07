@@ -68,6 +68,8 @@ data BinOp
     | Greater   -- ^ Greater than: `a > b`
     | LessEq    -- ^ Less or equal: `a <= b`
     | GreaterEq -- ^ Greater or equal: `a >= b`
+    {-| Nullish operators. -}
+    | Nullish   -- ^ Null coalesce, `a ?? b`
     deriving (Eq, Show)
 
 {-| Modify operators, in assignments. -}
@@ -78,6 +80,7 @@ data ModifyOp
     | MDiv -- ^ Division, `x /= y`
     | MBitAnd -- ^ Bitwise and, `x &= y`
     | MBitOr  -- ^ Bitwise or, `x |= y`
+    | MNullish -- ^ Null coalesce, `x ??= y`
     deriving (Eq, Show)
 
 modifyToBin :: ModifyOp -> BinOp
@@ -88,6 +91,7 @@ modifyToBin = \case
     MDiv -> Div
     MBitAnd -> BitAnd
     MBitOr -> BitOr
+    MNullish -> Nullish
 
 {-| Unary operators, in order of precedence. -}
 data UnOp
@@ -117,15 +121,18 @@ type Funcall = (Name, [Expr])
 data Expr
     -- Values
     = EVariable (Located Variable)
-    | ENumber   Double          -- ^ Numeric literal
-    | EString   Text            -- ^ String literal
-    | EArray    [Expr]          -- ^ Array literal
-    | EFunction Function        -- ^ Inline function
-    | EStruct   [(FieldName, Expr)] -- ^ Struct
+    | EUndefined                -- ^ Undefined literal: `undefined`
+    | EBool     Bool            -- ^ Boolean literal: `true`, `false`
+    | EPointer                  -- ^ TODO: pointers: `pointer_null`
+    | ENumber   Double          -- ^ Numeric literal: `2`, `3.141`
+    | EString   Text            -- ^ String literal: `"string"`
+    | EArray    [Expr]          -- ^ Array literal: `[1, 2, 3]`
+    | EFunction Function        -- ^ Inline function: `function (arg) {body}`
+    | EStruct   [(FieldName, Expr)] -- ^ Struct: `{a: 1, b: "str"}`
     -- Operators
     | EUnary    UnOp  Expr      -- ^ Unary expression
     | EBinary   BinOp Expr Expr -- ^ Binary expression
-    | ETernary  Expr  Expr Expr -- ^ Ternary conditional [cond ? t : f]
+    | ETernary  Expr  Expr Expr -- ^ Ternary conditional `cond ? t : f`
     | EFuncall  Funcall     -- ^ Function/script call with arguments
     | ENew      Funcall     -- ^ Constructor call with arguments
     deriving (Eq, Show)

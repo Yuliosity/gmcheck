@@ -45,6 +45,7 @@ data Type
     | TString -- ^ GML string, a primitive type
     | TPtr    -- ^ GML pointer, a primitive type
     | TMatrix -- ^ GML matrix, a primitive type
+    | TPointer -- ^ GML pointer, a primitive type
     | TStruct [(FieldName, Type)] -- ^ GML struct, a primitive type
     | TFunction [Argument] Type   -- ^ GML inline function, a primitive type
     -- Derived types

@@ -14,8 +14,8 @@ located = Located zeroPos
 lit42 = ENumber 42
 litPi = ENumber 3.14
 litString = EString "string"
-sin_pi = EFuncall ("sin", [litPi])
-write_string = EFuncall ("write", [litString])
+sinPi = EFuncall ("sin", [litPi])
+writeString = EFuncall ("write", [litString])
 foo = EVariable "foo"
 foo_42 = VArray "foo" lit42
 foo_lt_42 = EBinary Less foo lit42
@@ -34,8 +34,8 @@ vars = describe "variables parser" $ do
     it "can parse nested indices" $ do
         parse' variable "baz[bar[foo]]" `shouldParse` ("baz" `VArray` EVariable (located $ "bar" `VArray` foo))
     it "can parse accessors" $ do
-        parse' variable "foo[|42]" `shouldParse` (VContainer SList "foo" lit42)
-        parse' variable "foo[# 42, 42]" `shouldParse` (VContainer2 SGrid "foo" (lit42, lit42))
+        parse' variable "foo[|42]" `shouldParse` VContainer SList "foo" lit42
+        parse' variable "foo[# 42, 42]" `shouldParse` VContainer2 SGrid "foo" (lit42, lit42)
     it "can parse chained stuff for future" $ do
         parse' variable "baz.bar.foo" `shouldParse` ("baz" `VField` "bar" `VField` "foo")
         parse' variable "foo[42][42][42]" `shouldParse` ("foo" `VArray` lit42 `VArray` lit42 `VArray` lit42)
@@ -44,20 +44,24 @@ vars = describe "variables parser" $ do
         parse' variable `shouldFailOn` "case"
 
 exprs = describe "expressions parser" $ do
+    it "can parse constants" $ do
+        parse' expr "undefined" `shouldParse` EUndefined
+        parse' expr "pi" `shouldParse` ENumber pi
     it "can parse a single literal" $ do
         parse' expr "42" `shouldParse` lit42
         parse' expr "\"string\"" `shouldParse` litString
     it "can parse a variable as an expression" $ do
         parse' expr "foo" `shouldParse` foo
-        parse' expr "foo[42]" `shouldParse` (EVariable $ located foo_42)
+        parse' expr "foo[42]" `shouldParse` EVariable (located foo_42)
     it "can parse binary operators" $ do
         parse' expr "42+foo" `shouldParse` (42 + foo)
+        parse' expr "undefined ?? 42" `shouldParse` EBinary Nullish EUndefined 42
     it "can parse prefix and postfix operators" $ do
         parse' expr "foo++" `shouldParse` EUnary UPostInc foo
         parse' expr "foo-- - --foo" `shouldParse` (EUnary UPostDec foo - EUnary UPreDec foo)
     it "can parse function calls" $ do
         parse' expr "rand()" `shouldParse` EFuncall ("rand", [])
-        parse' expr "sin(3.14)" `shouldParse` sin_pi
+        parse' expr "sin(3.14)" `shouldParse` sinPi
         parse' expr "cat(foo, bar)" `shouldParse` EFuncall ("cat", [foo, bar])
     it "can parse array literals" $ do
         parse' expr "[foo, bar]" `shouldParse` EArray [foo, bar]
@@ -95,8 +99,8 @@ stmts = describe "statements parser" $ do
         parse' stmt "foo += 42" `shouldParse` SModify MAdd "foo" lit42
         parse' stmt "foo++" `shouldParse` SExpression (EUnary UPostInc foo)
     it "can parse function calls" $ do
-        parse' stmt "write(\"string\")" `shouldParse` SExpression write_string
-        parse' stmt "var foo = sin(3.14)" `shouldParse` SDeclare [("foo", Just sin_pi)]
+        parse' stmt "write(\"string\")" `shouldParse` SExpression writeString
+        parse' stmt "var foo = sin(3.14)" `shouldParse` SDeclare [("foo", Just sinPi)]
         parse' stmt "return atan2(1, a)" `shouldParse` SReturn (EFuncall ("atan2", [1, EVariable "a"]))
         parse' stmt "foo = new bar()" `shouldParse` SAssign "foo" (ENew ("bar", []))
     it "can parse conditionals" $ do
@@ -106,18 +110,18 @@ stmts = describe "statements parser" $ do
         parse' stmt "if (foo < 42) {foo += 42 exit}" `shouldParse`
             SIf foo_lt_42 (SBlock [SModify MAdd "foo" lit42, SExit]) Nothing
     it "can parse loops" $ do
-        parse' stmt "while(foo) write(\"string\")" `shouldParse` SWhile foo (SExpression write_string)
+        parse' stmt "while(foo) write(\"string\")" `shouldParse` SWhile foo (SExpression writeString)
         parse' stmt "while(foo) {foo -= 42; write(\"string\")}" `shouldParse`
-            SWhile foo (SBlock [SModify MSub "foo" lit42, SExpression write_string])
+            SWhile foo (SBlock [SModify MSub "foo" lit42, SExpression writeString])
         parse' stmt "for(foo = 42; foo > 0; foo--) ++bar" `shouldParse`
-            SFor (SAssign "foo" lit42) (EBinary Greater foo (ENumber 0)) (SExpression $ EUnary UPostDec foo) (SExpression $ EUnary UPreInc bar) 
+            SFor (SAssign "foo" lit42) (EBinary Greater foo (ENumber 0)) (SExpression $ EUnary UPostDec foo) (SExpression $ EUnary UPreInc bar)
         parse' stmt "for(var foo=42; foo < bar; foo+=42) write(\"string\")" `shouldParse`
-            SFor (SDeclare [("foo", Just lit42)]) (EBinary Less foo bar) (SModify MAdd "foo" lit42) (SExpression write_string)
+            SFor (SDeclare [("foo", Just lit42)]) (EBinary Less foo bar) (SModify MAdd "foo" lit42) (SExpression writeString)
     it "can parse switch block" $ do
         parse' stmt "switch(foo) {case 0: case 1: foo += 42 break}" `shouldParse`
             SSwitch foo [([0, 1], [SModify MAdd "foo" lit42, SBreak])]
         parse' stmt "switch(foo) {case 1 + 1: foo += 42 break default: write(\"string\")}" `shouldParse`
-            SSwitch foo [([1 + 1], [SModify MAdd "foo" lit42, SBreak]), ([], [SExpression write_string])]
+            SSwitch foo [([1 + 1], [SModify MAdd "foo" lit42, SBreak]), ([], [SExpression writeString])]
     it "can parse try-catch-finally" $ do
         parse' stmt "try {throw 42} catch(foo) {}" `shouldParse`
             STry [SThrow lit42] (Just ("foo", [])) Nothing
@@ -131,7 +135,7 @@ programs = describe "complex script parser" $ do
         parse' program "var foo\nfoo = 42" `shouldParse` [SDeclare [("foo", Nothing)], SAssign "foo" lit42]
     it "can parse nested loops" $ do
         parse' program "while(foo < 42) {while(bar) {write(\"string\");}}" `shouldParse`
-            [SWhile foo_lt_42 $ SBlock [SWhile bar $ SBlock [SExpression write_string]]]
+            [SWhile foo_lt_42 $ SBlock [SWhile bar $ SBlock [SExpression writeString]]]
 
 test = hspec $ do
     vars
