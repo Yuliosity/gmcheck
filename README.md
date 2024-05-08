@@ -13,10 +13,11 @@ GMCheck is best compiled and run using [Haskell Stack](https://haskellstack.org)
 ### nix
 
 `nix-shell -p hpack --command hpack` to generate cabal from package.yaml
+
 `nix-shell` for dev env with cabal and deps
+
 `nix-build` to get executable
 
-nix-shell
 
 ## Features and Plans
 
