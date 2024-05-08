@@ -1,0 +1,16 @@
+name: Examples
+on: push
+jobs:
+  minimal:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: nixbuild/nix-quick-install-action@v28
+      - uses: actions/checkout@v4
+      - run: pwd
+      - run: ls -la
+      - run: ls -la ..
+      - run: nix-channel --add https://nixos.org/channels/nixpkgs-unstable
+      - run: nix-channel --update
+      - run: nix-build --version
+      - run: nix-shell -p hpack --command hpack
+      - run: nix-build
