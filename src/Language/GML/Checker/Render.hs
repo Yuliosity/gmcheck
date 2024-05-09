@@ -1,36 +1,36 @@
-{-|
+{- |
 Module      : Language.GML.Checker.Render
 Description : HTML rendering of errors report
 -}
-
 module Language.GML.Checker.Render where
 
 import Control.Monad (forM_)
 import Data.ByteString.Lazy as BS
 import qualified Data.Map.Strict as M
 import Text.Blaze.Html5 as H
---import Text.Blaze.Html5.Attributes as A
+
+-- import Text.Blaze.Html5.Attributes as A
 import Text.Blaze.Html.Renderer.Utf8
 
-import Language.GML.Checker.Errors
 import Language.GML.AST
-import Language.GML.Types
+import Language.GML.Checker.Errors
 import Language.GML.Events
+import Language.GML.Types
 
 instance ToMarkup Variable where
     toMarkup = \case
         VVar name -> toMarkup name
         VField name var -> do toMarkup name; "."; toMarkup var
-        VContainer  _con name _expr      -> do toMarkup name; "[..]" --TODO: show expr
-        VContainer2 _con name (_e1, _e2) -> do toMarkup name; "[..,..]" --TODO: show expr
+        VContainer _con name _expr -> do toMarkup name; "[..]" -- TODO: show expr
+        VContainer2 _con name (_e1, _e2) -> do toMarkup name; "[..,..]" -- TODO: show expr
 
 instance ToMarkup UnOp where
     toMarkup = \case
-        UBitNeg  -> "~"
-        UNeg     -> "-"
-        UNot     -> "!"
-        UPreDec  -> "--"
-        UPreInc  -> "++"
+        UBitNeg -> "~"
+        UNeg -> "-"
+        UNot -> "!"
+        UPreDec -> "--"
+        UPreInc -> "++"
         UPostDec -> "--"
         UPostInc -> "++"
 
@@ -43,20 +43,20 @@ instance ToMarkup BinOp where
         Mod -> "%"
         IntDiv -> "div"
         BitAnd -> "&"
-        BitOr  -> "|"
+        BitOr -> "|"
         BitXor -> "^"
-        Shr    -> ">>"
-        Shl    -> "<<"
-        And    -> "&&"
-        Or     -> "||"
-        Xor    -> "^^"
-        Eq        -> "=="
-        NotEq     -> "!="
-        Less      -> "<"
-        LessEq    -> "<="
-        Greater   -> ">"
+        Shr -> ">>"
+        Shl -> "<<"
+        And -> "&&"
+        Or -> "||"
+        Xor -> "^^"
+        Eq -> "=="
+        NotEq -> "!="
+        Less -> "<"
+        LessEq -> "<="
+        Greater -> ">"
         GreaterEq -> ">="
-        Nullish   -> "??"
+        Nullish -> "??"
 
 instance ToMarkup ModifyOp where
     toMarkup = \case
@@ -65,34 +65,34 @@ instance ToMarkup ModifyOp where
         MMul -> "*="
         MDiv -> "/="
         MBitAnd -> "&="
-        MBitOr  -> "|="
+        MBitOr -> "|="
         MNullish -> "??="
 
 instance ToMarkup Container where
     toMarkup = \case
         SArray -> "array"
         SStack -> "stack"
-        SList  -> "list"
-        SMap   -> "map"
+        SList -> "list"
+        SMap -> "map"
         SQueue -> "queue"
         SPriorityQueue -> "pqueue"
 
 instance ToMarkup Container2 where
     toMarkup = \case
         SArray2 -> "array2d"
-        SGrid   -> "grid"
+        SGrid -> "grid"
 
 instance ToMarkup Type where
     toMarkup = \case
         TPointer -> "pointer"
-        TAny    -> "any"
+        TAny -> "any"
         TUnknown opt -> do "{"; markupOpt opt; "}"
-        TVoid   -> "undefined"
-        TBool   -> "bool"
-        TInt    -> "int"
-        TReal   -> "real"
+        TVoid -> "undefined"
+        TBool -> "bool"
+        TInt -> "int"
+        TReal -> "real"
         TString -> "string"
-        TPtr    -> "ptr"
+        TPtr -> "ptr"
         TMatrix -> "matrix"
         TStruct fields -> do
             "{"
@@ -104,13 +104,13 @@ instance ToMarkup Type where
             ") -> "
             toMarkup ret
         TNewtype n -> toMarkup n
-        TContainer  con ty -> do toMarkup con; "<"; toMarkup ty; ">"
+        TContainer con ty -> do toMarkup con; "<"; toMarkup ty; ">"
         TContainer2 con ty -> do toMarkup con; "<"; toMarkup ty; ">"
         TTypeVar n -> toMarkup n
-        where
-            markupOpt [] = mempty
-            markupOpt [x] = toMarkup x
-            markupOpt (x:xs) = do toMarkup x; "|"; markupOpt xs
+      where
+        markupOpt [] = mempty
+        markupOpt [x] = toMarkup x
+        markupOpt (x : xs) = do toMarkup x; "|"; markupOpt xs
 
 instance ToMarkup Event where
     toMarkup = toMarkup . show
@@ -123,24 +123,25 @@ instance ToMarkup Error where
         EUndefinedFunction fun -> do "Calling an undefined function "; m fun
         ENoResult fun -> do "Function "; m fun; " doesn't return anything"
         EWrongExprType descr need ty -> do "Type of "; m descr; " should be "; m need; ", but seems to be "; m ty
-        EWrongVarType  var   need ty -> do "Type of "; m var;   " should be "; m need; ", but seems to be "; m ty
-        EWrongArgNum fun ord n1 n2 -> do "Function "; m fun; " is expected to have "; bound; m n1; " argument(s), but got "; m n2 where
+        EWrongVarType var need ty -> do "Type of "; m var; " should be "; m need; ", but seems to be "; m ty
+        EWrongArgNum fun ord n1 n2 -> do "Function "; m fun; " is expected to have "; bound; m n1; " argument(s), but got "; m n2
+          where
             bound = case ord of
                 EQ -> ""
                 LT -> "no more than "
                 GT -> "at least "
-        EBadUnary  op ty    -> do "Operator "; m op; " cannot be applied to "; m ty
+        EBadUnary op ty -> do "Operator "; m op; " cannot be applied to "; m ty
         EBadBinary op t1 t2 -> do "Operator "; m op; " cannot be applied to "; m t1; " and "; m t2
         EBadModify op t1 t2 -> do "Operator "; m op; " cannot be applied to "; m t1; " and "; m t2
         EAssignConst var -> do "Cannot assign to a constant "; m var
-        EBadIndex  con ty -> do m con; " should be indexed with "; m (indexType  con); ", but got "; m ty
+        EBadIndex con ty -> do m con; " should be indexed with "; m (indexType con); ", but got "; m ty
         EBadIndex2 con ty -> do m con; " should be indexed with ints, but got "; m ty
         EWrongArgument fun name need ty -> do "Argument "; m name; " of function "; m fun; " should be "; m need; ", but seems to be "; m ty
         EWithInstance ty -> do "Parameter of the 'with' clause should be an instance, but seems to be "; m ty
         err -> toMarkup $ show err
-        where
-            m :: ToMarkup a => a -> Markup
-            m = toMarkup
+      where
+        m :: (ToMarkup a) => a -> Markup
+        m = toMarkup
 
 instance ToMarkup Source where
     toMarkup = \case
@@ -153,7 +154,8 @@ instance ToMarkup Pos where
     toMarkup (Pos line col) = toMarkup line >> ":" >> toMarkup col
 
 renderLog :: Log -> Html
-renderLog log = ul $ mapM_ renderError log where
+renderLog log = ul $ mapM_ renderError log
+  where
     renderError (Located _pos err) = li $ toMarkup _pos >> " : " >> toMarkup err
 
 htmlReport :: Report -> Html
