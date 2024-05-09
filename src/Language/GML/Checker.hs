@@ -134,7 +134,7 @@ lookup = \case
     --Referenced variable
     VField var@(VVar name) field -> do
         object <- use (cObjects . at name)
-        case object of 
+        case object of
             Nothing  -> report (EUndefinedVar var) >> return Nothing
             Just mem -> return $ lookupMem field mem
 
@@ -379,7 +379,7 @@ exec = \case
     SAssign var expr -> execAssignModify Nothing var expr
 
     SModify op var expr -> execAssignModify (Just op) var expr
-        
+
     SExpression expr ->
         -- If the expression returns anything, the result is actually lost
         checkType "expression statement" TVoid expr
@@ -399,7 +399,7 @@ exec = \case
         checkCond cond
         exec stmt
 
-    SDoUntil stmt cond -> do 
+    SDoUntil stmt cond -> do
         exec stmt
         checkCond cond
 

@@ -107,7 +107,7 @@ pattern TAlpha :: Type
 pattern TAlpha = TReal
 
 {-| Instance descriptor. Reserved for future typechecking. -}
-pattern TInstance :: Type 
+pattern TInstance :: Type
 pattern TInstance = TReal
 
 {-| Data structure descriptors. -}
@@ -131,7 +131,7 @@ pattern TException = TStruct
     , ("longMessage", TString)
     , ("script", TString)
     , ("stacktrace", TArray TString)
-    ] 
+    ]
 
 {-| Possibly named function argument. -}
 type Argument = (Name, Type)

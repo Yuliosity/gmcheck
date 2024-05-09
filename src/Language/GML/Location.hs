@@ -16,10 +16,10 @@ zeroPos = Pos 0 0
 data Source
     -- | Game script
     = SrcScript !Name
-    -- | Object event 
+    -- | Object event
     | SrcObject !Name !Event
     -- | Room creation code
-    | SrcRoom   !Name 
+    | SrcRoom   !Name
     deriving (Eq, Ord, Show)
 
 {-| A global code location inside the project. -}
