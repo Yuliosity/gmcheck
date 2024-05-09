@@ -1,0 +1,15 @@
+on:
+  workflow_call:
+
+jobs:
+  hlint:
+    name: Fourmolu
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone project
+        uses: actions/checkout@v4
+
+      - name: Run fourmolu
+        uses: haskell-actions/run-fourmolu@v10
+        with:
+          version: "latest"

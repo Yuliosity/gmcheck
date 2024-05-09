@@ -1,6 +1,6 @@
 # Checker ideas
 
-## WARN 
+## WARN
 - N arguments in a script call, but it uses only K<N
 - Using a deprecated function/variable
 - Unspecified arguments evaluation order

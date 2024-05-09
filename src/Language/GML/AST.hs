@@ -143,7 +143,7 @@ instance IsString Variable where
     fromString = VVar . fromString --TODO: parse
 
 instance IsString Expr where
-    fromString str = EVariable $ Located zeroPos (fromString str) 
+    fromString str = EVariable $ Located zeroPos (fromString str)
 
 instance IsString a => IsString (Located a) where
     fromString = Located zeroPos . fromString

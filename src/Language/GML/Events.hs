@@ -153,7 +153,7 @@ pEvent = do
             6  -> Mouse       Press   MMiddle
             7  -> Mouse       Release MLeft
             8  -> Mouse       Release MRight
-            9  -> Mouse       Release MMiddle            
+            9  -> Mouse       Release MMiddle
             10 -> MouseEnter  SBegin
             11 -> MouseEnter  SEnd
             50 -> MouseGlobal Hold    MLeft

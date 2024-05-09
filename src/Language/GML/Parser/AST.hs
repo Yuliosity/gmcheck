@@ -155,7 +155,7 @@ sEnum = SEnum <$> (kwEnum *> ident) <*> braces (ident `sepBy` comma)
 
 sAssign = do
     var <- located variable
-    op <- choice (map (\(c, s) -> c <$ symbol s) ops) <?> "assignment operator" 
+    op <- choice (map (\(c, s) -> c <$ symbol s) ops) <?> "assignment operator"
     op var <$> expr
     where
         ops =

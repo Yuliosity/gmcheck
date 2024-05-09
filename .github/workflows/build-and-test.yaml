@@ -1,0 +1,77 @@
+on:
+  workflow_call:
+
+jobs:
+  pedantic-build:
+    name: Pedantic build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone project
+        uses: actions/checkout@v4
+
+      - name: Setup Haskell with Stack
+        uses: haskell-actions/setup@v2
+        with:
+          enable-stack: true
+          stack-version: "latest"
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.stack
+          key: pedantic-${{ hashFiles('stack.yaml') }}
+          restore-keys: |
+            pedantic-
+
+      - name: Install dependencies
+        run: |
+          stack update
+          stack build --only-dependencies
+
+      - name: Pedantic build
+        run: |
+          stack build --pedantic
+
+  build-and-test:
+    name: Build and Test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macOS-latest, windows-latest]
+
+    steps:
+      - name: Clone project
+        uses: actions/checkout@v4
+
+      - name: Setup Haskell with Stack
+        uses: haskell-actions/setup@v2
+        with:
+          enable-stack: true
+          stack-version: "latest"
+
+      - name: Cache dependencies on Unix-like OS
+        if: startsWith(runner.os, 'Linux') || startsWith(runner.os, 'macOS')
+        uses: actions/cache@v4
+        with:
+          path: ~/.stack
+          key: ${{ runner.os }}-${{ hashFiles('stack.yaml') }}
+
+      - name: Cache dependencies on Windows
+        if: startsWith(runner.os, 'Windows')
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~\AppData\Roaming\stack
+            ~\AppData\Local\Programs\stack
+          key: ${{ runner.os }}-${{ hashFiles('stack.yaml') }}
+
+      - name: Install dependencies
+        run: |
+          stack update
+          stack build --only-dependencies --test --bench --no-run-tests --no-run-benchmarks
+
+      - name: Build
+        run: stack build --test --bench --no-run-tests --no-run-benchmarks
+
+      - name: Run tests
+        run: stack test
