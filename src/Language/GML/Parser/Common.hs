@@ -1,9 +1,11 @@
 {-# LANGUAGE TypeFamilies #-}
 
-module Language.GML.Parser.Common
-    ( Parser, Error, Result
-    , parseFile
-    ) where
+module Language.GML.Parser.Common (
+    Parser,
+    Error,
+    Result,
+    parseFile,
+) where
 
 import Data.Text (Text)
 import qualified Data.Text.IO as T (readFile)

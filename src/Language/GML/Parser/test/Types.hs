@@ -4,8 +4,8 @@ import Test.Hspec
 import Test.Hspec.Megaparsec
 import Text.Megaparsec
 
-import Language.GML.Types
 import Language.GML.Parser.Types hiding (signatures)
+import Language.GML.Types
 
 parse' p = parse (p <* eof) "test"
 
@@ -22,8 +22,8 @@ types = describe "types" $ do
     it "can parse function types" $ do
         "(int) -> int" `shouldParseAs` TFunction [("int", TInt)] TInt
         "() -> bool" `shouldParseAs` TFunction [] TBool
-        "(flag: bool, fun: (int) -> int) -> int" `shouldParseAs`
-            TFunction [("flag", TBool), ("fun", TFunction [("int", TInt)] TInt)] TInt
+        "(flag: bool, fun: (int) -> int) -> int"
+            `shouldParseAs` TFunction [("flag", TBool), ("fun", TFunction [("int", TInt)] TInt)] TInt
     let tyvarT = TTypeVar "T"
     it "can parse type variables" $ do
         "array<T>" `shouldParseAs` TArray tyvarT

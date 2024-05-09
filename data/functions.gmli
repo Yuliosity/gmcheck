@@ -183,7 +183,7 @@ ds_grid_resize : (grid<T>, width: int, height: int) -> void
 ds_grid_width, ds_grid_height : (grid<T>) -> int
 ds_grid_get : (grid<T>, x: int, y: int) -> T
 ds_grid_get_max, ds_grid_get_min, ds_grid_get_sum : (grid<real>, x1: int, y1: int, x2: int, y2: int) -> real //TODO: or string
-ds_grid_get_mean : (grid<real>, x1: int, y1: int, x2: int, y2: int) -> real 
+ds_grid_get_mean : (grid<real>, x1: int, y1: int, x2: int, y2: int) -> real
 ds_grid_get_disk_max, ds_grid_get_disk_min, ds_grid_get_disk_sum :
     (grid<real>, x: int, y: int, r: int) -> real //TODO: or string
 ds_grid_get_disk_mean : (grid<real>, x: int, y: int, r: int) -> real
@@ -435,7 +435,7 @@ instance_deactivate_region :
 //Search
 //TODO: object or instance
 instance_exists : object -> bool
-instance_find : (object, n: int) -> instance 
+instance_find : (object, n: int) -> instance
 instance_furthest, instance_nearest : (x: real, y: real, object) -> instance
 instance_number : object -> int
 instance_id_get : int -> instance
@@ -622,7 +622,7 @@ display_set_ui_visibility : (flags: int) -> void
 window_center : () -> void
 window_device : () -> ptr //TODO: deprecated
 window_get_caption : () -> string
-window_set_caption : string -> void 
+window_set_caption : string -> void
 window_get_color : () -> color //returns N/A in the manual
 window_set_color : color -> void
 window_get_cursor : () -> int //TODO: enum

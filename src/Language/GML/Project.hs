@@ -1,19 +1,18 @@
-{-|
+{-# LANGUAGE TypeApplications #-}
+
+{- |
 Module      : Language.GML.Project
 Description : GM Project
 
 Datatypes representing the whole Game Maker project and functions for loading its codebase.
 -}
-
-{-# LANGUAGE TypeApplications #-}
-
-module Language.GML.Project
-    ( Script (..)
-    , Object (..)
-    , Room (..)
-    , Project (..)
-    , loadProject
-    ) where
+module Language.GML.Project (
+    Script (..),
+    Object (..),
+    Room (..),
+    Project (..),
+    loadProject,
+) where
 
 import Control.Applicative ((<|>))
 import Control.Monad (forM)
@@ -28,59 +27,60 @@ import System.Directory
 import System.FilePath
 import System.IO
 
-import Language.GML.Parser.Common (parseFile)
-import Language.GML.Parser.AST
-import Language.GML.Types (Name, Type (TNewtype))
 import Language.GML.Events
+import Language.GML.Parser.AST
+import Language.GML.Parser.Common (parseFile)
+import Language.GML.Types (Name, Type (TNewtype))
 
-{-| Executable script. -}
+-- | Executable script.
 data Script = Script
-    { sName   :: Name
+    { sName :: Name
     , sSource :: Program
     }
-    deriving Show
+    deriving (Show)
 
-{-| Object with callable events. -}
+-- | Object with callable events.
 data Object = Object
-    { oName   :: Name
+    { oName :: Name
     , oEvents :: M.Map Event Program
     }
-    deriving Show
+    deriving (Show)
 
-{-| Rooms with game objects. -}
+-- | Rooms with game objects.
 data Room = Room
-    { rName          :: Name
+    { rName :: Name
     , rCreationOrder :: [Text]
-    , rCreationCode  :: Maybe Program
+    , rCreationCode :: Maybe Program
     }
-    deriving Show
+    deriving (Show)
 
 instance Yaml.FromYAML Room where
-  parseYAML = Yaml.withMap "Room" $ \m -> Room
-    <$> pure "FIXME"
-    <*> m Yaml..: "instanceCreationOrder"
-    <*> pure Nothing
+    parseYAML = Yaml.withMap "Room" $ \m ->
+        Room
+            <$> pure "FIXME"
+            <*> m Yaml..: "instanceCreationOrder"
+            <*> pure Nothing
 
 data Project = Project
     { pResources :: M.Map Name Type
-    --, pGuids     :: M.Map Guid Name
-    , pScripts   :: M.Map Name Program
-    , pObjects   :: M.Map Name Object
-    , pRooms     :: M.Map Name Room
+    , -- , pGuids     :: M.Map Guid Name
+      pScripts :: M.Map Name Program
+    , pObjects :: M.Map Name Object
+    , pRooms :: M.Map Name Room
     }
-    deriving Show
+    deriving (Show)
 
 logTrace :: String -> IO ()
 logTrace = hPutStrLn stderr
 
 loadResources :: FilePath -> String -> IO (M.Map Name Type)
-loadResources path ty = do
-    let rPath = path </> (ty ++ "s")
-    rNames <- listDirectory rPath
-    logTrace $ "Loading resources from " ++ rPath
-    return $ M.fromList [(pack res, TNewtype $ pack ty) | res <- rNames]
-    <|>
-    return M.empty
+loadResources path ty =
+    do
+        let rPath = path </> (ty ++ "s")
+        rNames <- listDirectory rPath
+        logTrace $ "Loading resources from " ++ rPath
+        return $ M.fromList [(pack res, TNewtype $ pack ty) | res <- rNames]
+        <|> return M.empty
 
 loadProgram :: String -> FilePath -> IO Program
 loadProgram what path = do
@@ -91,18 +91,18 @@ withDirectory :: FilePath -> (FilePath -> IO a) -> IO [a]
 withDirectory dir load = do
     ok <- doesDirectoryExist dir
     if ok
-    then do
-        fnames <- listDirectory dir
-        forM fnames load
-    else pure []
+        then do
+            fnames <- listDirectory dir
+            forM fnames load
+        else pure []
 
 loadScripts :: FilePath -> IO (M.Map Name Program)
 loadScripts path = do
     let dir = path </> "scripts"
     scripts <- withDirectory dir $ \name -> do
         let name' = case name of
-                    '@':xs -> xs --Strip the compatibility script prefix
-                    xs     -> xs
+                '@' : xs -> xs -- Strip the compatibility script prefix
+                xs -> xs
         pr <- loadProgram "script" $ dir </> name </> name' <.> "gml"
         return (pack name', pr)
     pure $ M.fromList scripts
@@ -116,10 +116,11 @@ loadObjects path = do
         events <- forM eNames $ \eName -> do
             pr <- loadProgram "event" $ dir </> name </> eName
             return (read $ dropExtension eName, pr)
-        return Object
-            { oName = pack name
-            , oEvents = M.fromList events
-            }
+        return
+            Object
+                { oName = pack name
+                , oEvents = M.fromList events
+                }
     pure (names, M.fromList $ map (\o -> (oName o, o)) objects)
 
 loadRooms :: FilePath -> IO ([FilePath], M.Map Name Room)
@@ -130,34 +131,39 @@ loadRooms path = do
         files <- listDirectory (dir </> name)
         let configName = head $ filter ("yy" `isExtensionOf`) files
             creationCodeName = find ("gml" `isExtensionOf`) files
-        rCreationCode <- traverse
-            (\codename -> loadProgram "creation code" (dir </> name </> codename))
-            creationCodeName
-        config <- fromRight (Room (pack name) [] Nothing)
+        rCreationCode <-
+            traverse
+                (\codename -> loadProgram "creation code" (dir </> name </> codename))
+                creationCodeName
+        config <-
+            fromRight (Room (pack name) [] Nothing)
                 . Yaml.decode1Strict @Room
                 <$> BS.readFile (dir </> name </> configName)
-        return config {rCreationCode}
+        return config{rCreationCode}
     pure (names, M.fromList $ map (\o -> (rName o, o)) rooms)
 
 createResoursesMap :: [FilePath] -> Type -> M.Map Name Type
 createResoursesMap names resType = M.fromList $ zip (map pack names) $ repeat resType
 
-{-| Loads the project from a directory. -}
+-- | Loads the project from a directory.
 loadProject :: FilePath -> IO Project
 loadProject path = do
-    --TODO: load 2.3 projects
+    -- TODO: load 2.3 projects
     -- Load resources
-    resources <- mapM (loadResources path)
-        [ "font", "sound", "sprite" ]
+    resources <-
+        mapM
+            (loadResources path)
+            ["font", "sound", "sprite"]
     -- Load scripts
     pScripts <- loadScripts path
     (oFilenames, pObjects) <- loadObjects path
-    (rFilenames, pRooms)   <- loadRooms path
+    (rFilenames, pRooms) <- loadRooms path
     let resObjects = createResoursesMap oFilenames (TNewtype "object")
-        resRooms   = createResoursesMap rFilenames (TNewtype "room")
-    return $ Project
-        { pResources = M.unions $ resRooms : resObjects : resources
-        , pScripts
-        , pObjects
-        , pRooms
-        }
+        resRooms = createResoursesMap rFilenames (TNewtype "room")
+    return $
+        Project
+            { pResources = M.unions $ resRooms : resObjects : resources
+            , pScripts
+            , pObjects
+            , pRooms
+            }

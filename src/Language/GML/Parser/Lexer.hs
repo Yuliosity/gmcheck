@@ -10,11 +10,11 @@ import Text.Megaparsec
 import Text.Megaparsec.Char
 import qualified Text.Megaparsec.Char.Lexer as L
 
+import Language.GML.Location
 import Language.GML.Parser.Common
 import Language.GML.Types (Name)
-import Language.GML.Location
 
-{-| Spaces and comments skipper. -}
+-- | Spaces and comments skipper.
 spaces :: Parser ()
 spaces = L.space space1 (L.skipLineComment "//") (L.skipBlockComment "/*" "*/")
 
@@ -29,13 +29,13 @@ symbol str = L.symbol spaces str $> ()
 
 -- * Punctuation
 comma, colon, semicolon, parenL, parenR, braceL, braceR :: Parser ()
-comma     = symbol ","
-colon     = symbol ":"
+comma = symbol ","
+colon = symbol ":"
 semicolon = symbol ";"
-parenL    = symbol "("
-parenR    = symbol ")"
-braceL    = symbol "{"
-braceR    = symbol "}"
+parenL = symbol "("
+parenR = symbol ")"
+braceL = symbol "{"
+braceR = symbol "}"
 
 parens, braces, brackets :: Parser a -> Parser a
 parens = between parenL parenR
@@ -47,28 +47,92 @@ keyword :: Text -> Parser ()
 keyword kw = (lexeme . try) (string kw <* notFollowedBy alphaNumChar) $> ()
 
 reserved =
-    [ "begin", "break", "case", "catch", "constructor", "continue", "default"
-    , "delete", "do", "else", "end", "enum", "exit", "finally", "for", "false"
-    , "function", "globalvar", "if", "infinity", "NaN", "new", "pi", "pointer_null"
-    , "pointer_invalid", "repeat", "return", "static", "switch", "throw", "true"
-    , "try", "undefined", "until", "var", "while", "with"
+    [ "begin"
+    , "break"
+    , "case"
+    , "catch"
+    , "constructor"
+    , "continue"
+    , "default"
+    , "delete"
+    , "do"
+    , "else"
+    , "end"
+    , "enum"
+    , "exit"
+    , "finally"
+    , "for"
+    , "false"
+    , "function"
+    , "globalvar"
+    , "if"
+    , "infinity"
+    , "NaN"
+    , "new"
+    , "pi"
+    , "pointer_null"
+    , "pointer_invalid"
+    , "repeat"
+    , "return"
+    , "static"
+    , "switch"
+    , "throw"
+    , "true"
+    , "try"
+    , "undefined"
+    , "until"
+    , "var"
+    , "while"
+    , "with"
     ]
 
-[     kwBegin, kwBreak, kwCase, kwCatch, kwConstructor, kwContinue, kwDefault
-    , kwDelete, kwDo, kwElse, kwEnd, kwEnum, kwExit, kwFinally, kwFor, kwFalse
-    , kwFunction, kwGlobalvar, kwIf, kwInfinity, kwNaN, kwNew, kwPi, kwPointerNull
-    , kwPointerInvalid, kwRepeat, kwReturn, kwStatic, kwSwitch, kwThrow, kwTrue
-    , kwTry, kwUndefined, kwUntil, kwVar, kwWhile, kwWith
+[ kwBegin
+    , kwBreak
+    , kwCase
+    , kwCatch
+    , kwConstructor
+    , kwContinue
+    , kwDefault
+    , kwDelete
+    , kwDo
+    , kwElse
+    , kwEnd
+    , kwEnum
+    , kwExit
+    , kwFinally
+    , kwFor
+    , kwFalse
+    , kwFunction
+    , kwGlobalvar
+    , kwIf
+    , kwInfinity
+    , kwNaN
+    , kwNew
+    , kwPi
+    , kwPointerNull
+    , kwPointerInvalid
+    , kwRepeat
+    , kwReturn
+    , kwStatic
+    , kwSwitch
+    , kwThrow
+    , kwTrue
+    , kwTry
+    , kwUndefined
+    , kwUntil
+    , kwVar
+    , kwWhile
+    , kwWith
     ] = map keyword reserved
 
 -- * Operators
 opSymbol :: Parser Char
-opSymbol = satisfy (`elem` ("+-*/=<>!|&^" :: String)) --TODO: optimize
+opSymbol = satisfy (`elem` ("+-*/=<>!|&^" :: String)) -- TODO: optimize
 
 operator :: Text -> Parser Text
 operator op = (lexeme . try) (string op <* notFollowedBy opSymbol)
 
-{-| Identifier -}
+-- | Identifier
 ident :: Parser Name
 ident = try $ do
     i <- lexeme $ pack <$> ((:) <$> (letterChar <|> char '_') <*> many (alphaNumChar <|> char '_'))
@@ -77,20 +141,23 @@ ident = try $ do
 
 -- * Literals
 
--- |Number literal.
+-- | Number literal.
 lNumber :: Parser Double
 lNumber =
-    (try (lexeme (L.signed empty L.float))
-    <|> fromIntegral <$> lexeme (L.signed empty L.decimal))
-    <?> "number"
+    ( try (lexeme (L.signed empty L.float))
+        <|> fromIntegral
+        <$> lexeme (L.signed empty L.decimal)
+    )
+        <?> "number"
 
--- |String literal.
+-- | String literal.
 lString :: Parser Text
 lString =
-    --TODO: escaped characters
+    -- TODO: escaped characters
     pack <$> (char '\"' *> manyTill L.charLiteral (char '\"') <* spaces)
-    <?> "string"
+        <?> "string"
 
 located :: Parser a -> Parser (Located a)
-located p = Located . toPos <$> getSourcePos <*> p where
+located p = Located . toPos <$> getSourcePos <*> p
+  where
     toPos (SourcePos _file line col) = Pos (unPos line) (unPos col)
