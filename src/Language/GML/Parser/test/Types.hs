@@ -3,6 +3,8 @@ module Types where
 import Test.Hspec
 import Test.Hspec.Megaparsec
 import Text.Megaparsec
+import Text.Megaparsec.Debug
+import Language.GML.Parser.Lexer
 
 import Language.GML.Types
 import Language.GML.Parser.Types hiding (signatures)
@@ -45,6 +47,25 @@ signatures = describe "signatures" $ do
     it "can parse variadic arguments" $ do
         "(array<int> * val: int) -> void" `shouldParseAs` Signature [("array<int>", TArray TInt)] (VarArgs ("val", TInt)) TVoid
 
+variablesTest = describe "variables" $ do
+    let shouldParseAs = shouldParse . parse' variables
+    it "can parse single var declaration" $ do
+        "some_var : real" `shouldParseAs` [("some_var", (TReal, False))]
+    it "can parse multiple var declarations" $ do
+        "some_var, other_var, another_var : real" `shouldParseAs` [
+            ("some_var", (TReal, False)), 
+            ("other_var", (TReal, False)), 
+            ("another_var", (TReal, False))]
+    it "can parse single const declaration" $ do
+        "const some_var : real" `shouldParseAs` [("some_var", (TReal, True))]
+    it "can parse multiple const declarations" $ do
+        "const some_var, other_var, another_var : real" `shouldParseAs` [
+            ("some_var", (TReal, True)), 
+            ("other_var", (TReal, True)), 
+            ("another_var", (TReal, True))]
+
+
 test = hspec $ do
     types
     signatures
+    variablesTest
