@@ -46,6 +46,7 @@ data OtherEvent
     | NoMoreLives | NoMoreHealth
     | AnimationEnd | PathEnd
     | CloseButton
+    | Broadcast
     | User Int -- ^ Custom user event
     deriving (Eq, Ord, Show)
 
@@ -82,6 +83,19 @@ data GestureEvent
     | RotateStart
     | Rotating
     | RotateEnd
+    | GlobalTap
+    | GlobalDoubleTap
+    | GlobalDragStart
+    | GlobalDragging
+    | GlobalDragEnd
+    | GlobalFlick
+    | GlobalPinchStart
+    | GlobalPinchIn
+    | GlobalPinchOut
+    | GlobalPinchEnd
+    | GlobalRotateStart
+    | GlobalRotating
+    | GlobalRotateEnd
     deriving (Eq, Ord, Show, Enum)
 
 {-| Object event. -}
@@ -139,7 +153,9 @@ pEvent = do
             76 -> DrawPre
             77 -> DrawPost
             n  -> error $ "Unknown Draw subid: " ++ show n
-        "Other"      -> Other $ toEnum code
+        "Other"      -> case code of
+            76 -> Other Broadcast
+            _  -> Other $ toEnum code
         "KeyPress"   -> Keyboard Press   keycode
         "Keyboard"   -> Keyboard Hold    keycode
         "KeyRelease" -> Keyboard Release keycode
@@ -168,5 +184,19 @@ pEvent = do
             60 -> MouseWheelUp
             61 -> MouseWheelDown
             n  -> error $ "Unknown Mouse subid: " ++ show n
-        "Gesture"    -> Gesture $ toEnum code
+        "Gesture"    -> case code of
+            64 -> Gesture GlobalTap
+            65 -> Gesture GlobalDoubleTap
+            66 -> Gesture GlobalDragStart
+            67 -> Gesture GlobalDragging
+            68 -> Gesture GlobalDragEnd
+            69 -> Gesture GlobalFlick
+            70 -> Gesture GlobalPinchStart
+            71 -> Gesture GlobalPinchIn
+            72 -> Gesture GlobalPinchOut
+            73 -> Gesture GlobalPinchEnd
+            74 -> Gesture GlobalRotateStart
+            75 -> Gesture GlobalRotating
+            76 -> Gesture GlobalRotateEnd
+            _  -> Gesture $ toEnum code
         s -> error $ "Unknown event name: " ++ s
