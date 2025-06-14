@@ -40,6 +40,7 @@ library:
     - LambdaCase
     - NamedFieldPuns
     - OverloadedStrings
+    - TupleSections
   source-dirs: src
   ghc-options: [-W]
 

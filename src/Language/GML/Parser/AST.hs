@@ -14,6 +14,7 @@ import Language.GML.AST
 import Language.GML.Types
 import Language.GML.Parser.Common
 import Language.GML.Parser.Lexer
+import Language.GML.Parser.Types (type_)
 
 -- * Basic tokens
 
@@ -119,6 +120,7 @@ prefix, postfix :: Text -> UnOp -> Operator Parser Expr
 prefix  name op = Prefix  (EUnary op <$ operator name)
 postfix name op = Postfix (EUnary op <$ operator name)
 
+funcall :: Parser (Text, [Expr])
 funcall = (,) <$> funName <*> parens (expr `sepBy` comma)
 
 kwValues :: Parser Expr
@@ -131,6 +133,7 @@ kwValues = choice
     , kwPi $> ENumber pi
     ]
 
+eTerm :: Parser Expr
 eTerm = choice
     [ parens expr
     , kwValues
@@ -149,14 +152,23 @@ expr = makeExprParser eTerm opTable <* spaces <?> "expression"
 
 -- * Statements
 
+sVarDecl :: Parser VarDecl
+sVarDecl = do
+    name <- ident_ <* space
+    mType <- optional $ inPragma type_
+    mInit <- optional $ symbol "=" *> expr
+    return $ VarDecl name mInit mType
+
+sDeclare :: Parser Stmt
 sDeclare = do
-    kwVar
-    let sVar = (,) <$> varName <*> optional (symbol "=" *> expr)
-    vars <- sVar `sepBy1` comma
+    kwVar   
+    vars <- sVarDecl `sepBy1` comma
     return $ SDeclare vars
 
+sEnum :: Parser Stmt
 sEnum = SEnum <$> (kwEnum *> ident) <*> braces (ident `sepBy` comma)
 
+sAssign :: Parser Stmt
 sAssign = do
     var <- located variable
     op <- choice (map (\(c, s) -> c <$ symbol s) ops) <?> "assignment operator" 
@@ -170,6 +182,7 @@ sAssign = do
             , (SModify MNullish, "??=")
             ]
 
+sSwitch :: Parser Stmt
 sSwitch = do
     kwSwitch
     cond <- expr

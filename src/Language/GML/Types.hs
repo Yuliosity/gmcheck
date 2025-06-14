@@ -11,6 +11,8 @@ module Language.GML.Types where
 
 import Data.List (union)
 import Data.Text (Text, pack)
+import Data.String (IsString(..))
+
 {-| Identifier (name). -}
 type Name = Text
 
@@ -57,6 +59,14 @@ data Type
     | TTypeVar Name
     deriving (Eq, Show)
 --FIXME: compare functions ignoring argument names
+
+instance IsString Type where
+    fromString = \case 
+        "string" -> TString
+        "real"   -> TReal
+        "int"    -> TInt
+        "bool"   -> TBool
+        ty -> TNewtype $ pack ty
 
 indexType :: Container -> Type
 indexType = \case

@@ -12,7 +12,7 @@ module Language.GML.AST
     , module Language.GML.AST
     ) where
 
-import Data.String
+import Data.String (IsString(..))
 import Data.Text (Text)
 
 import Language.GML.Location
@@ -163,11 +163,27 @@ instance Fractional Expr where
 
 -- * Statements
 
+data VarDecl = VarDecl
+    { vdName :: Name
+    , vdExpr :: Maybe Expr
+    , vdType :: Maybe Type
+    }
+    deriving (Eq, Show)
+
+pattern SimpleVarDecl :: Name -> VarDecl
+pattern SimpleVarDecl name = VarDecl name Nothing Nothing
+
+pattern InitVarDecl :: Name -> Expr -> VarDecl
+pattern InitVarDecl name expr = VarDecl name (Just expr) Nothing
+
+instance IsString VarDecl where
+    fromString = SimpleVarDecl . fromString
+
 {-| Statement (instruction). -}
 data Stmt
     = SExpression Expr -- ^ Calling an expression (typically a function/script with side effects)
     -- Declarations and modification
-    | SDeclare [(Name, Maybe Expr)] -- ^ Declaring local variable(s) with `var`
+    | SDeclare [VarDecl] -- ^ Declaring local variable(s) with `var`
     | SAssign (Located Variable) Expr -- ^ Assigning a variable with `=`, possibly declaring it in-place
     | SModify ModifyOp (Located Variable) Expr   -- ^ Modifying an existing variable with an operator like `+=` or `^=`
     | SFunction Name Function       -- ^ Declaring a function (possibly constructor) with arguments and a body

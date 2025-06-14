@@ -80,11 +80,12 @@ exprs = describe "expressions parser" $ do
 
 stmts = describe "statements parser" $ do
     it "can parse variable declarations" $ do
-        parse' stmt "var foo" `shouldParse` SDeclare [("foo", Nothing)]
-        parse' stmt "var foo, bar" `shouldParse` SDeclare [("foo", Nothing), ("bar", Nothing)]
-        parse' stmt "var foo=42" `shouldParse` SDeclare [("foo", Just lit42)]
+        parse' stmt "var foo" `shouldParse` SDeclare ["foo"]
+        parse' stmt "var foo, bar" `shouldParse` SDeclare ["foo", "bar"]
+        parse' stmt "var foo=42" `shouldParse` SDeclare [InitVarDecl "foo" lit42]
         parse' stmt "var foo=2+2, bar, baz=42" `shouldParse`
-            SDeclare [("foo", Just $ 2 + 2), ("bar", Nothing), ("baz", Just lit42)]
+            SDeclare [InitVarDecl "foo" (2 + 2), "bar", InitVarDecl "baz" lit42]
+        parse' stmt "var foo /* : string */" `shouldParse` SDeclare [VarDecl "foo" Nothing (Just "string")]
     it "can parse function declarations" $ do
         parse' stmt "function smth(foo, bar) { return foo + bar; } " `shouldParse`
             SFunction "smth" (Function ["foo", "bar"] PlainFunction [SReturn (foo + bar)])
@@ -101,7 +102,7 @@ stmts = describe "statements parser" $ do
         parse' stmt "foo++" `shouldParse` SExpression (EUnary UPostInc foo)
     it "can parse function calls" $ do
         parse' stmt "write(\"string\")" `shouldParse` SExpression writeString
-        parse' stmt "var foo = sin(3.14)" `shouldParse` SDeclare [("foo", Just sinPi)]
+        parse' stmt "var foo = sin(3.14)" `shouldParse` SDeclare [InitVarDecl "foo" sinPi]
         parse' stmt "return atan2(1, a)" `shouldParse` SReturn (EFuncall ("atan2", [1, EVariable "a"]))
         parse' stmt "foo = new bar()" `shouldParse` SAssign "foo" (ENew ("bar", []))
     it "can parse conditionals" $ do
@@ -117,7 +118,7 @@ stmts = describe "statements parser" $ do
         parse' stmt "for(foo = 42; foo > 0; foo--) ++bar" `shouldParse`
             SFor (SAssign "foo" lit42) (EBinary Greater foo (ENumber 0)) (SExpression $ EUnary UPostDec foo) (SExpression $ EUnary UPreInc bar)
         parse' stmt "for(var foo=42; foo < bar; foo+=42) write(\"string\")" `shouldParse`
-            SFor (SDeclare [("foo", Just lit42)]) (EBinary Less foo bar) (SModify MAdd "foo" lit42) (SExpression writeString)
+            SFor (SDeclare [InitVarDecl "foo" lit42]) (EBinary Less foo bar) (SModify MAdd "foo" lit42) (SExpression writeString)
     it "can parse switch block" $ do
         parse' stmt "switch(foo) {case 0: case 1: foo += 42 break}" `shouldParse`
             SSwitch foo [([0, 1], [SModify MAdd "foo" lit42, SBreak])]
@@ -137,7 +138,7 @@ stmts = describe "statements parser" $ do
 
 programs = describe "complex script parser" $ do
     it "can parse multi-lines" $ do
-        parse' program "var foo\nfoo = 42" `shouldParse` [SDeclare [("foo", Nothing)], SAssign "foo" lit42]
+        parse' program "var foo\nfoo = 42" `shouldParse` [SDeclare [SimpleVarDecl "foo"], SAssign "foo" lit42]
     it "can parse nested loops" $ do
         parse' program "while(foo < 42) {while(bar) {write(\"string\");}}" `shouldParse`
             [SWhile foo_lt_42 $ SBlock [SWhile bar $ SBlock [SExpression writeString]]]

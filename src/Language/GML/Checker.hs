@@ -20,6 +20,7 @@ import Control.Monad.Trans.RWS
 import Data.Either (isLeft)
 import Data.Foldable (asum, for_)
 import qualified Data.Map as M
+import Data.Maybe (fromMaybe)
 import Data.Text (pack)
 import Debug.Trace
 import Lens.Micro.Platform
@@ -134,7 +135,7 @@ lookup = \case
     --Referenced variable
     VField var@(VVar name) field -> do
         object <- use (cObjects . at name)
-        case object of 
+        case object of
             Nothing  -> report (EUndefinedVar var) >> return Nothing
             Just mem -> return $ lookupMem field mem
 
@@ -195,6 +196,7 @@ lookupFn name = do
     -- TODO: derive and store script types
     return $ M.lookup name builtinFn
 
+isCompOp, isNumOp, isBoolOp :: BinOp -> Bool
 isCompOp = (`elem` [Less, LessEq, Eq, NotEq, Greater, GreaterEq])
 isNumOp = (`elem` [Add, Sub, Mul, Div])
 isBoolOp = (`elem` [And, Or, Xor])
@@ -287,7 +289,7 @@ derive = \case
 
     -- TODO: actually derive
     EFunction (Function args _cons _body) -> do
-        let argsT = zip args (repeat TAny)
+        let argsT = map (, TAny) args
         let bodyT = TAny
         return $ TFunction argsT bodyT
 
@@ -366,20 +368,24 @@ execAssignModify op (Located pos var) expr = do
                         --FIXME: report assignment operators differently
                         reportPos (EBadModify op ty exprT)
 
-
-
 exec :: Stmt -> Checker ()
 exec = \case
-    SDeclare vexp -> forM_ vexp $ \(var, mExpr) -> do
+    SDeclare vexp -> forM_ vexp $ \(VarDecl var mExpr mType) -> do
         exprT <- case mExpr of
-            Nothing -> return TVoid
-            Just expr -> derive expr
+            Nothing -> return $ fromMaybe TVoid mType
+            Just expr -> do
+                exprT <- derive expr
+                case mType of
+                    Nothing -> return exprT
+                    Just ty -> do
+                        when (exprT /= ty) $ report $ WChangeType (VVar var) exprT ty
+                        return exprT
         setVar (VVar var) exprT
 
     SAssign var expr -> execAssignModify Nothing var expr
 
     SModify op var expr -> execAssignModify (Just op) var expr
-        
+
     SExpression expr ->
         -- If the expression returns anything, the result is actually lost
         checkType "expression statement" TVoid expr
@@ -399,7 +405,7 @@ exec = \case
         checkCond cond
         exec stmt
 
-    SDoUntil stmt cond -> do 
+    SDoUntil stmt cond -> do
         exec stmt
         checkCond cond
 

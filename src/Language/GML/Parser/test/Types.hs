@@ -8,6 +8,7 @@ import Language.GML.Parser.Lexer
 
 import Language.GML.Types
 import Language.GML.Parser.Types hiding (signatures)
+import Language.GML.Parser.Lexer (inPragma)
 
 parse' p = parse (p <* eof) "test"
 
@@ -64,8 +65,12 @@ variablesTest = describe "variables" $ do
             ("other_var", (TReal, True)), 
             ("another_var", (TReal, True))]
 
+misc = describe "misc parser" $ do
+    it "can parse pragmas with types" $ do
+        parse' (inPragma type_) "/* : string */ " `shouldParse` "string"
 
 test = hspec $ do
     types
     signatures
     variablesTest
+    misc

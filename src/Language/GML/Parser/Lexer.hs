@@ -27,6 +27,15 @@ lexeme = L.lexeme spaces
 symbol :: Text -> Parser ()
 symbol str = L.symbol spaces str $> ()
 
+inPragma :: Parser a -> Parser a
+inPragma p = do
+    "/*" <* space
+    ":" <* space
+    res <- p
+    "*/"
+    spaces
+    return res
+
 -- * Punctuation
 comma, colon, semicolon, parenL, parenR, braceL, braceR :: Parser ()
 comma     = symbol ","
@@ -68,10 +77,14 @@ opSymbol = satisfy (`elem` ("+-*/=<>!|&^" :: String)) --TODO: optimize
 operator :: Text -> Parser Text
 operator op = (lexeme . try) (string op <* notFollowedBy opSymbol)
 
+{-| Identifier without following spaces. -}
+ident_ :: Parser Name
+ident_ = pack <$> ((:) <$> (letterChar <|> char '_') <*> many (alphaNumChar <|> char '_'))
+
 {-| Identifier -}
 ident :: Parser Name
 ident = try $ do
-    i <- lexeme $ pack <$> ((:) <$> (letterChar <|> char '_') <*> many (alphaNumChar <|> char '_'))
+    i <- lexeme ident_ 
     guard $ i `notElem` reserved
     return i
 
