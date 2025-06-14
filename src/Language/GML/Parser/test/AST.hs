@@ -63,6 +63,7 @@ exprs = describe "expressions parser" $ do
         parse' expr "rand()" `shouldParse` EFuncall ("rand", [])
         parse' expr "sin(3.14)" `shouldParse` sinPi
         parse' expr "cat(foo, bar)" `shouldParse` EFuncall ("cat", [foo, bar])
+        parse' expr "qux(foo + 0, bar + 0)" `shouldParse` EFuncall ("qux", [foo + 0, bar + 0])
     it "can parse array literals" $ do
         parse' expr "[foo, bar]" `shouldParse` EArray [foo, bar]
         parse' expr "test([foo, 42 + 42])" `shouldParse` EFuncall ("test", [EArray [foo, 42 + 42]])

@@ -149,7 +149,11 @@ expr = makeExprParser eTerm opTable <* spaces <?> "expression"
 
 -- * Statements
 
-sDeclare = SDeclare <$> (kwVar *> (((,) <$> varName <*> optional (symbol "=" *> expr)) `sepBy1` comma))
+sDeclare = do
+    kwVar
+    let sVar = (,) <$> varName <*> optional (symbol "=" *> expr)
+    vars <- sVar `sepBy1` comma
+    return $ SDeclare vars
 
 sEnum = SEnum <$> (kwEnum *> ident) <*> braces (ident `sepBy` comma)
 
@@ -177,11 +181,23 @@ sSwitch = do
         return (cases, body)
     return $ SSwitch cond branches
 
-forInit :: Parser Stmt
-forInit = sDeclare <|> sAssign
+sFor :: Parser Stmt
+sFor = do
+    kwFor <* parenL
+    init <- (sDeclare <|> sAssign) <* semicolon
+    cond <- expr <* semicolon
+    step <- try sAssign <|> SExpression <$> expr
+    parenR
+    body <- stmt
+    return $ SFor init cond step body
 
-forStep :: Parser Stmt
-forStep = try sAssign <|> SExpression <$> expr
+sTry :: Parser Stmt
+sTry = do
+    kwTry
+    body <- block
+    catch <- optional ((,) <$> (kwCatch *> parens ident) <*> block)
+    finally <- optional (kwFinally *> block)
+    return $ STry body catch finally
 
 -- | A single statement, optionally ended with a semicolon.
 stmt :: Parser Stmt
@@ -195,12 +211,12 @@ stmt = (choice
     , SRepeat     <$> (kwRepeat *> expr) <*> stmt
     , SWhile      <$> (kwWhile  *> expr) <*> stmt
     , SDoUntil    <$> (kwDo *> stmt) <*> (kwUntil *> expr)
-    , SFor        <$> (kwFor *> parenL *> forInit <* semicolon) <*> (expr <* semicolon) <*> (forStep <* parenR) <*> stmt
+    , sFor
     , SIf         <$> (kwIf *> expr) <*> stmt <*> optional (kwElse *> stmt)
     , SReturn     <$> (kwReturn *> expr)
     , SThrow      <$> (kwThrow  *> expr)
     , sSwitch
-    , STry <$> (kwTry *> block) <*> optional ((,) <$> (kwCatch *> parens ident) <*> block) <*> optional (kwFinally *> block)
+    , sTry
     , try sAssign
     , SExpression <$> expr
     ] <?> "statement")
