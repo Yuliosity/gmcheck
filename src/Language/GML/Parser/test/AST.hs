@@ -90,7 +90,10 @@ stmts = describe "statements parser" $ do
         parse' stmt "var foo=42" `shouldParse` SDeclare [InitVarDecl "foo" lit42]
         parse' stmt "var foo=2+2, bar, baz=42" `shouldParse`
             SDeclare [InitVarDecl "foo" (2 + 2), "bar", InitVarDecl "baz" lit42]
+    it "can parse variable declarations with types" $ do
         parse' stmt "var foo /* : string */" `shouldParse` SDeclare [VarDecl "foo" Nothing (Just "string")]
+        parse' stmt "var foo /*:string*/ = \"string\"" `shouldParse`
+            SDeclare [VarDecl "foo" (Just litString) (Just "string")]
     it "can parse function declarations" $ do
         parse' stmt "function smth(foo, bar) { return foo + bar; } " `shouldParse`
             SFunction "smth" (Function ["foo", "bar"] PlainFunction [SReturn (foo + bar)])
