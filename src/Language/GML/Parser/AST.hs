@@ -71,7 +71,7 @@ opTable =
     [   [ prefix "-" UNeg
         , prefix "~" UBitNeg
         , prefix "!" UNot
-        --, prefix "+" id
+        , prefix "+" UPos
         ]
     ,   [ binaryK "div" IntDiv
         , binary  "%"   Mod

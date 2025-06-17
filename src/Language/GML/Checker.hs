@@ -201,6 +201,21 @@ isCompOp = (`elem` [Less, LessEq, Eq, NotEq, Greater, GreaterEq])
 isNumOp = (`elem` [Add, Sub, Mul, Div])
 isBoolOp = (`elem` [And, Or, Xor])
 
+{-| Try to derive a result type of a unary operator application.
+    In case of impossible combinations, returns `Left` with the expected result.
+    TODO: int-only versions
+-}
+deriveUnOp :: UnOp -> Type -> Either Type Type
+deriveUnOp UNot TBool = Right TBool
+deriveUnOp UPos TReal = Right TReal
+deriveUnOp UNeg TReal = Right TReal
+deriveUnOp UBitNeg TReal = Right TReal
+deriveUnOp UPreInc TReal = Right TReal
+deriveUnOp UPreDec TReal = Right TReal
+deriveUnOp UPostInc TReal = Right TReal
+deriveUnOp UPostDec TReal = Right TReal
+deriveUnOp _ _ = Left TReal
+
 {-| Try to derive a result type of a binary operator application.
     In case of impossible combinations, returns `Left` with the expected result. -}
 deriveOp :: BinOp -> Type -> Type -> Either Type Type
@@ -261,10 +276,12 @@ derive = \case
         return $ TStruct fieldsT
 
     EUnary op expr -> do
-        exprT <- derive expr
-        case exprT of
-            TReal -> return TReal
-            _ -> report (EBadUnary op exprT) >> return exprT
+        e1T <- derive expr
+        case deriveUnOp op e1T of
+            Right res -> return res
+            Left  res -> do
+                report (EBadUnary op e1T)
+                return res
 
     EBinary op e1 e2 -> do
         e1T <- derive e1

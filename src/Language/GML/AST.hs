@@ -96,6 +96,7 @@ modifyToBin = \case
 {-| Unary operators, in order of precedence. -}
 data UnOp
     = UBitNeg  -- ^ Bit negation: `~a`
+    | UPos     -- ^ Arithmetical positive: `+a`
     | UNeg     -- ^ Arithmetical negation: `-a`
     | UNot     -- ^ Boolean negation: `!a`
     | UPreInc  -- ^ Prefix increment: `++a`

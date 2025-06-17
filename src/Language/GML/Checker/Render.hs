@@ -27,6 +27,7 @@ instance ToMarkup Variable where
 instance ToMarkup UnOp where
     toMarkup = \case
         UBitNeg  -> "~"
+        UPos     -> "+"
         UNeg     -> "-"
         UNot     -> "!"
         UPreDec  -> "--"

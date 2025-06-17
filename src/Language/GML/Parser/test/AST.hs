@@ -53,17 +53,22 @@ exprs = describe "expressions parser" $ do
     it "can parse a variable as an expression" $ do
         parse' expr "foo" `shouldParse` foo
         parse' expr "foo[42]" `shouldParse` EVariable (located foo_42)
+    it "can parse unary operators" $ do
+        parse' expr "-foo" `shouldParse` EUnary UNeg foo
+        parse' expr "!foo" `shouldParse` EUnary UNot foo
+        parse' expr "+foo" `shouldParse` EUnary UPos foo
     it "can parse binary operators" $ do
         parse' expr "42+foo" `shouldParse` (42 + foo)
         parse' expr "undefined ?? 42" `shouldParse` EBinary Nullish EUndefined 42
     it "can parse prefix and postfix operators" $ do
         parse' expr "foo++" `shouldParse` EUnary UPostInc foo
         parse' expr "foo-- - --foo" `shouldParse` (EUnary UPostDec foo - EUnary UPreDec foo)
+        parse' expr "foo + -bar" `shouldParse` (foo + EUnary UNeg bar)
     it "can parse function calls" $ do
         parse' expr "rand()" `shouldParse` EFuncall ("rand", [])
         parse' expr "sin(3.14)" `shouldParse` sinPi
         parse' expr "cat(foo, bar)" `shouldParse` EFuncall ("cat", [foo, bar])
-        parse' expr "qux(foo + 0, bar + 0)" `shouldParse` EFuncall ("qux", [foo + 0, bar + 0])
+        parse' expr "qux(foo + 0, +bar)" `shouldParse` EFuncall ("qux", [foo + 0, EUnary UPos bar])
     it "can parse array literals" $ do
         parse' expr "[foo, bar]" `shouldParse` EArray [foo, bar]
         parse' expr "test([foo, 42 + 42])" `shouldParse` EFuncall ("test", [EArray [foo, 42 + 42]])
