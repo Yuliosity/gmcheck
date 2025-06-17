@@ -242,6 +242,9 @@ derive = \case
     ENumber _ -> return TReal
     EString _ -> return TString
 
+    -- TODO: check self/other/noone
+    EInstance _ -> return TInstance
+
     EArray [] -> return $ TArray TAny
     EArray (e1:es) -> do
         t1 <- derive e1

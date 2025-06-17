@@ -123,20 +123,23 @@ postfix name op = Postfix (EUnary op <$ operator name)
 funcall :: Parser (Text, [Expr])
 funcall = (,) <$> funName <*> parens (expr `sepBy` comma)
 
-kwValues :: Parser Expr
-kwValues = choice
+kwConstants :: Parser Expr
+kwConstants = choice
     [ kwUndefined $> EUndefined
     , kwTrue $> EBool True
     , kwFalse $> EBool False
     , kwPointerNull $> EPointer --FIXME
     , kwPointerInvalid $> EPointer --FIXME
     , kwPi $> ENumber pi
+    , kwSelf $> EInstance ISelf
+    , kwOther $> EInstance IOther
+    , kwNoone $> EInstance INoone
     ]
 
 eTerm :: Parser Expr
 eTerm = choice
     [ parens expr
-    , kwValues
+    , kwConstants
     , ENumber <$> lNumber
     , EString <$> lString
     , EArray <$> brackets (expr `sepBy1` comma)

@@ -117,6 +117,9 @@ data FunctionKind = PlainFunction | Constructor (Maybe Funcall)
 {-| Function/constructor call. |-}
 type Funcall = (Name, [Expr])
 
+data Instance = ISelf | IOther | INoone
+    deriving (Eq, Show)
+
 {-| Expression which can be evaluated to a value. -}
 data Expr
     -- Values
@@ -124,6 +127,7 @@ data Expr
     | EUndefined                -- ^ Undefined literal: `undefined`
     | EBool     Bool            -- ^ Boolean literal: `true`, `false`
     | EPointer                  -- ^ TODO: pointers: `pointer_null`
+    | EInstance Instance        -- ^ Instance of an object
     | ENumber   Double          -- ^ Numeric literal: `2`, `3.141`
     | EString   Text            -- ^ String literal: `"string"`
     | EArray    [Expr]          -- ^ Array literal: `[1, 2, 3]`

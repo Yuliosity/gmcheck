@@ -1,9 +1,8 @@
-//Magic constants
-const pi, NaN, infinity : real
-const pointer_null, pointer_invalid : ptr
-//Keywords
-const true, false : bool
-const self, other, noone : instance
+//Reserved constants
+//const pi, NaN, infinity : real
+//const pointer_null, pointer_invalid : ptr
+//const true, false : bool
+//const self, other, noone : instance
 //Game constants
 const os_type : int
 const game_id : int
