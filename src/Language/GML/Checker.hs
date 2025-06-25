@@ -104,7 +104,7 @@ reportPos err = do
     noErr <- inSet err <$> view sDisabledErrors
     unless noErr $ do
         src <- use cSrc
-        tell $ singleError src $ Located ?pos err
+        tell $ singleError src $ err :@ ?pos
 
 {-| Lookup for a builtin variable. -}
 lookupBuiltin :: Name -> Checker (Maybe (Type, Bool))
@@ -143,9 +143,10 @@ lookup = \case
 
     --Indexed cell
     VContainer con var expr -> do
+        let ?pos = getPos expr
         --1. Check the index
         index <- derive expr
-        unless (index `isSubtype` indexType con) $ report $ EBadIndex con index
+        unless (index `isSubtype` indexType con) $ reportPos $ EBadIndex con index
         --2. Check the container itself
         mty <- lookup var
         case mty of
@@ -157,15 +158,17 @@ lookup = \case
             Just (TContainer rcon res) | con == rcon -> return $ Just res
             --2.3. Wrong container type.
             Just res -> do
-                report $ EWrongVarType var res (TContainer con TAny) --FIXME: actual expected array type
+                reportPos $ EWrongVarType var res (TContainer con TAny) --FIXME: actual expected array type
                 return Nothing
 
     --2D indexed cell
     VContainer2 con var (e1, e2) -> do
         i1 <- derive e1
-        when (i1 /= TInt) $ report $ EBadIndex2 con i1
+        when (i1 /= TInt) $
+            let ?pos = getPos e1 in reportPos $ EBadIndex2 con i1
         i2 <- derive e2
-        when (i2 /= TInt) $ report $ EBadIndex2 con i2
+        when (i2 /= TInt) $
+            let ?pos = getPos e2 in reportPos $ EBadIndex2 con i2
         mty <- lookup var
         case mty of
             --2.1. Uninitialized array
@@ -237,18 +240,18 @@ deriveOp _ _ _ = error "deriveOp: unreachable"
 
 checkType descr ty expr = do
     varT <- derive expr
-    when (varT /= ty) $ report $ EWrongExprType descr ty varT
+    let ?pos = getPos expr
+    when (varT /= ty) $ reportPos $ EWrongExprType descr ty varT
 
 checkCond = checkType "conditional" TBool
 
 {-| Deriving the expression type. -}
 derive :: Expr -> Checker Type
-derive = \case
+derive (e :@ pos) = let ?pos = pos in case e of
     EUndefined -> pure TVoid
     EBool _    -> pure TBool
     EPointer   -> pure TPointer
-    EVariable (Located pos var) -> do
-        let ?pos = pos
+    EVariable (var :@ _) -> do
         mty <- lookup var
         case mty of
             Nothing -> reportPos (EUndefinedVar var) >> return TVoid
@@ -346,9 +349,9 @@ scriptDerive = go where
     go (stmt:rest) = case stmt of
 -}
 
-execAssignModify :: Maybe ModifyOp -> Located Variable -> Expr -> Checker ()
-execAssignModify op (Located pos var) expr = do
-    let ?pos = pos
+execAssignModify :: Maybe ModifyOp -> VarLoc -> Expr -> Checker ()
+execAssignModify op (var :@ p1) expr = do
+    let ?pos = p1
     varT <- lookup var
     exprT <- derive expr
 
@@ -369,8 +372,8 @@ execAssignModify op (Located pos var) expr = do
         Nothing -> do
             case varT of
                 Just ty | ty /= TVoid && ty /= exprT ->
-                    report $ WChangeType var ty exprT
-                --It is a freshly declared instance variable
+                    reportPos $ WChangeType var ty exprT
+                -- It is a freshly declared instance variable
                 _ -> return ()
             src <- use cSrc
             case src of
@@ -380,13 +383,13 @@ execAssignModify op (Located pos var) expr = do
         -- Modification: "a += 5" etc.
         Just op -> do
             case varT of
-                Nothing -> reportPos (EUndefinedVar var)
+                Nothing -> reportPos $ EUndefinedVar var
                 -- Assuming that all modifying operators preserve the type, don't check the change
                 -- TODO: refactor copy-pasta with binary derive
                 Just ty ->
                     when (isLeft $ deriveOp (modifyToBin op) ty exprT) $
-                        --FIXME: report assignment operators differently
-                        reportPos (EBadModify op ty exprT)
+                        -- FIXME: report assignment operators differently
+                        reportPos $ EBadModify op ty exprT
 
 exec :: Stmt -> Checker ()
 exec = \case
@@ -411,8 +414,9 @@ exec = \case
         checkType "expression statement" TVoid expr
 
     SWith expr stmt -> do
+        let ?pos = getPos expr
         varT <- derive expr
-        when (varT /= TInstance) $ report $ EWithInstance varT
+        when (varT /= TInstance) $ reportPos $ EWithInstance varT
         -- TODO: switch the context
         exec stmt
 

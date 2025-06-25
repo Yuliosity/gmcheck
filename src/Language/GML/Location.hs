@@ -27,7 +27,7 @@ data Location = Location {source :: !Source, row :: !Int, col :: !Int}
     deriving (Eq, Ord, Show)
 
 {-| A code entity with a position (without source). -}
-data Located a = Located {getPos :: !Pos, unLoc :: !a}
+data Located a = (:@) {unLoc :: !a, getPos :: !Pos}
     deriving (Show)
 
 instance Eq a => Eq (Located a) where

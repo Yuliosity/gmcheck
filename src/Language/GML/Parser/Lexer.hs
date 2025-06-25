@@ -107,5 +107,5 @@ lString =
     <?> "string"
 
 located :: Parser a -> Parser (Located a)
-located p = Located . toPos <$> getSourcePos <*> p where
+located p = flip (:@) . toPos <$> getSourcePos <*> p where
     toPos (SourcePos _file line col) = Pos (unPos line) (unPos col)

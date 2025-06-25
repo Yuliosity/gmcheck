@@ -26,11 +26,11 @@ accessor1 = do
     char '['
     spec <- option '@' $ oneOf [ '|', '?', '@' ]
     spaces
-    let cons = case spec of
-            '|' -> SList
-            '?' -> SMap
-            '@' -> SArray
-            _   -> error "impossible"
+    cons <- case spec of
+        '|' -> return SList
+        '?' -> return SMap
+        '@' -> return SArray
+        c   -> fail $ "Unknown accessor " <> show c
     arg <- expr
     symbol "]"
     return $ \var -> VContainer cons var arg
@@ -39,12 +39,12 @@ accessor2 = do
     char '['
     spec <- option ' ' $ char '#'
     spaces
-    let cons = case spec of
-            ' ' -> SArray2
-            '#' -> SGrid
-            _   -> error "impossible"
-    arg1 <- expr
-    arg2 <- comma *> expr
+    cons <- case spec of
+        ' ' -> return SArray2
+        '#' -> return SGrid
+        c   -> fail $ "Unknown accessor " <> show c
+    arg1 <- expr <* comma
+    arg2 <- expr
     symbol "]"
     return $ \var -> VContainer2 cons var (arg1, arg2)
 
@@ -112,19 +112,28 @@ opTable =
         ]
     ]
 
+-- TODO: refactor the copy-pasta
 binary, binaryK :: Text -> BinOp -> Operator Parser Expr
-binary  name op = InfixL  (EBinary op <$ operator name)
-binaryK name op = InfixL  (EBinary op <$ keyword name)
+binary  name op = InfixL $ do --  (EBinary op <$ operator name)
+    operator name
+    return $ \a b -> EBinary op a b :@ getPos a
+binaryK name op = InfixL $ do --  (EBinary op <$ keyword name)
+    keyword name
+    return $ \a b -> EBinary op a b :@ getPos a
 
 prefix, postfix :: Text -> UnOp -> Operator Parser Expr
-prefix  name op = Prefix  (EUnary op <$ operator name)
-postfix name op = Postfix (EUnary op <$ operator name)
+prefix  name op = Prefix $ do --  (EUnary op <$ operator name)
+    _ :@ p <- located (operator name)
+    return $ \e -> EUnary op e :@ p
+postfix name op = Postfix $ do -- (EUnary op <$ operator name)
+    _ :@ p <- located (operator name)
+    return $ \e -> EUnary op e :@ p
 
 funcall :: Parser (Text, [Expr])
 funcall = (,) <$> funName <*> parens (expr `sepBy` comma)
 
 kwConstants :: Parser Expr
-kwConstants = choice
+kwConstants = located $ choice
     [ kwUndefined $> EUndefined
     , kwTrue $> EBool True
     , kwFalse $> EBool False
@@ -137,9 +146,9 @@ kwConstants = choice
     ]
 
 eTerm :: Parser Expr
-eTerm = choice
-    [ parens expr
-    , kwConstants
+eTerm = located $ choice
+    [ unLoc <$> parens expr
+    , unLoc <$> kwConstants
     , ENumber <$> lNumber
     , EString <$> lString
     , EArray <$> brackets (expr `sepBy1` comma)

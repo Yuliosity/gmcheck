@@ -5,7 +5,7 @@ Description : GML AST
 Everything representing the Game Maker Language source tree.
 -}
 
-{-# LANGUAGE PatternSynonyms #-}
+{-# LANGUAGE FlexibleInstances, PatternSynonyms #-}
 
 module Language.GML.AST
     ( module Language.GML.Location
@@ -27,6 +27,8 @@ data Variable
     | VContainer  Container  Variable Expr         -- ^ Data structure accessor. Arrays are a special case.
     | VContainer2 Container2 Variable (Expr, Expr) -- ^ 2D data structure accessor
     deriving (Eq, Show)
+
+type VarLoc = Located Variable
 
 {-| Prepend a qualifier for a variable, e.g. a[2] -> c.a[2] -}
 qualify :: Name -> Variable -> Variable
@@ -122,9 +124,9 @@ data Instance = ISelf | IOther | INoone
     deriving (Eq, Show)
 
 {-| Expression which can be evaluated to a value. -}
-data Expr
+data Expr_
     -- Values
-    = EVariable (Located Variable)
+    = EVariable VarLoc          -- ^ Variable: `foo`, `bar.baz`, `a[2]`
     | EUndefined                -- ^ Undefined literal: `undefined`
     | EBool     Bool            -- ^ Boolean literal: `true`, `false`
     | EPointer                  -- ^ TODO: pointers: `pointer_null`
@@ -138,33 +140,35 @@ data Expr
     | EUnary    UnOp  Expr      -- ^ Unary expression
     | EBinary   BinOp Expr Expr -- ^ Binary expression
     | ETernary  Expr  Expr Expr -- ^ Ternary conditional `cond ? t : f`
-    | EFuncall  Funcall     -- ^ Function/script call with arguments
-    | ENew      Funcall     -- ^ Constructor call with arguments
+    | EFuncall  Funcall         -- ^ Function/script call with arguments
+    | ENew      Funcall         -- ^ Constructor call with arguments
     deriving (Eq, Show)
+
+type Expr = Located Expr_
 
 -- Helper instances for writing expressions in code
 
 instance IsString Variable where
     fromString = VVar . fromString --TODO: parse
 
-instance IsString Expr where
-    fromString str = EVariable $ Located zeroPos (fromString str) 
+instance IsString Expr_ where
+    fromString = EString . fromString
 
 instance IsString a => IsString (Located a) where
-    fromString = Located zeroPos . fromString
+    fromString = (:@ zeroPos) . fromString
 
 instance Num Expr where
-    fromInteger = ENumber . fromInteger
-    (+) = EBinary Add
-    (-) = EBinary Sub
-    (*) = EBinary Mul
-    negate = EUnary UNeg
-    abs x = EFuncall ("abs", [x])
-    signum x = EFuncall ("sign", [x])
+    fromInteger x = ENumber (fromInteger x) :@ zeroPos
+    a + b = EBinary Add a b :@ getPos a
+    a - b = EBinary Sub a b :@ getPos a
+    a * b = EBinary Mul a b :@ getPos a
+    negate x = EUnary UNeg x :@ getPos x
+    abs x = EFuncall ("abs", [x]) :@ getPos x
+    signum x = EFuncall ("sign", [x]) :@ getPos x
 
 instance Fractional Expr where
-    fromRational = ENumber . fromRational
-    (/) = EBinary Div
+    fromRational = (:@ zeroPos) . ENumber . fromRational
+    a / b =  EBinary Div a b :@ getPos a
 
 -- * Statements
 
@@ -189,17 +193,17 @@ data Stmt
     = SExpression Expr -- ^ Calling an expression (typically a function/script with side effects)
     -- Declarations and modification
     | SDeclare [VarDecl] -- ^ Declaring local variable(s) with `var`
-    | SAssign (Located Variable) Expr -- ^ Assigning a variable with `=`, possibly declaring it in-place
-    | SModify ModifyOp (Located Variable) Expr   -- ^ Modifying an existing variable with an operator like `+=` or `^=`
-    | SFunction Name Function       -- ^ Declaring a function (possibly constructor) with arguments and a body
-    | SDelete Name                  -- ^ Delete operator
-    | SEnum     Name [FieldName]    -- ^ Enum: `enum foo { a, b, c }`
+    | SAssign VarLoc Expr -- ^ Assigning a variable with `=`, possibly declaring it in-place
+    | SModify ModifyOp VarLoc Expr    -- ^ Modifying an existing variable with an operator like `+=` or `^=`
+    | SFunction Name Function         -- ^ Declaring a function (possibly constructor) with arguments and a body
+    | SDelete Name                    -- ^ Delete operator
+    | SEnum     Name [FieldName]      -- ^ Enum: `enum foo { a, b, c }`
     -- Control flow structures
-    | SBlock   Block           -- ^ Nested sequence of statements
-    | SWith    Expr Stmt       -- ^ Switching the execution context into an another instance
-    | SRepeat  Expr Stmt       -- ^ `repeat`ing some instructions several times
-    | SWhile   Expr Stmt       -- ^ Loop with a pre-condition
-    | SDoUntil Stmt Expr       -- ^ Loop with a post-condition
+    | SBlock   Block                  -- ^ Nested sequence of statements
+    | SWith    Expr Stmt              -- ^ Switching the execution context into an another instance
+    | SRepeat  Expr Stmt              -- ^ `repeat`ing some instructions several times
+    | SWhile   Expr Stmt              -- ^ Loop with a pre-condition
+    | SDoUntil Stmt Expr              -- ^ Loop with a post-condition
     | SFor     Stmt Expr Stmt Stmt    -- ^ [for] loop. TODO: limit the first header stmt to assign or declare, and the second one to assign
     | SIf      Expr Stmt (Maybe Stmt) -- ^ `if` conditional, with mandatory `then` branch and optional `else` branch
     | SSwitch  Expr [([Expr], Block)] -- ^ Switch-case. For the default branch, the case list is empty

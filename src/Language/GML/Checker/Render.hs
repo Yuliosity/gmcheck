@@ -147,7 +147,7 @@ instance ToMarkup Source where
     toMarkup = \case
         SrcScript name -> toMarkup name
         SrcObject name event -> toMarkup event >> " of " >> toMarkup name
-        SrcRoom name -> "Creation code of" >> toMarkup name
+        SrcRoom name -> "Creation code of " >> toMarkup name
 
 instance ToMarkup Pos where
     toMarkup (Pos 0 0) = "<unknown pos>"
@@ -155,7 +155,7 @@ instance ToMarkup Pos where
 
 renderLog :: Log -> Html
 renderLog log = ul $ mapM_ renderError log where
-    renderError (Located _pos err) = li $ toMarkup _pos >> " : " >> toMarkup err
+    renderError (err :@ pos) = li $ toMarkup pos >> " : " >> toMarkup err
 
 htmlReport :: Report -> Html
 htmlReport (Report logs) = docTypeHtml $ do
