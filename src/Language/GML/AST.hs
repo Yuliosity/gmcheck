@@ -30,7 +30,7 @@ data Variable
 
 type VarLoc = Located Variable
 
-{-| Prepend a qualifier for a variable, e.g. a[2] -> c.a[2] -}
+{-| Prepend a qualifier for a variable, e.g. @a[2]@ -> @c.a[2]@ -}
 qualify :: Name -> Variable -> Variable
 qualify obj = \case
     VVar name              -> VField (VVar obj) name
@@ -38,51 +38,51 @@ qualify obj = \case
     VContainer  c var expr -> VContainer  c (qualify obj var) expr
     VContainer2 c var expr -> VContainer2 c (qualify obj var) expr
 
-{-| One-dimensional array, indexed by a number: `a[b]`. -}
+{-| One-dimensional array, indexed by a number: @a[b]@. -}
 pattern VArray  v e = VContainer  SArray  v e
 
-{-| Two-dimensional array, indexed by two numbers: `a[b, c]`. Legacy in GMS 2.3. -}
+{-| Two-dimensional array, indexed by two numbers: @a[b, c]@. Legacy in GMS 2.3. -}
 pattern VArray2 v e = VContainer2 SArray2 v e
 
 -- * Operators
 
-{-| Arithetical and logical operations, used in both modification assignment and binary operations. -}
+{-| Arithmetical and logical operations, used in binary expressions. -}
 data BinOp
-    = Add    -- ^ Addition, `x + `y`
-    | Sub    -- ^ Subtraction, `x - y`
-    | Mul    -- ^ Multiplication, `x * y`
-    | Div    -- ^ Division, `x / y`
-    | Mod    -- ^ Modulus, `x % y` or `x mod y`
-    | IntDiv -- ^ Integral division, `x div y`
-    | Shr    -- ^ Bit shift right, `x << y`
-    | Shl    -- ^ Bit shift left, `x >> y`
-    | BitAnd -- ^ Bitwise and, `x & y`
-    | BitOr  -- ^ Bitwise or, `x | y`
-    | BitXor -- ^ Bitwise xor, `CHECK`
+    = Add    -- ^ Addition, @x + y@
+    | Sub    -- ^ Subtraction, @x - y@
+    | Mul    -- ^ Multiplication, @x * y@
+    | Div    -- ^ Division, @x / y@
+    | Mod    -- ^ Modulus, @x % y@ or @x mod y@
+    | IntDiv -- ^ Integral division, @x div y@
+    | Shr    -- ^ Bit shift right, @x << y@
+    | Shl    -- ^ Bit shift left, @x >> y@
+    | BitAnd -- ^ Bitwise and, @x & y@
+    | BitOr  -- ^ Bitwise or, @x | y@
+    | BitXor -- ^ Bitwise xor, @CHECK@
     {-| Boolean operations. -}
-    | And -- ^ Logical AND, `x && y` or `x and y`
-    | Or  -- ^ Logical OR, `x || y` or `x or y`
-    | Xor -- ^ Logical XOR, `x ^^ y`
+    | And -- ^ Logical AND, @x && y@ or @x and y@
+    | Or  -- ^ Logical OR, @x || y@ or @x or y@
+    | Xor -- ^ Logical XOR, @x ^^ y@
     {-| Comparison operators. -}
-    | Eq        -- ^ Equality: `a == b` (or `a = b` in expression context)
-    | NotEq     -- ^ Unequality: `a != b`
-    | Less      -- ^ Less than: `a < b`
-    | Greater   -- ^ Greater than: `a > b`
-    | LessEq    -- ^ Less or equal: `a <= b`
-    | GreaterEq -- ^ Greater or equal: `a >= b`
+    | Eq        -- ^ Equality: @a == b@ (or @a = b@ in expression context)
+    | NotEq     -- ^ Unequality: @a != b@
+    | Less      -- ^ Less than: @a < b@
+    | Greater   -- ^ Greater than: @a > b@
+    | LessEq    -- ^ Less or equal: @a <= b@
+    | GreaterEq -- ^ Greater or equal: @a >= b@
     {-| Nullish operators. -}
-    | Nullish   -- ^ Null coalesce, `a ?? b`
+    | Nullish   -- ^ Null coalesce, @a ?? b@
     deriving (Eq, Show)
 
-{-| Modify operators, in assignments. -}
+{-| Modify operators, used in assignments. -}
 data ModifyOp
-    = MAdd -- ^ Addition, `x += `y`
-    | MSub -- ^ Subtraction, `x -= y`
-    | MMul -- ^ Multiplication, `x *= y`
-    | MDiv -- ^ Division, `x /= y`
-    | MBitAnd -- ^ Bitwise and, `x &= y`
-    | MBitOr  -- ^ Bitwise or, `x |= y`
-    | MNullish -- ^ Null coalesce, `x ??= y`
+    = MAdd -- ^ Addition, @x += y@
+    | MSub -- ^ Subtraction, @x -= y@
+    | MMul -- ^ Multiplication, @x *= y@
+    | MDiv -- ^ Division, @x /= y@
+    | MBitAnd -- ^ Bitwise and, @x &= y@
+    | MBitOr  -- ^ Bitwise or, @x |= y@
+    | MNullish -- ^ Null coalesce, @x ??= y@
     deriving (Eq, Show)
 
 modifyToBin :: ModifyOp -> BinOp
@@ -97,14 +97,14 @@ modifyToBin = \case
 
 {-| Unary operators, in order of precedence. -}
 data UnOp
-    = UBitNeg  -- ^ Bit negation: `~a`
-    | UPos     -- ^ Arithmetical positive: `+a`
-    | UNeg     -- ^ Arithmetical negation: `-a`
-    | UNot     -- ^ Boolean negation: `!a`
-    | UPreInc  -- ^ Prefix increment: `++a`
-    | UPreDec  -- ^ Prefix decrement: `--a`
-    | UPostInc -- ^ Postfix increment: `a++`
-    | UPostDec -- ^ Postfix decrement: `a--`
+    = UBitNeg  -- ^ Bit negation: @~a@
+    | UPos     -- ^ Arithmetical positive: @+a@
+    | UNeg     -- ^ Arithmetical negation: @-a@
+    | UNot     -- ^ Boolean negation: @!a@
+    | UPreInc  -- ^ Prefix increment: @++a@
+    | UPreDec  -- ^ Prefix decrement: @--a@
+    | UPostInc -- ^ Postfix increment: @a++@
+    | UPostDec -- ^ Postfix decrement: @a--@
     deriving (Eq, Show)
 
 -- * Expressions
@@ -117,29 +117,30 @@ data Function = Function [Name] FunctionKind Block
 data FunctionKind = PlainFunction | Constructor (Maybe Funcall)
     deriving (Eq, Show)
 
-{-| Function/constructor call. |-}
+{-| Function/constructor call. -}
 type Funcall = (Name, [Expr])
 
+{-| Keywords for special instances. -}
 data Instance = ISelf | IOther | INoone
     deriving (Eq, Show)
 
-{-| Expression which can be evaluated to a value. -}
+{-| Expressions which can be evaluated to a value. -}
 data Expr_
     -- Values
-    = EVariable VarLoc          -- ^ Variable: `foo`, `bar.baz`, `a[2]`
-    | EUndefined                -- ^ Undefined literal: `undefined`
-    | EBool     Bool            -- ^ Boolean literal: `true`, `false`
-    | EPointer                  -- ^ TODO: pointers: `pointer_null`
+    = EVariable VarLoc          -- ^ Variable: @foo@, @bar.baz@, @a[2]@
+    | EUndefined                -- ^ Undefined literal: @undefined@
+    | EBool     Bool            -- ^ Boolean literal: @true@, @false@
+    | EPointer                  -- ^ TODO: pointers: @pointer_null@
     | EInstance Instance        -- ^ Instance of an object
-    | ENumber   Double          -- ^ Numeric literal: `2`, `3.141`
-    | EString   Text            -- ^ String literal: `"string"`
-    | EArray    [Expr]          -- ^ Array literal: `[1, 2, 3]`
-    | EFunction Function        -- ^ Inline function: `function (arg) {body}`
-    | EStruct   [(FieldName, Expr)] -- ^ Struct: `{a: 1, b: "str"}`
+    | ENumber   Double          -- ^ Numeric literal: @2@, @3.141@
+    | EString   Text            -- ^ String literal: @"string"@
+    | EArray    [Expr]          -- ^ Array literal: @[1, 2, 3]@
+    | EFunction Function        -- ^ Inline function: @function (arg) {body}@
+    | EStruct   [(FieldName, Expr)] -- ^ Struct: @{a: 1, b: "str"}@
     -- Operators
     | EUnary    UnOp  Expr      -- ^ Unary expression
     | EBinary   BinOp Expr Expr -- ^ Binary expression
-    | ETernary  Expr  Expr Expr -- ^ Ternary conditional `cond ? t : f`
+    | ETernary  Expr  Expr Expr -- ^ Ternary conditional @cond ? t : f@
     | EFuncall  Funcall         -- ^ Function/script call with arguments
     | ENew      Funcall         -- ^ Constructor call with arguments
     deriving (Eq, Show)
@@ -173,9 +174,9 @@ instance Fractional Expr where
 -- * Statements
 
 data VarDecl = VarDecl
-    { vdName :: Name
-    , vdExpr :: Maybe Expr
-    , vdType :: Maybe Type
+    { vdName :: Name       -- ^ Variable name
+    , vdExpr :: Maybe Expr -- ^ Optional initializer
+    , vdType :: Maybe Type -- ^ Optional type annotation
     }
     deriving (Eq, Show)
 
@@ -192,28 +193,28 @@ instance IsString VarDecl where
 data Stmt
     = SExpression Expr -- ^ Calling an expression (typically a function/script with side effects)
     -- Declarations and modification
-    | SDeclare [VarDecl] -- ^ Declaring local variable(s) with `var`
-    | SAssign VarLoc Expr -- ^ Assigning a variable with `=`, possibly declaring it in-place
-    | SModify ModifyOp VarLoc Expr    -- ^ Modifying an existing variable with an operator like `+=` or `^=`
+    | SDeclare [VarDecl] -- ^ Declaring local variable(s) with @var@
+    | SAssign VarLoc Expr -- ^ Assigning a variable with @=@, possibly declaring it in-place
+    | SModify ModifyOp VarLoc Expr    -- ^ Modifying an existing variable with an operator like @+=@ or @^=@
     | SFunction Name Function         -- ^ Declaring a function (possibly constructor) with arguments and a body
     | SDelete Name                    -- ^ Delete operator
-    | SEnum     Name [FieldName]      -- ^ Enum: `enum foo { a, b, c }`
+    | SEnum     Name [FieldName]      -- ^ Enum: @enum foo { a, b, c }@
     -- Control flow structures
     | SBlock   Block                  -- ^ Nested sequence of statements
     | SWith    Expr Stmt              -- ^ Switching the execution context into an another instance
-    | SRepeat  Expr Stmt              -- ^ `repeat`ing some instructions several times
+    | SRepeat  Expr Stmt              -- ^ @repeat@ing some instructions several times
     | SWhile   Expr Stmt              -- ^ Loop with a pre-condition
     | SDoUntil Stmt Expr              -- ^ Loop with a post-condition
-    | SFor     Stmt Expr Stmt Stmt    -- ^ [for] loop. TODO: limit the first header stmt to assign or declare, and the second one to assign
-    | SIf      Expr Stmt (Maybe Stmt) -- ^ `if` conditional, with mandatory `then` branch and optional `else` branch
+    | SFor     Stmt Expr Stmt Stmt    -- ^ @for@ loop. TODO: limit the first header stmt to assign or declare, and the second one to assign
+    | SIf      Expr Stmt (Maybe Stmt) -- ^ @if@ conditional, with mandatory @then@ branch and optional @else@ branch
     | SSwitch  Expr [([Expr], Block)] -- ^ Switch-case. For the default branch, the case list is empty
-    | STry     Block (Maybe (Name, Block)) (Maybe Block) -- ^ `try` block, with optional `catch` and optional `finally` blocks
+    | STry     Block (Maybe (Name, Block)) (Maybe Block) -- ^ @try@ block, with optional @catch@ and optional @finally@ blocks
     -- Control flow redirection
-    | SBreak       -- ^ `break` from a loop or `switch`-`case`
-    | SContinue    -- ^ `continue` to the next loop iteration
-    | SExit        -- ^ `exit` from a script/event without a result
-    | SReturn Expr -- ^ `return` the result from a function
-    | SThrow  Expr -- ^ `throw` an exception
+    | SBreak       -- ^ @break@ from a loop or @switch@-@case@
+    | SContinue    -- ^ @continue@ to the next loop iteration
+    | SExit        -- ^ @exit@ from a script/event without a result
+    | SReturn Expr -- ^ @return@ the result from a function
+    | SThrow  Expr -- ^ @throw@ an exception
     deriving (Eq, Show)
 
 {-| A block is a sequence of statements, typically in braces. -}
