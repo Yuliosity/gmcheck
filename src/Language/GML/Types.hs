@@ -49,7 +49,7 @@ data Type
     | TMatrix -- ^ GML matrix, a primitive type
     | TPointer -- ^ GML pointer, a primitive type
     | TStruct [(FieldName, Type)] -- ^ GML struct, a primitive type
-    | TFunction [Argument] Type   -- ^ GML inline function, a primitive type
+    | TFunction Signature   -- ^ GML inline function, a primitive type
     -- Derived types
     | TNewtype Text -- ^ Represented as just a number, but distinguished here
     -- Vector types
@@ -154,10 +154,10 @@ data MoreArgs
 
 {-| Function or script signature. -}
 data Signature = Signature
-    [Argument]       -- ^ Mandatory arguments
-    MoreArgs         -- ^ Optional or variadic arguments
-    Type             -- ^ Return type
-    deriving (Eq, Show)
+    { sArgs :: [Argument]       -- ^ Mandatory arguments
+    , sMoreArgs :: MoreArgs         -- ^ Optional or variadic arguments
+    , sRetType :: Type             -- ^ Return type
+    } deriving (Eq, Show)
 
 pattern (:->) args ret = Signature args (OptArgs []) ret
 

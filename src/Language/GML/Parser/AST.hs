@@ -56,7 +56,7 @@ variable = do
     return nest2
 
 function = Function
-    <$> parens (ident `sepBy` comma)
+    <$> parens (varDecl `sepBy` comma)
     <*> choice
         [ colon *> (Constructor . Just <$> funcall) <* kwConstructor
         , kwConstructor $> Constructor Nothing
@@ -164,8 +164,8 @@ expr = makeExprParser eTerm opTable <* spaces <?> "expression"
 
 -- * Statements
 
-sVarDecl :: Parser VarDecl
-sVarDecl = do
+varDecl :: Parser VarDecl
+varDecl = do
     name <- ident_ <* space
     mType <- optional $ inPragma type_
     mInit <- optional $ symbol "=" *> expr
@@ -174,7 +174,7 @@ sVarDecl = do
 sDeclare :: Parser Stmt
 sDeclare = do
     kwVar   
-    vars <- sVarDecl `sepBy1` comma
+    vars <- varDecl `sepBy1` comma
     return $ SDeclare vars
 
 sEnum :: Parser Stmt
@@ -230,8 +230,8 @@ stmt = (choice
     [ SBlock      <$> block
     , SBreak <$ kwBreak, SContinue <$ kwContinue, SExit <$ kwExit
     , SFunction   <$> (kwFunction *> ident) <*> function
-    , SDeclare    <$> (kwVar *> sVarDecl `sepBy1` comma)
-    , SStatic     <$> (kwStatic *> sVarDecl)
+    , SDeclare    <$> (kwVar *> varDecl `sepBy1` comma)
+    , SStatic     <$> (kwStatic *> varDecl)
     , sEnum
     , SWith       <$> (kwWith *> parens expr) <*> stmt
     , SRepeat     <$> (kwRepeat *> expr) <*> stmt

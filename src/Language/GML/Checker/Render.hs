@@ -3,6 +3,8 @@ Module      : Language.GML.Checker.Render
 Description : HTML rendering of errors report
 -}
 
+{-# LANGUAGE FlexibleInstances #-}
+
 module Language.GML.Checker.Render where
 
 import Control.Monad (forM_)
@@ -83,6 +85,15 @@ instance ToMarkup Container2 where
         SArray2 -> "array2d"
         SGrid   -> "grid"
 
+instance ToMarkup (Name, Type) where
+    toMarkup (name, ty) = do toMarkup name; ":"; toMarkup ty
+
+commaSep :: ToMarkup a => [a] -> Markup
+commaSep = \case
+    [] -> mempty
+    [x] -> toMarkup x
+    (x:xs) -> toMarkup x >> ", " >> commaSep xs
+
 instance ToMarkup Type where
     toMarkup = \case
         TPointer -> "pointer"
@@ -97,11 +108,14 @@ instance ToMarkup Type where
         TMatrix -> "matrix"
         TStruct fields -> do
             "{"
-            forM_ fields (\(name, ty) -> do toMarkup name; ":"; toMarkup ty)
+            forM_ fields (\field -> toMarkup field >> ";")
             "}"
-        TFunction args ret -> do
+        TFunction (Signature args mArgs ret) -> do
             "("
-            forM_ args (\(name, ty) -> do toMarkup name; ":"; toMarkup ty)
+            commaSep args
+            case mArgs of
+                OptArgs args -> do " ? " >> commaSep args
+                VarArgs arg -> do " * " >> toMarkup arg
             ") -> "
             toMarkup ret
         TNewtype n -> toMarkup n

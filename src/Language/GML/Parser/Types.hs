@@ -69,12 +69,13 @@ nametype =
             ]
 
 function = do
-    --TODO: parse single argument without parens
+    -- TODO: parse arbitrary signature
+    -- Currently it gives a left recursion
     args <- parens (arg `sepBy` comma)
     symbol "->"
     ret <- type_
-    --TODO: show function type
-    return ("function", TFunction args ret)
+    -- TODO: show function type
+    return ("function", TFunction (args :-> ret))
 
 type_ = snd <$> nametype
 
@@ -106,7 +107,6 @@ arg = do
     (tyName, ty) <- nametype
     return (fromMaybe tyName name, ty)
 
--- Difference between this and [function] is that it can handle optional and variadic arguments
 signature_ :: Parser Signature
 signature_ = do
     (args, moreArgs) <- parens (do

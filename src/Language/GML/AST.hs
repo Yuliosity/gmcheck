@@ -110,7 +110,11 @@ data UnOp
 -- * Expressions
 
 {-| Anonymous function (possibly a constructor) with arguments and a body. -}
-data Function = Function [Name] FunctionKind Block
+data Function = Function
+    { fArgs :: [VarDecl]
+    , fKind :: FunctionKind
+    , fBody :: Block
+    }
     deriving (Eq, Show)
 
 {-| A plain function or a possibly inherited constructor. -}

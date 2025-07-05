@@ -37,6 +37,7 @@ dependencies:
 
 library:
   default-extensions:
+    - BlockArguments
     - LambdaCase
     - NamedFieldPuns
     - OverloadedStrings

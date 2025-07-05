@@ -17,11 +17,12 @@ import Prelude hiding (lookup)
 
 import Control.Monad
 import Control.Monad.Trans.RWS
-import Data.Either (isLeft)
+import Data.Either (isLeft, partitionEithers)
 import Data.Foldable (asum, for_)
 import qualified Data.Map as M
 import Data.Maybe (fromMaybe)
 import Data.Text (pack)
+import Data.Traversable (for)
 import Debug.Trace
 import Lens.Micro.Platform
 
@@ -312,9 +313,14 @@ derive (e :@ pos) = let ?pos = pos in case e of
 
     -- TODO: actually derive
     EFunction (Function args _cons _body) -> do
-        let argsT = map (, TAny) args
+        (argsT, optArgsT) <- partitionEithers <$> for args \arg -> do
+            t <- deriveVarDecl arg
+            return $ case vdExpr arg of
+                Nothing -> Left (vdName arg, t)
+                Just _ -> Right (vdName arg, t)
         let bodyT = TAny
-        return $ TFunction argsT bodyT
+        
+        return $ TFunction $ Signature argsT (OptArgs optArgsT) bodyT
 
     where
         deriveCall fn args = do
@@ -391,19 +397,26 @@ execAssignModify op (var :@ p1) expr = do
                         -- FIXME: report assignment operators differently
                         reportPos $ EBadModify op ty exprT
 
+deriveVarDecl :: VarDecl -> Checker Type
+deriveVarDecl (VarDecl var mExpr mType) = do
+    exprT <- case mExpr of
+        Nothing -> return $ fromMaybe TVoid mType
+        Just expr -> do
+            exprT <- derive expr
+            case mType of
+                Nothing -> return exprT
+                Just ty -> do
+                    when (exprT /= ty) $ report $ WChangeType (VVar var) exprT ty
+                    return exprT
+    setVar (VVar var) exprT
+    return exprT
+
 exec :: Stmt -> Checker ()
 exec = \case
-    SDeclare vexp -> forM_ vexp $ \(VarDecl var mExpr mType) -> do
-        exprT <- case mExpr of
-            Nothing -> return $ fromMaybe TVoid mType
-            Just expr -> do
-                exprT <- derive expr
-                case mType of
-                    Nothing -> return exprT
-                    Just ty -> do
-                        when (exprT /= ty) $ report $ WChangeType (VVar var) exprT ty
-                        return exprT
-        setVar (VVar var) exprT
+    SDeclare vexp -> forM_ vexp deriveVarDecl
+
+    -- TODO: save static variables statically
+    SStatic vexp -> void $ deriveVarDecl vexp
 
     SAssign var expr -> execAssignModify Nothing var expr
 

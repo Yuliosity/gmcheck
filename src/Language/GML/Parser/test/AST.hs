@@ -107,6 +107,8 @@ stmts = describe "statements parser" $ do
     it "can parse function declarations" $ do
         parse' stmt "function smth(foo, bar) { return foo + bar; } " `shouldParse`
             SFunction "smth" (Function ["foo", "bar"] PlainFunction [SReturn (foo + bar)])
+        parse' stmt "function smth(foo=42, bar = 42) { return foo + bar; } " `shouldParse`
+            SFunction "smth" (Function [InitVarDecl "foo" lit42, InitVarDecl "bar" lit42] PlainFunction [SReturn (foo + bar)])
         parse' stmt "function cons(foo) constructor { bar = foo }" `shouldParse`
             SFunction "cons" (Function ["foo"] (Constructor Nothing) [SAssign "bar" foo])
         parse' stmt "function cons(foo): parent(foo, 42) constructor { bar = foo }" `shouldParse`
