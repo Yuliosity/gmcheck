@@ -30,6 +30,12 @@ data Variable
 
 type VarLoc = Located Variable
 
+{-| Keywords for special instances. -}
+pattern ISelf, IOther, INoone :: Variable
+pattern ISelf  = VVar "self"
+pattern IOther = VVar "other"
+pattern INoone = VVar "noone"
+
 {-| Prepend a qualifier for a variable, e.g. @a[2]@ -> @c.a[2]@ -}
 qualify :: Name -> Variable -> Variable
 qualify obj = \case
@@ -124,18 +130,13 @@ data FunctionKind = PlainFunction | Constructor (Maybe Funcall)
 {-| Function/constructor call. -}
 type Funcall = (Name, [Expr])
 
-{-| Keywords for special instances. -}
-data Instance = ISelf | IOther | INoone
-    deriving (Eq, Show)
-
 {-| Expressions which can be evaluated to a value. -}
 data Expr_
     -- Values
-    = EVariable VarLoc          -- ^ Variable: @foo@, @bar.baz@, @a[2]@
+    = EVariable Variable        -- ^ Variable: @foo@, @bar.baz@, @a[2]@
     | EUndefined                -- ^ Undefined literal: @undefined@
     | EBool     Bool            -- ^ Boolean literal: @true@, @false@
     | EPointer                  -- ^ TODO: pointers: @pointer_null@
-    | EInstance Instance        -- ^ Instance of an object
     | ENumber   Double          -- ^ Numeric literal: @2@, @3.141@
     | EString   Text            -- ^ String literal: @"string"@
     | EArray    [Expr]          -- ^ Array literal: @[1, 2, 3]@

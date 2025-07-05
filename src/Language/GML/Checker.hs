@@ -109,9 +109,14 @@ reportPos err = do
 
 {-| Lookup for a builtin variable. -}
 lookupBuiltin :: Name -> Checker (Maybe (Type, Bool))
-lookupBuiltin name = do
-    Builtin {bGlobalVar, bInstanceVar} <- view sBuiltin
-    return $ asum (map (M.!? name) [bGlobalVar, bInstanceVar])
+lookupBuiltin = \case
+    -- TODO: specify the instance type
+    "self"  -> return $ Just (TInstance, True)
+    "other" -> return $ Just (TInstance, True)
+    "noone" -> return $ Just (TInstance, True)
+    name -> do
+        Builtin {bGlobalVar, bInstanceVar} <- view sBuiltin
+        return $ asum (map (M.!? name) [bGlobalVar, bInstanceVar])
 
 {-| Lookup for a variable in a memory dictionary. -}
 lookupMem :: Name -> Memory -> Maybe Type
@@ -252,7 +257,7 @@ derive (e :@ pos) = let ?pos = pos in case e of
     EUndefined -> pure TVoid
     EBool _    -> pure TBool
     EPointer   -> pure TPointer
-    EVariable (var :@ _) -> do
+    EVariable var -> do
         mty <- lookup var
         case mty of
             Nothing -> reportPos (EUndefinedVar var) >> return TVoid
@@ -261,8 +266,6 @@ derive (e :@ pos) = let ?pos = pos in case e of
     ENumber _ -> return TReal
     EString _ -> return TString
 
-    -- TODO: check self/other/noone
-    EInstance _ -> return TInstance
 
     EArray [] -> return $ TArray TAny
     EArray (e1:es) -> do

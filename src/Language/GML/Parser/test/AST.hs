@@ -17,7 +17,7 @@ litString = "string"
 sinPi = EFuncall ("sin", [litPi]) :@ zeroPos
 writeString = EFuncall ("write", [litString]) :@ zeroPos
 foo = EVariable "foo" :@ zeroPos
-foo_42 = VArray "foo" lit42 :@ zeroPos
+foo_42 = VArray "foo" lit42
 foo_lt_42 = EBinary Less foo lit42 :@ zeroPos
 bar = EVariable "bar" :@ zeroPos
 eUndefined = EUndefined :@ zeroPos
@@ -38,17 +38,21 @@ vars = describe "variables parser" $ do
         parse' variable "foo" `shouldParse` "foo"
         parse' variable "bar.foo" `shouldParse` VField "bar" "foo"
     it "can parse arrays" $ do
-        parse' variable "foo[42]" `shouldParse` unLoc foo_42
+        parse' variable "foo[42]" `shouldParse` foo_42
         parse' variable "foo[42, 42]" `shouldParse` ("foo" `VArray2` (lit42, lit42))
         parse' variable "baz.bar[foo]" `shouldParse` ("baz" `VField` "bar" `VArray` foo)
     it "can parse nested indices" $ do
-        parse' variable "baz[bar[foo]]" `shouldParse` ("baz" `VArray` eVariable (located $ "bar" `VArray` foo))
+        parse' variable "baz[bar[foo]]" `shouldParse` ("baz" `VArray` eVariable ("bar" `VArray` foo))
     it "can parse accessors" $ do
         parse' variable "foo[|42]" `shouldParse` VContainer SList "foo" lit42
         parse' variable "foo[# 42, 42]" `shouldParse` VContainer2 SGrid "foo" (lit42, lit42)
-    it "can parse chained stuff for future" $ do
+    it "can parse chained stuff" $ do
         parse' variable "baz.bar.foo" `shouldParse` ("baz" `VField` "bar" `VField` "foo")
         parse' variable "foo[42][42][42]" `shouldParse` ("foo" `VArray` lit42 `VArray` lit42 `VArray` lit42)
+        parse' variable "foo.bar[42].baz" `shouldParse` ("foo" `VField` "bar" `VArray` lit42 `VField` "baz")
+    it "can parse keyworded instances" $ do
+        parse' variable "self" `shouldParse` ISelf
+        parse' variable "other.x" `shouldParse` VField IOther "x"
     it "must fail on keywords" $ do
         parse' variable `shouldFailOn` "default"
         parse' variable `shouldFailOn` "case"
@@ -119,7 +123,7 @@ stmts = describe "statements parser" $ do
     it "can parse variable assignments" $ do
         parse' stmt "foo=42" `shouldParse` SAssign "foo" lit42
         parse' stmt "foo+=\"string\"" `shouldParse` SModify MAdd "foo" litString
-        parse' stmt "foo[42] -= 42" `shouldParse` SModify MSub foo_42 lit42
+        parse' stmt "foo[42] -= 42" `shouldParse` SModify MSub (located foo_42) lit42
     it "can parse variable modifications" $ do
         parse' stmt "foo += 42" `shouldParse` SModify MAdd "foo" lit42
         parse' stmt "foo++" `shouldParse` SExpression (eUnary UPostInc foo)

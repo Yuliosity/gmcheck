@@ -16,11 +16,20 @@ import Language.GML.Parser.Common
 import Language.GML.Parser.Lexer
 import Language.GML.Parser.Types (type_)
 
--- * Basic tokens
+-- * Variables
 
-varName = ident <?> "variable"
+varName = choice 
+    [ kwSelf $> ISelf
+    , kwOther $> IOther
+    , kwNoone $> INoone
+    , VVar <$> ident
+    ] <?> "variable"
 funName = ident <?> "function"
--- * Values
+
+field = do
+    char '.'
+    name <- ident
+    return $ \var -> VField var name
 
 accessor1 = do
     char '['
@@ -49,11 +58,9 @@ accessor2 = do
     return $ \var -> VContainer2 cons var (arg1, arg2)
 
 variable = do
-    (var:vars) <- varName `sepBy1` symbol "."
-    accs <- many (try accessor1 <|> accessor2)
-    let nest  = foldl' VField (VVar var) vars
-    let nest2 = foldl' (flip ($)) nest accs
-    return nest2
+    var <- varName
+    accs <- many (choice [field, try accessor1, accessor2])
+    return $ foldl' (flip ($)) var accs
 
 function = Function
     <$> parens (varDecl `sepBy` comma)
@@ -140,9 +147,6 @@ kwConstants = located $ choice
     , kwPointerNull $> EPointer --FIXME
     , kwPointerInvalid $> EPointer --FIXME
     , kwPi $> ENumber pi
-    , kwSelf $> EInstance ISelf
-    , kwOther $> EInstance IOther
-    , kwNoone $> EInstance INoone
     ]
 
 eTerm :: Parser Expr
@@ -156,7 +160,7 @@ eTerm = located $ choice
     , EFunction <$> (kwFunction *> function)
     , ENew <$> (kwNew *> funcall)
     , try (EFuncall <$> funcall)
-    , EVariable <$> located variable
+    , EVariable <$> variable
     ]
 
 expr :: Parser Expr
