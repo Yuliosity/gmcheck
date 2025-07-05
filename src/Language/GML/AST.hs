@@ -59,18 +59,18 @@ data BinOp
     | BitAnd -- ^ Bitwise and, @x & y@
     | BitOr  -- ^ Bitwise or, @x | y@
     | BitXor -- ^ Bitwise xor, @CHECK@
-    {-| Boolean operations. -}
+    -- Boolean operations
     | And -- ^ Logical AND, @x && y@ or @x and y@
     | Or  -- ^ Logical OR, @x || y@ or @x or y@
     | Xor -- ^ Logical XOR, @x ^^ y@
-    {-| Comparison operators. -}
+    -- Comparison operators
     | Eq        -- ^ Equality: @a == b@ (or @a = b@ in expression context)
     | NotEq     -- ^ Unequality: @a != b@
     | Less      -- ^ Less than: @a < b@
     | Greater   -- ^ Greater than: @a > b@
     | LessEq    -- ^ Less or equal: @a <= b@
     | GreaterEq -- ^ Greater or equal: @a >= b@
-    {-| Nullish operators. -}
+    -- Nullish operators
     | Nullish   -- ^ Null coalesce, @a ?? b@
     deriving (Eq, Show)
 
@@ -191,9 +191,10 @@ instance IsString VarDecl where
 
 {-| Statement (instruction). -}
 data Stmt
-    = SExpression Expr -- ^ Calling an expression (typically a function/script with side effects)
+    = SExpression Expr    -- ^ Calling an expression (typically a function/script with side effects)
     -- Declarations and modification
-    | SDeclare [VarDecl] -- ^ Declaring local variable(s) with @var@
+    | SDeclare [VarDecl]  -- ^ Declaring local variable(s) with @var@
+    | SStatic VarDecl     -- ^ Declaring a static variable
     | SAssign VarLoc Expr -- ^ Assigning a variable with @=@, possibly declaring it in-place
     | SModify ModifyOp VarLoc Expr    -- ^ Modifying an existing variable with an operator like @+=@ or @^=@
     | SFunction Name Function         -- ^ Declaring a function (possibly constructor) with arguments and a body

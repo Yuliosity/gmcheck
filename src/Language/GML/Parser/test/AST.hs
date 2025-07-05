@@ -111,6 +111,9 @@ stmts = describe "statements parser" $ do
             SFunction "cons" (Function ["foo"] (Constructor Nothing) [SAssign "bar" foo])
         parse' stmt "function cons(foo): parent(foo, 42) constructor { bar = foo }" `shouldParse`
             SFunction "cons" (Function ["foo"] (Constructor $ Just ("parent", [foo, lit42])) [SAssign "bar" foo])
+    it "can parse static variable declarations" $ do
+        parse' stmt "function foo() { static bar = 42 }" `shouldParse`
+            SFunction "foo" (Function [] PlainFunction [SStatic $ InitVarDecl "bar" lit42])
     it "can parse variable assignments" $ do
         parse' stmt "foo=42" `shouldParse` SAssign "foo" lit42
         parse' stmt "foo+=\"string\"" `shouldParse` SModify MAdd "foo" litString

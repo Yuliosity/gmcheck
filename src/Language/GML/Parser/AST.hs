@@ -230,7 +230,8 @@ stmt = (choice
     [ SBlock      <$> block
     , SBreak <$ kwBreak, SContinue <$ kwContinue, SExit <$ kwExit
     , SFunction   <$> (kwFunction *> ident) <*> function
-    , sDeclare
+    , SDeclare    <$> (kwVar *> sVarDecl `sepBy1` comma)
+    , SStatic     <$> (kwStatic *> sVarDecl)
     , sEnum
     , SWith       <$> (kwWith *> parens expr) <*> stmt
     , SRepeat     <$> (kwRepeat *> expr) <*> stmt
