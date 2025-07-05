@@ -266,7 +266,6 @@ derive (e :@ pos) = let ?pos = pos in case e of
     ENumber _ -> return TReal
     EString _ -> return TString
 
-
     EArray [] -> return $ TArray TAny
     EArray (e1:es) -> do
         t1 <- derive e1

@@ -109,6 +109,9 @@ stmts = describe "statements parser" $ do
         parse' stmt "var foo /* : string */" `shouldParse` SDeclare [VarDecl "foo" Nothing (Just "string")]
         parse' stmt "var foo /*:string*/ = \"string\"" `shouldParse`
             SDeclare [VarDecl "foo" (Just litString) (Just "string")]
+    it "can parse returns" $ do
+        parse' stmt "return" `shouldParse` SReturnVoid
+        parse' stmt "return foo" `shouldParse` SReturn foo
     it "can parse function declarations" $ do
         parse' stmt "function smth(foo, bar) { return foo + bar; } " `shouldParse`
             SFunction "smth" (Function ["foo", "bar"] PlainFunction [SReturn (foo + bar)])

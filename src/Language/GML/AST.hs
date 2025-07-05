@@ -219,8 +219,9 @@ data Stmt
     | SBreak       -- ^ @break@ from a loop or @switch@-@case@
     | SContinue    -- ^ @continue@ to the next loop iteration
     | SExit        -- ^ @exit@ from a script/event without a result
-    | SReturn Expr -- ^ @return@ the result from a function
     | SThrow  Expr -- ^ @throw@ an exception
+    | SReturn Expr -- ^ @return@ the result from a function
+    | SReturnVoid  -- ^ @return@ without a result
     deriving (Eq, Show)
 
 {-| A block is a sequence of statements, typically in braces. -}

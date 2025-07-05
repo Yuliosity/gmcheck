@@ -18,7 +18,7 @@ import Language.GML.Parser.Types (type_)
 
 -- * Variables
 
-varName = choice 
+varName = choice
     [ kwSelf $> ISelf
     , kwOther $> IOther
     , kwNoone $> INoone
@@ -178,7 +178,7 @@ varDecl = do
 
 sDeclare :: Parser Stmt
 sDeclare = do
-    kwVar   
+    kwVar
     vars <- varDecl `sepBy1` comma
     return $ SDeclare vars
 
@@ -188,7 +188,7 @@ sEnum = SEnum <$> (kwEnum *> ident) <*> braces (ident `sepBy` comma)
 sAssign :: Parser Stmt
 sAssign = do
     var <- located variable
-    op <- choice (map (\(c, s) -> c <$ symbol s) ops) <?> "assignment operator" 
+    op <- choice (map (\(c, s) -> c <$ symbol s) ops) <?> "assignment operator"
     op var <$> expr
     where
         ops =
@@ -229,6 +229,12 @@ sTry = do
     finally <- optional (kwFinally *> block)
     return $ STry body catch finally
 
+sReturn :: Parser Stmt
+sReturn = do
+    kwReturn
+    expr <- optional expr
+    return $ maybe SReturnVoid SReturn expr
+
 -- | A single statement, optionally ended with a semicolon.
 stmt :: Parser Stmt
 stmt = (choice
@@ -244,7 +250,7 @@ stmt = (choice
     , SDoUntil    <$> (kwDo *> stmt) <*> (kwUntil *> expr)
     , sFor
     , SIf         <$> (kwIf *> expr) <*> stmt <*> optional (kwElse *> stmt)
-    , SReturn     <$> (kwReturn *> expr)
+    , sReturn
     , SThrow      <$> (kwThrow  *> expr)
     , sSwitch
     , sTry
