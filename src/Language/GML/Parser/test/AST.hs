@@ -84,6 +84,7 @@ exprs = describe "expressions parser" $ do
         parse' expr "cat(foo, bar)" `shouldParse` eFuncall ("cat", [foo, bar])
         parse' expr "qux(foo + 0, +bar)" `shouldParse` eFuncall ("qux", [foo + 0, eUnary UPos bar])
     it "can parse array literals" $ do
+        parse' expr "[]" `shouldParse` eArray []
         parse' expr "[foo, bar]" `shouldParse` eArray [foo, bar]
         parse' expr "test([foo, 42 + 42])" `shouldParse` eFuncall ("test", [eArray [foo, 42 + 42]])
     it "can parse inline functions" $ do
