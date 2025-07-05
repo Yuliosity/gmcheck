@@ -33,12 +33,13 @@ field = do
 
 accessor1 = do
     char '['
-    spec <- option '@' $ oneOf [ '|', '?', '@' ]
+    spec <- option '@' $ oneOf [ '|', '?', '@', '$' ]
     spaces
     cons <- case spec of
         '|' -> return SList
         '?' -> return SMap
         '@' -> return SArray
+        '$' -> return SStruct
         c   -> fail $ "Unknown accessor " <> show c
     arg <- expr
     symbol "]"

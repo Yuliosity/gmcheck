@@ -79,6 +79,7 @@ instance ToMarkup Container where
         SMap   -> "map"
         SQueue -> "queue"
         SPriorityQueue -> "pqueue"
+        SStruct -> "struct" -- TODO: should this be reachable?
 
 instance ToMarkup Container2 where
     toMarkup = \case

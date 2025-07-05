@@ -25,9 +25,10 @@ data Container
     = SArray
     | SStack
     | SList
-    | SMap --CHECKME: polymorphic by key?
+    | SMap -- CHECKME: polymorphic by key?
     | SQueue
     | SPriorityQueue
+    | SStruct -- Structs are represented with TStruct, this is for the accessor only
     deriving (Eq, Show)
 
 {-| 2D data container type. -}
@@ -70,10 +71,11 @@ instance IsString Type where
 
 indexType :: Container -> Type
 indexType = \case
-    SArray -> TInt
-    SList  -> TInt
-    SMap   -> TAny
-    _      -> TVoid
+    SArray  -> TInt
+    SList   -> TInt
+    SMap    -> TAny
+    SStruct -> TString
+    _       -> TVoid
 
 isSubtype :: Type -> Type -> Bool
 isSubtype _ TAny = True
