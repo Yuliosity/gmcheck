@@ -93,10 +93,14 @@ exprs = describe "expressions parser" $ do
     it "can parse inline functions" $ do
         parse' expr "function(foo, bar) {return (foo + 42)}" `shouldParse`
             eFunction (Function ["foo", "bar"] PlainFunction [SReturn (foo + 42)])
+        parse' expr "self.foo(42, function(bar) {return bar * 2;})" `shouldParse`
+            eFuncall ("self" `VField` "foo") [lit42, eFunction (Function ["bar"] PlainFunction [SReturn (bar * 2)])]
     it "can parse structs" $ do
         parse' expr "{}" `shouldParse` eStruct []
         parse' expr "{foo : a + 42, bar : \"string\"}" `shouldParse`
             eStruct [("foo", eVariable "a" + lit42), ("bar", litString)]
+        parse' expr "foo(42, {bar : \"string\", })" `shouldParse`
+            eFuncall "foo" [lit42, eStruct [("bar", litString)]]
     it "must fail on keywords" $ do
         parse' variable `shouldFailOn` "do"
         parse' variable `shouldFailOn` "1 + default"

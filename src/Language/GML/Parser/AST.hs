@@ -165,8 +165,8 @@ eTerm = located $ choice
     , ENumber <$> lNumber
     , EString <$> lString
     , EString <$> lTemplateString
-    , EArray <$> brackets (expr `sepBy` comma)
-    , EStruct <$> braces (((,) <$> ident <*> (colon *> expr)) `sepBy` comma)
+    , EArray <$> brackets (expr `sepEndBy` comma)
+    , EStruct <$> braces (((,) <$> ident <*> (colon *> expr)) `sepEndBy` comma)
     , EFunction <$> (kwFunction *> function)
     , uncurry ENew <$> (kwNew *> funcall)
     , try (uncurry EFuncall <$> funcall)
