@@ -163,6 +163,7 @@ eTerm = located $ choice
     , unLoc <$> kwConstants
     , ENumber <$> lNumber
     , EString <$> lString
+    , EString <$> lTemplateString
     , EArray <$> brackets (expr `sepBy` comma)
     , EStruct <$> braces (((,) <$> ident <*> (colon *> expr)) `sepBy` comma)
     , EFunction <$> (kwFunction *> function)

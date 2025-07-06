@@ -13,7 +13,7 @@ strings = describe "strings parser" $ do
         parse' lString "\"string\"" `shouldParse` "string"
         parse' lString "\"1\\n2\\n3\"" `shouldParse` "1\n2\n3"
     it "can parse multiline strings" $ do
-        parse' lMultiLineString "@\"1\n2\n3\"" `shouldParse` "1\n2\n3"
+        parse' lString "@\"1\n2\n3\"" `shouldParse` "1\n2\n3"
 
 test = hspec $ do
     strings

@@ -102,12 +102,18 @@ lNumber =
 -- |String literal.
 lString :: Parser Text
 lString =
-    pack <$> (char '\"' *> L.charLiteral `manyTill` char '\"' <* spaces)
+    pack <$> choice
+        [ char   '\"'  *> L.charLiteral `manyTill` char '\"'
+        , string "@\"" *> anySingle     `manyTill` char '\"'
+        , string "@'"  *> anySingle     `manyTill` char '\''
+        ]
+    <* spaces
     <?> "string"
 
-lMultiLineString :: Parser Text
-lMultiLineString =
-    pack <$> (string "@\"" *> anySingle `manyTill` char '\"' <* spaces)
+-- TODO: parse subexpressions
+lTemplateString :: Parser Text
+lTemplateString =
+    pack <$> (string "$\"" *> L.charLiteral `manyTill` char '\"' <* spaces)
     <?> "string"
 
 located :: Parser a -> Parser (Located a)
