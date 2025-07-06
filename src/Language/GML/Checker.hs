@@ -199,11 +199,16 @@ setVar var ty = case var of
 
 
 {-| Lookup for a function signature. -}
-lookupFn :: Name -> Checker (Maybe Signature)
-lookupFn name = do
-    builtinFn <- bFunctions <$> view sBuiltin
-    -- TODO: derive and store script types
-    return $ M.lookup name builtinFn
+lookupFn :: Variable -> Checker (Maybe Signature)
+lookupFn fun = do
+    case fun of
+        VVar name -> do
+            builtinFn <- bFunctions <$> view sBuiltin
+            -- TODO: derive and store script types
+            return $ M.lookup name builtinFn
+        _ -> do
+            -- TODO: derive local functions
+            return Nothing
 
 isCompOp, isNumOp, isBoolOp :: BinOp -> Bool
 isCompOp = (`elem` [Less, LessEq, Eq, NotEq, Greater, GreaterEq])
@@ -308,10 +313,10 @@ derive (e :@ pos) = let ?pos = pos in case e of
             report (WTernaryDiff e1T e2T)
             return $ e1T <> e2T
 
-    EFuncall (fn, args) -> deriveCall fn args
+    EFuncall fn args -> deriveCall fn args
 
     --TODO: check if fn is a constructor
-    ENew (fn, args) -> deriveCall fn args
+    ENew fn args -> deriveCall fn args
 
     -- TODO: actually derive
     EFunction (Function args _cons _body) -> do
@@ -340,15 +345,20 @@ derive (e :@ pos) = let ?pos = pos in case e of
                         unless (a `isSubtype` b) $ report $ EWrongArgument fn name b a
                     return res
                 Nothing -> do
-                    scripts <- pScripts <$> view sProject
-                    case scripts M.!? fn of
-                        Nothing -> report (EUndefinedFunction fn) >> return TAny
-                        Just pr -> do
-                            --Push the stack frame with arguments
-                            let frame = zipWith (\i t -> ("argument" <> pack (show i), t)) [0..] argsT
-                            withFrame (fromList frame) $ run pr
-                            return TAny --FIXME: return type
-                            --Pop the stack frame
+                    case fn of
+                        VVar name -> do
+                            scripts <- pScripts <$> view sProject
+                            case scripts M.!? name of
+                                Nothing -> report (EUndefinedFunction fn) >> return TAny
+                                Just pr -> do
+                                    --Push the stack frame with arguments
+                                    let frame = zipWith (\i t -> ("argument" <> pack (show i), t)) [0..] argsT
+                                    withFrame (fromList frame) $ run pr
+                                    return TAny --FIXME: return type
+                                    --Pop the stack frame
+                        _ -> do
+                            -- FIXME
+                            return TAny
 
 {-| Deriving the script signature. -}
 {-

@@ -124,11 +124,8 @@ data Function = Function
     deriving (Eq, Show)
 
 {-| A plain function or a possibly inherited constructor. -}
-data FunctionKind = PlainFunction | Constructor (Maybe Funcall)
+data FunctionKind = PlainFunction | Constructor (Maybe (Name, [Expr]))
     deriving (Eq, Show)
-
-{-| Function/constructor call. -}
-type Funcall = (Name, [Expr])
 
 {-| Expressions which can be evaluated to a value. -}
 data Expr_
@@ -146,8 +143,8 @@ data Expr_
     | EUnary    UnOp  Expr      -- ^ Unary expression
     | EBinary   BinOp Expr Expr -- ^ Binary expression
     | ETernary  Expr  Expr Expr -- ^ Ternary conditional @cond ? t : f@
-    | EFuncall  Funcall         -- ^ Function/script call with arguments
-    | ENew      Funcall         -- ^ Constructor call with arguments
+    | EFuncall  Variable [Expr] -- ^ Function/script call with arguments
+    | ENew      Variable [Expr] -- ^ Constructor call with arguments
     deriving (Eq, Show)
 
 type Expr = Located Expr_
@@ -169,8 +166,8 @@ instance Num Expr where
     a - b = EBinary Sub a b :@ getPos a
     a * b = EBinary Mul a b :@ getPos a
     negate x = EUnary UNeg x :@ getPos x
-    abs x = EFuncall ("abs", [x]) :@ getPos x
-    signum x = EFuncall ("sign", [x]) :@ getPos x
+    abs x = EFuncall "abs" [x] :@ getPos x
+    signum x = EFuncall "sign" [x] :@ getPos x
 
 instance Fractional Expr where
     fromRational = (:@ zeroPos) . ENumber . fromRational

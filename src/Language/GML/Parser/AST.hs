@@ -24,7 +24,6 @@ varName = choice
     , kwNoone $> INoone
     , VVar <$> ident
     ] <?> "variable"
-funName = ident <?> "function"
 
 field = do
     char '.'
@@ -71,6 +70,8 @@ function = Function
         , return PlainFunction
         ]
     <*> block
+    where 
+        funcall = (,) <$> ident <*> parens (expr `sepBy` comma)
 
 -- * Expressions
 
@@ -144,8 +145,8 @@ ternary = TernR do
     where
         f e1 e2 e3 = ETernary e1 e2 e3 :@ getPos e1
 
-funcall :: Parser (Text, [Expr])
-funcall = (,) <$> funName <*> parens (expr `sepBy` comma)
+funcall :: Parser (Variable, [Expr])
+funcall = (,) <$> variable <*> parens (expr `sepBy` comma)
 
 kwConstants :: Parser Expr
 kwConstants = located $ choice
@@ -167,8 +168,8 @@ eTerm = located $ choice
     , EArray <$> brackets (expr `sepBy` comma)
     , EStruct <$> braces (((,) <$> ident <*> (colon *> expr)) `sepBy` comma)
     , EFunction <$> (kwFunction *> function)
-    , ENew <$> (kwNew *> funcall)
-    , try (EFuncall <$> funcall)
+    , uncurry ENew <$> (kwNew *> funcall)
+    , try (uncurry EFuncall <$> funcall)
     , EVariable <$> variable
     ]
 

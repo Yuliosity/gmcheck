@@ -27,7 +27,7 @@ data Error
     -- | Referencing an unknown variable
     | EUndefinedVar Variable
     -- | Calling an unknown function or script
-    | EUndefinedFunction Name
+    | EUndefinedFunction Variable
     -- | Function doesn't return anything
     | ENoResult Variable
     -- | Assigning to a constant
@@ -49,9 +49,9 @@ data Error
     | EBadIndex  Container Type
     | EBadIndex2 Container2 Type
     -- | Wrong argument count
-    | EWrongArgNum Name Ordering Int Int
+    | EWrongArgNum Variable Ordering Int Int
     -- | Wrong type of function argument
-    | EWrongArgument Name Name Type Type
+    | EWrongArgument Variable Name Type Type
     -- | Not every branch returns a value
     | ENotAlwaysReturn Name
     deriving Show

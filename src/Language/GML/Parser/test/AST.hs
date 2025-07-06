@@ -14,8 +14,8 @@ located = (:@ zeroPos)
 lit42 = 42
 litPi = 3.14
 litString = "string"
-sinPi = EFuncall ("sin", [litPi]) :@ zeroPos
-writeString = EFuncall ("write", [litString]) :@ zeroPos
+sinPi = EFuncall "sin" [litPi] :@ zeroPos
+writeString = EFuncall "write" [litString] :@ zeroPos
 foo = EVariable "foo" :@ zeroPos
 foo_42 = VArray "foo" lit42
 foo_lt_42 = EBinary Less foo lit42 :@ zeroPos
@@ -27,8 +27,8 @@ eArray es = EArray es :@ zeroPos
 eUnary op a = EUnary op a :@ zeroPos
 eBinary op a b = EBinary op a b :@ zeroPos
 eStruct fs = EStruct fs :@ zeroPos
-eFuncall c = EFuncall c :@ zeroPos
-eNew c = ENew c :@ zeroPos
+eFuncall f args = EFuncall f args :@ zeroPos
+eNew f args = ENew f args :@ zeroPos
 eFunction f = EFunction f :@ zeroPos
 
 parse' p = parse (p <* eof) "test"
@@ -81,14 +81,15 @@ exprs = describe "expressions parser" $ do
     it "can parse the ternary operator" $ do
         parse' expr "foo ? bar : sin(3.14)" `shouldParse` located (ETernary foo bar sinPi)
     it "can parse function calls" $ do
-        parse' expr "rand()" `shouldParse` eFuncall ("rand", [])
+        parse' expr "rand()" `shouldParse` eFuncall "rand" []
         parse' expr "sin(3.14)" `shouldParse` sinPi
-        parse' expr "cat(foo, bar)" `shouldParse` eFuncall ("cat", [foo, bar])
-        parse' expr "qux(foo + 0, +bar)" `shouldParse` eFuncall ("qux", [foo + 0, eUnary UPos bar])
+        parse' expr "cat(foo, bar)" `shouldParse` eFuncall "cat" [foo, bar]
+        parse' expr "qux(foo + 0, +bar)" `shouldParse` eFuncall "qux" [foo + 0, eUnary UPos bar]
+        parse' expr "self.foo(bar)" `shouldParse` eFuncall ("self" `VField` "foo") [bar]
     it "can parse array literals" $ do
         parse' expr "[]" `shouldParse` eArray []
         parse' expr "[foo, bar]" `shouldParse` eArray [foo, bar]
-        parse' expr "test([foo, 42 + 42])" `shouldParse` eFuncall ("test", [eArray [foo, 42 + 42]])
+        parse' expr "test([foo, 42 + 42])" `shouldParse` eFuncall "test" [eArray [foo, 42 + 42]]
     it "can parse inline functions" $ do
         parse' expr "function(foo, bar) {return (foo + 42)}" `shouldParse`
             eFunction (Function ["foo", "bar"] PlainFunction [SReturn (foo + 42)])
@@ -136,8 +137,8 @@ stmts = describe "statements parser" $ do
     it "can parse function calls" $ do
         parse' stmt "write(\"string\")" `shouldParse` SExpression writeString
         parse' stmt "var foo = sin(3.14)" `shouldParse` SDeclare [InitVarDecl "foo" sinPi]
-        parse' stmt "return atan2(1, a)" `shouldParse` SReturn (eFuncall ("atan2", [1, eVariable "a"]))
-        parse' stmt "foo = new bar()" `shouldParse` SAssign "foo" (eNew ("bar", []))
+        parse' stmt "return atan2(1, a)" `shouldParse` SReturn (eFuncall "atan2" [1, eVariable "a"])
+        parse' stmt "foo = new bar()" `shouldParse` SAssign "foo" (eNew "bar" [])
     it "can parse conditionals" $ do
         parse' stmt "if foo==42 exit" `shouldParse` SIf (eBinary Eq foo lit42) SExit Nothing
         parse' stmt "if (foo < 42) exit" `shouldParse` SIf foo_lt_42 SExit Nothing
