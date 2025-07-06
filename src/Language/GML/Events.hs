@@ -10,7 +10,7 @@ Events in Game Maker objects.
 module Language.GML.Events
     ( Key (..), KeyState (..), MouseButton (..)
     , Guid, Stage (..)
-    , OtherEvent (..), GestureEvent (..), Event (..)
+    , AsyncEvent (..), OtherEvent (..), GestureEvent (..), Event (..)
     ) where
 
 import Data.Char (isAlpha, isHexDigit)
@@ -37,17 +37,36 @@ type Guid = Text
 data Stage = SBegin | SEnd
     deriving (Eq, Ord, Show)
 
+data AsyncEvent
+    = AudioPlayback Stage
+    | AudioRecording
+    | Cloud
+    | Dialog
+    | Http
+    | InAppPurchase
+    | ImageLoaded
+    | Networking
+    | PushNotification
+    | SaveLoad
+    | Social
+    | Steam
+    | System
+    deriving (Eq, Ord, Show)
+
 data OtherEvent
-    = Outside | Boundary
+    = Outside          -- ^ Outside room
+    | Boundary         -- ^ Intersect boundary
     | OutsideView  Int -- ^ Outside view
-    | BoundaryView Int -- ^ View boundary
+    | BoundaryView Int -- ^ Intersect iew boundary
     | GameEvent Stage
     | RoomEvent Stage
     | NoMoreLives | NoMoreHealth
     | AnimationEnd | PathEnd
     | CloseButton
     | Broadcast
-    | User Int -- ^ Custom user event
+    | User Int         -- ^ Custom user event
+    | Async AsyncEvent -- ^ Asynchronous event
+    | UnknownEvent Int -- ^ Unknown event
     deriving (Eq, Ord, Show)
 
 instance Enum OtherEvent where
@@ -66,7 +85,21 @@ instance Enum OtherEvent where
         n  | n <= 25  -> User         $ n - 10
         n  | n <= 47  -> OutsideView  $ n - 40
         n  | n <= 57  -> BoundaryView $ n - 50
-        n  -> error $ "Unknown event id: " ++ show n
+        60 -> Async ImageLoaded
+        62 -> Async Http
+        63 -> Async Dialog
+        66 -> Async InAppPurchase
+        67 -> Async Cloud
+        68 -> Async Networking
+        69 -> Async Steam
+        70 -> Async Social
+        71 -> Async PushNotification
+        72 -> Async SaveLoad
+        73 -> Async AudioRecording
+        74 -> Async $ AudioPlayback SBegin
+        75 -> Async System
+        80 -> Async $ AudioPlayback SEnd
+        n  -> UnknownEvent n
     fromEnum = undefined
 
 data GestureEvent
