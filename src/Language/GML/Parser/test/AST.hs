@@ -78,6 +78,8 @@ exprs = describe "expressions parser" $ do
         parse' expr "foo++" `shouldParse` eUnary UPostInc foo
         parse' expr "foo-- - --foo" `shouldParse` (eUnary UPostDec foo - eUnary UPreDec foo)
         parse' expr "foo + -bar" `shouldParse` (foo + eUnary UNeg bar)
+    it "can parse the ternary operator" $ do
+        parse' expr "foo ? bar : sin(3.14)" `shouldParse` located (ETernary foo bar sinPi)
     it "can parse function calls" $ do
         parse' expr "rand()" `shouldParse` eFuncall ("rand", [])
         parse' expr "sin(3.14)" `shouldParse` sinPi

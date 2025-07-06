@@ -118,6 +118,8 @@ opTable =
         , binary  "^^"  Xor
         , binaryK "xor" Xor
         ]
+    ,   [ ternary
+        ]
     ]
 
 -- TODO: refactor the copy-pasta
@@ -136,6 +138,11 @@ prefix  name op = Prefix $ do --  (EUnary op <$ operator name)
 postfix name op = Postfix $ do -- (EUnary op <$ operator name)
     _ :@ p <- located (operator name)
     return $ \e -> EUnary op e :@ p
+
+ternary = TernR do 
+    (f <$ symbol ":") <$ symbol "?"
+    where
+        f e1 e2 e3 = ETernary e1 e2 e3 :@ getPos e1
 
 funcall :: Parser (Text, [Expr])
 funcall = (,) <$> funName <*> parens (expr `sepBy` comma)
