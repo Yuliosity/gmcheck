@@ -102,8 +102,12 @@ lNumber =
 -- |String literal.
 lString :: Parser Text
 lString =
-    --TODO: escaped characters
-    pack <$> (char '\"' *> manyTill L.charLiteral (char '\"') <* spaces)
+    pack <$> (char '\"' *> L.charLiteral `manyTill` char '\"' <* spaces)
+    <?> "string"
+
+lMultiLineString :: Parser Text
+lMultiLineString =
+    pack <$> (string "@\"" *> anySingle `manyTill` char '\"' <* spaces)
     <?> "string"
 
 located :: Parser a -> Parser (Located a)
