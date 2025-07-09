@@ -173,6 +173,9 @@ stmts = describe "statements parser" $ do
         parse' stmt "enum foo {}" `shouldParse` SEnum "foo" []
         parse' stmt "enum foo {a, b, c}" `shouldParse`
             SEnum "foo" ["a", "b", "c"]
+    it "can parse macros" $ do
+        parse' stmt "#macro foo bar" `shouldParse` SMacro Nothing "foo" bar
+        parse' stmt "#macro config:foo bar" `shouldParse` SMacro (Just "config") "foo" bar
 
 programs = describe "complex script parser" $ do
     it "can parse multi-lines" $ do

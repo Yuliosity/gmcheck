@@ -51,6 +51,7 @@ data Settings = Settings
     { _sBuiltin :: !Builtin
     , _sProject :: !Project
     , _sDisabledErrors :: !ErrorSet
+    , _sMacros :: M.Map Name Expr
     }
 
 makeLenses ''Settings
@@ -127,17 +128,22 @@ lookup :: Variable -> Checker (Maybe Type)
 lookup = \case
     --Local or instance variables
     VVar name -> do
-        resources <- pResources <$> view sProject
-        builtin   <- lookupBuiltin name
-        local <- use cLocal
-        scope <- head <$> use cScope
-        self <- use (cObjects . at scope) --FIXME: report or insert self
-        return $ asum
-            [ fst <$> builtin               -- #1: built-in variables/constants
-            , M.lookup name resources       -- #2: project resources
-            , lookupLocal name local        -- #3: local variables
-            , self >>= lookupMem name       -- #4: instance variables
-            ]
+        -- Macros
+        macros <- view sMacros
+        case M.lookup name macros of
+            Just expr -> Just <$> derive expr
+            Nothing -> do
+                resources <- pResources <$> view sProject
+                builtin   <- lookupBuiltin name
+                local <- use cLocal
+                scope <- head <$> use cScope
+                self <- use (cObjects . at scope) --FIXME: report or insert self
+                return $ asum
+                    [ fst <$> builtin               -- #1: built-in variables/constants
+                    , M.lookup name resources       -- #2: project resources
+                    , lookupLocal name local        -- #3: local variables
+                    , self >>= lookupMem name       -- #4: instance variables
+                    ]
     --Referenced variable
     VField var@(VVar name) field -> do
         object <- use (cObjects . at name)
@@ -506,8 +512,16 @@ runProject = do
     objects <- pObjects <$> view sProject
     forM_ (M.toList objects) runObject
 
+collectMacros :: Name -> Project -> [(Name, Expr)]
+collectMacros config Project {pScripts, pObjects} = do
+    script <- M.elems pScripts <> concatMap (M.elems . oEvents) (M.elems pObjects)
+    -- Assuming that all macro declarations are at the top
+    SMacro mConf name expr <- script
+    guard $ maybe True (== config) mConf
+    return (name, expr)
+
 runChecker :: Builtin -> Project -> ErrorSet -> Report
-runChecker builtin project disabledErrors =
+runChecker builtin project disabledErrors = do
+    let macros = M.fromList $ collectMacros "" project
+    let settings = Settings builtin project disabledErrors macros
     snd $ execRWS runProject settings emptyContext
-    where
-        settings = Settings builtin project disabledErrors

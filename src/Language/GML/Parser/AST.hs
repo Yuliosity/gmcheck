@@ -244,10 +244,23 @@ sReturn = do
     expr <- optional expr
     return $ maybe SReturnVoid SReturn expr
 
+sMacro :: Parser Stmt
+sMacro = do
+    keyword "#macro"
+    p1 <- ident_
+    c <- optional $ single ':'
+    (mConfig, name) <- case c of
+        Nothing -> spaces >> return (Nothing, p1)
+        Just _ -> do
+            p2 <- ident
+            return (Just p1, p2)
+    SMacro mConfig name <$> expr
+
 -- | A single statement, optionally ended with a semicolon.
 stmt :: Parser Stmt
 stmt = (choice
     [ SBlock      <$> block
+    , sMacro
     , SBreak <$ kwBreak, SContinue <$ kwContinue, SExit <$ kwExit
     , SFunction   <$> (kwFunction *> ident) <*> function
     , SDeclare    <$> (kwVar *> varDecl `sepBy1` comma)

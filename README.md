@@ -12,10 +12,11 @@ GMCheck is best compiled and run using [Haskell Stack](https://haskellstack.org)
 
 ## Features and Plans
 
-- ✔️ (Mostly) complete parser of pre-2.3 GML. 2.3 additions are in-progress.
+- ✔️ Mostly complete parser of GML, including 2.3 additions.
 - ✔️ Deriving and tracking variable types to detect type errors.
-- ✔️ "Extending" the GML type system to distinguish booleans, integers, colors, resource identifiers and so on, which are just ordinary numbers in GML.
+- ✔️ "Extending" the GML type system to distinguish floats, integers, colors, resource identifiers and so on, which are just ordinary numbers in GML.
 - ✔️ Type-annotated signatures of built-in functions and variables, stored in editable external file.
+- ✔️ Parsing [GMEdit](https://github.com/YellowAfterlife/GMEdit)-style type annotations: `var label /*:string*/`.
 - ✔️ Finding usage of possibly uninitialized variables and missing resources.
 - Deriving script type signatures from their arguments and usage.
 - Detecting unreachable code, premature `break`s and `exit`s, and so on.
@@ -27,5 +28,5 @@ GMCheck is best compiled and run using [Haskell Stack](https://haskellstack.org)
 
 ## Known issues
 
-- Regions, macros and enumerations are not yet supported.
+- Regions are not yet supported.
 - Due to the highly dynamic nature of GML, it's impossible to 100% detect and analyze variables without actually running the code. Depending on the project, there may be a high percent of false positives.

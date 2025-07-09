@@ -10,6 +10,7 @@ Everything representing the Game Maker Language source tree.
 module Language.GML.AST
     ( module Language.GML.Location
     , module Language.GML.AST
+    , Name
     ) where
 
 import Data.String (IsString(..))
@@ -193,7 +194,8 @@ instance IsString VarDecl where
 
 {-| Statement (instruction). -}
 data Stmt
-    = SExpression Expr    -- ^ Calling an expression (typically a function/script with side effects)
+    = SExpression Expr    -- ^ Calling an expression (typically a function/script with side effects
+    | SMacro (Maybe Name) Name Expr -- ^ Defining a macro
     -- Declarations and modification
     | SDeclare [VarDecl]  -- ^ Declaring local variable(s) with @var@
     | SGlobalvar VarDecl  -- ^ Declaring a global variable
