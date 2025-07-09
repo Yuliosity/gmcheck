@@ -196,6 +196,7 @@ data Stmt
     = SExpression Expr    -- ^ Calling an expression (typically a function/script with side effects)
     -- Declarations and modification
     | SDeclare [VarDecl]  -- ^ Declaring local variable(s) with @var@
+    | SGlobalvar VarDecl  -- ^ Declaring a global variable
     | SStatic VarDecl     -- ^ Declaring a static variable
     | SAssign VarLoc Expr -- ^ Assigning a variable with @=@, possibly declaring it in-place
     | SModify ModifyOp VarLoc Expr    -- ^ Modifying an existing variable with an operator like @+=@ or @^=@

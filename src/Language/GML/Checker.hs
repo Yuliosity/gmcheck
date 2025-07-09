@@ -427,6 +427,9 @@ exec :: Stmt -> Checker ()
 exec = \case
     SDeclare vexp -> forM_ vexp deriveVarDecl
 
+    -- TODO: process global variables
+    SGlobalvar vexp -> void $ deriveVarDecl vexp
+
     -- TODO: save static variables statically
     SStatic vexp -> void $ deriveVarDecl vexp
 

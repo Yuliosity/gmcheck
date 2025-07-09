@@ -251,6 +251,7 @@ stmt = (choice
     , SBreak <$ kwBreak, SContinue <$ kwContinue, SExit <$ kwExit
     , SFunction   <$> (kwFunction *> ident) <*> function
     , SDeclare    <$> (kwVar *> varDecl `sepBy1` comma)
+    , SGlobalvar  <$> (kwGlobalvar *> varDecl)
     , SStatic     <$> (kwStatic *> varDecl)
     , sEnum
     , SWith       <$> (kwWith *> parens expr) <*> stmt
