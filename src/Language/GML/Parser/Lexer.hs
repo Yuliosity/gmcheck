@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeApplications, TypeFamilies #-}
 
 module Language.GML.Parser.Lexer where
 
@@ -94,10 +94,12 @@ ident = try $ do
 
 -- |Number literal.
 lNumber :: Parser Double
-lNumber =
-    (try (lexeme (L.signed empty L.float))
-    <|> fromIntegral <$> lexeme (L.signed empty L.decimal))
-    <?> "number"
+lNumber = choice
+    [ read @Double . ("0." ++) <$> (char '.' *> many digitChar)
+    , fromIntegral <$> ((char '$' <|> try (char '0' >> char 'x')) *> lexeme L.hexadecimal)
+    , try (lexeme (L.signed empty L.float))
+    , fromIntegral <$> lexeme (L.signed empty L.decimal)
+    ] <?> "number"
 
 -- |String literal.
 lString :: Parser Text
