@@ -127,10 +127,10 @@ opTable =
 binary, binaryK :: Text -> BinOp -> Operator Parser Expr
 binary  name op = InfixL $ do --  (EBinary op <$ operator name)
     operator name
-    pure $ \a b -> EBinary op a b :@ getPos a
+    pure $ \a b -> EBinary op a b :@ a.pos
 binaryK name op = InfixL $ do --  (EBinary op <$ keyword name)
     keyword name <?> "operator"
-    pure $ \a b -> EBinary op a b :@ getPos a
+    pure $ \a b -> EBinary op a b :@ a.pos
 
 prefix, postfix :: Text -> UnOp -> Operator Parser Expr
 prefix  name op = Prefix $ do --  (EUnary op <$ operator name)
@@ -143,7 +143,7 @@ postfix name op = Postfix $ do -- (EUnary op <$ operator name)
 ternary = TernR do 
     (f <$ symbol ":") <$ symbol "?"
     where
-        f e1 e2 e3 = ETernary e1 e2 e3 :@ getPos e1
+        f e1 e2 e3 = ETernary e1 e2 e3 :@ e1.pos
 
 funcall :: Parser (Variable, [Expr])
 funcall = (,) <$> variable <*> parens (expr `sepBy` comma)
@@ -160,8 +160,8 @@ kwConstants = located $ choice
 
 eTerm :: Parser Expr
 eTerm = located $ choice
-    [ unLoc <$> parens expr
-    , unLoc <$> kwConstants
+    [ (.unLoc) <$> parens expr
+    , (.unLoc) <$> kwConstants
     , ENumber <$> lNumber
     , EString <$> lString
     , EString <$> lTemplateString

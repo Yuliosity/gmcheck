@@ -120,7 +120,7 @@ loadObjects path = do
             { oName = pack name
             , oEvents = M.fromList events
             }
-    pure (names, M.fromList $ map (\o -> (oName o, o)) objects)
+    pure (names, M.fromList $ map (\o -> (o.oName, o)) objects)
 
 loadRooms :: FilePath -> IO ([FilePath], M.Map Name Room)
 loadRooms path = do
@@ -137,7 +137,7 @@ loadRooms path = do
                 . Yaml.decode1Strict @Room
                 <$> BS.readFile (dir </> name </> configName)
         pure config {rCreationCode}
-    pure (names, M.fromList $ map (\o -> (rName o, o)) rooms)
+    pure (names, M.fromList $ map (\o -> (o.rName, o)) rooms)
 
 createResoursesMap :: [FilePath] -> Type -> M.Map Name Type
 createResoursesMap names resType = M.fromList $ zip (map pack names) $ repeat resType

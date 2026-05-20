@@ -133,7 +133,7 @@ lookup = \case
         case M.lookup name macros of
             Just expr -> Just <$> derive expr
             Nothing -> do
-                resources <- pResources <$> view sProject
+                resources <- (.pResources) <$> view sProject
                 builtin   <- lookupBuiltin name
                 local <- use cLocal
                 scope <- head <$> use cScope
@@ -155,7 +155,7 @@ lookup = \case
 
     --Indexed cell
     VContainer con var expr -> do
-        let ?pos = getPos expr
+        let ?pos = expr.pos
         --1. Check the index
         index <- derive expr
         unless (index `isSubtype` indexType con) $ reportPos $ EBadIndex con index
@@ -177,10 +177,10 @@ lookup = \case
     VContainer2 con var (e1, e2) -> do
         i1 <- derive e1
         when (i1 /= TInt) $
-            let ?pos = getPos e1 in reportPos $ EBadIndex2 con i1
+            let ?pos = e1.pos in reportPos $ EBadIndex2 con i1
         i2 <- derive e2
         when (i2 /= TInt) $
-            let ?pos = getPos e2 in reportPos $ EBadIndex2 con i2
+            let ?pos = e2.pos in reportPos $ EBadIndex2 con i2
         mty <- lookup var
         case mty of
             --2.1. Uninitialized array
@@ -209,7 +209,7 @@ lookupFn :: Variable -> Checker (Maybe Signature)
 lookupFn fun = do
     case fun of
         VVar name -> do
-            builtinFn <- bFunctions <$> view sBuiltin
+            builtinFn <- (.bFunctions) <$> view sBuiltin
             -- TODO: derive and store script types
             pure $ M.lookup name builtinFn
         _ -> do
@@ -257,7 +257,7 @@ deriveOp _ _ _ = error "deriveOp: unreachable"
 
 checkType descr ty expr = do
     varT <- derive expr
-    let ?pos = getPos expr
+    let ?pos = expr.pos
     when (varT /= ty) $ reportPos $ EWrongExprType descr ty varT
 
 checkCond = checkType "conditional" TBool
@@ -328,9 +328,9 @@ derive (e :@ pos) = let ?pos = pos in case e of
     EFunction (Function args _cons _body) -> do
         (argsT, optArgsT) <- partitionEithers <$> for args \arg -> do
             t <- deriveVarDecl arg
-            pure $ case vdExpr arg of
-                Nothing -> Left (vdName arg, t)
-                Just _ -> Right (vdName arg, t)
+            pure $ case arg.vdExpr of
+                Nothing -> Left (arg.vdName, t)
+                Just _ -> Right (arg.vdName, t)
         let bodyT = TAny
         
         pure $ TFunction $ Signature argsT (OptArgs optArgsT) bodyT
@@ -353,7 +353,7 @@ derive (e :@ pos) = let ?pos = pos in case e of
                 Nothing -> do
                     case fn of
                         VVar name -> do
-                            scripts <- pScripts <$> view sProject
+                            scripts <- (.pScripts) <$> view sProject
                             case scripts M.!? name of
                                 Nothing -> report (EUndefinedFunction fn) >> pure TAny
                                 Just pr -> do
@@ -448,7 +448,7 @@ exec = \case
         checkType "expression statement" TVoid expr
 
     SWith expr stmt -> do
-        let ?pos = getPos expr
+        let ?pos = expr.pos
         varT <- derive expr
         when (varT /= TInstance) $ reportPos $ EWithInstance varT
         -- TODO: switch the context
@@ -509,12 +509,12 @@ runObject (name, Object {oEvents}) = do
 
 runProject :: Checker ()
 runProject = do
-    objects <- pObjects <$> view sProject
+    objects <- (.pObjects) <$> view sProject
     for_ (M.toList objects) runObject
 
 collectMacros :: Name -> Project -> [(Name, Expr)]
 collectMacros config Project {pScripts, pObjects} = do
-    script <- M.elems pScripts <> concatMap (M.elems . oEvents) (M.elems pObjects)
+    script <- M.elems pScripts <> concatMap (M.elems . (.oEvents)) (M.elems pObjects)
     -- Assuming that all macro declarations are at the top
     SMacro mConf name expr <- script
     guard $ maybe True (== config) mConf

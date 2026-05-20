@@ -27,11 +27,11 @@ data Location = Location {source :: !Source, row :: !Int, col :: !Int}
     deriving (Eq, Ord, Show)
 
 {-| A code entity with a position (without source). -}
-data Located a = (:@) {unLoc :: !a, getPos :: !Pos}
+data Located a = (:@) {unLoc :: !a, pos :: !Pos}
     deriving (Show)
 
 instance Eq a => Eq (Located a) where
-    (==) = (==) `on` unLoc
+    (==) = (==) `on` (.unLoc)
 
 instance Ord a => Ord (Located a) where
-    compare = compare `on` unLoc
+    compare = compare `on` (.unLoc)

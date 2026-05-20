@@ -40,6 +40,8 @@ library:
     - BlockArguments
     - LambdaCase
     - NamedFieldPuns
+    - NoFieldSelectors
+    - OverloadedRecordDot
     - OverloadedStrings
     - TupleSections
   source-dirs: src

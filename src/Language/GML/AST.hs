@@ -163,16 +163,16 @@ instance IsString a => IsString (Located a) where
 
 instance Num Expr where
     fromInteger x = ENumber (fromInteger x) :@ zeroPos
-    a + b = EBinary Add a b :@ getPos a
-    a - b = EBinary Sub a b :@ getPos a
-    a * b = EBinary Mul a b :@ getPos a
-    negate x = EUnary UNeg x :@ getPos x
-    abs x = EFuncall "abs" [x] :@ getPos x
-    signum x = EFuncall "sign" [x] :@ getPos x
+    a + b = EBinary Add a b :@ a.pos
+    a - b = EBinary Sub a b :@ a.pos
+    a * b = EBinary Mul a b :@ a.pos
+    negate x = EUnary UNeg x :@ x.pos
+    abs x = EFuncall "abs" [x] :@ x.pos
+    signum x = EFuncall "sign" [x] :@ x.pos
 
 instance Fractional Expr where
     fromRational = (:@ zeroPos) . ENumber . fromRational
-    a / b =  EBinary Div a b :@ getPos a
+    a / b =  EBinary Div a b :@ a.pos
 
 -- * Statements
 
