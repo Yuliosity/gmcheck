@@ -41,9 +41,9 @@ loadBuiltin dir = do
     let enumValues = M.fromList [(name, (TNewtype ty, True)) | Enum ty opts <- en, (name, _) <- opts]
     fs <- M.fromList <$> parseFile signatures (dir </> "functions.gmli")
     let loadVars file = M.fromList <$> parseFile variables file
-    [globVars, instVars] <- mapM (\file -> loadVars (dir </> file))
+    [globVars, instVars] <- traverse (\file -> loadVars (dir </> file))
         ["global.gmli", "instance.gmli"]
-    return $ Builtin fs (M.union enumValues globVars) instVars
+    pure $ Builtin fs (M.union enumValues globVars) instVars
 
 {-| Hardcoded built-in bundle. For testing purposes. -}
 testBuiltin :: Builtin

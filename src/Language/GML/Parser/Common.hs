@@ -19,5 +19,5 @@ parseFile :: Parser [a] -> FilePath -> IO [a]
 parseFile parser path = do
     src <- T.readFile path
     case parse parser path src of
-        Left err -> putStrLn (errorBundlePretty err) >> return []
-        Right err -> return err
+        Left err -> putStrLn (errorBundlePretty err) >> pure []
+        Right err -> pure err

@@ -15,10 +15,10 @@ module Language.GML.Checker
 
 import Prelude hiding (lookup)
 
-import Control.Monad
+import Control.Monad (guard, unless, void, when)
 import Control.Monad.Trans.RWS
 import Data.Either (isLeft, partitionEithers)
-import Data.Foldable (asum, for_)
+import Data.Foldable (asum, for_, traverse_)
 import qualified Data.Map as M
 import Data.Maybe (fromMaybe)
 import Data.Text (pack)
@@ -112,12 +112,12 @@ reportPos err = do
 lookupBuiltin :: Name -> Checker (Maybe (Type, Bool))
 lookupBuiltin = \case
     -- TODO: specify the instance type
-    "self"  -> return $ Just (TInstance, True)
-    "other" -> return $ Just (TInstance, True)
-    "noone" -> return $ Just (TInstance, True)
+    "self"  -> pure $ Just (TInstance, True)
+    "other" -> pure $ Just (TInstance, True)
+    "noone" -> pure $ Just (TInstance, True)
     name -> do
         Builtin {bGlobalVar, bInstanceVar} <- view sBuiltin
-        return $ asum (map (M.!? name) [bGlobalVar, bInstanceVar])
+        pure $ asum (map (M.!? name) [bGlobalVar, bInstanceVar])
 
 {-| Lookup for a variable in a memory dictionary. -}
 lookupMem :: Name -> Memory -> Maybe Type
@@ -138,7 +138,7 @@ lookup = \case
                 local <- use cLocal
                 scope <- head <$> use cScope
                 self <- use (cObjects . at scope) --FIXME: report or insert self
-                return $ asum
+                pure $ asum
                     [ fst <$> builtin               -- #1: built-in variables/constants
                     , M.lookup name resources       -- #2: project resources
                     , lookupLocal name local        -- #3: local variables
@@ -148,10 +148,10 @@ lookup = \case
     VField var@(VVar name) field -> do
         object <- use (cObjects . at name)
         case object of
-            Nothing  -> report (EUndefinedVar var) >> return Nothing
-            Just mem -> return $ lookupMem field mem
+            Nothing  -> report (EUndefinedVar var) >> pure Nothing
+            Just mem -> pure $ lookupMem field mem
 
-    VField _var _name -> return Nothing--error "Chaining is not yet supported"
+    VField _var _name -> pure Nothing--error "Chaining is not yet supported"
 
     --Indexed cell
     VContainer con var expr -> do
@@ -165,13 +165,13 @@ lookup = \case
             --2.1. Uninitialized array
             Nothing -> do
                 --TODO: init
-                return $ Just TVoid
+                pure $ Just TVoid
             --2.2. All is OK
-            Just (TContainer rcon res) | con == rcon -> return $ Just res
+            Just (TContainer rcon res) | con == rcon -> pure $ Just res
             --2.3. Wrong container type.
             Just res -> do
                 reportPos $ EWrongVarType var res (TContainer con TAny) --FIXME: actual expected array type
-                return Nothing
+                pure Nothing
 
     --2D indexed cell
     VContainer2 con var (e1, e2) -> do
@@ -186,13 +186,13 @@ lookup = \case
             --2.1. Uninitialized array
             Nothing -> do
                 --TODO: init
-                return $ Just TVoid
+                pure $ Just TVoid
             --2.2. All is OK
-            Just (TContainer2 rcon res) | con == rcon -> return $ Just res
+            Just (TContainer2 rcon res) | con == rcon -> pure $ Just res
             --2.3. Wrong container type.
             Just res -> do
                 report $ EWrongVarType var res (TContainer2 con TAny) --FIXME: actual expected array type
-                return Nothing
+                pure Nothing
 
 setVar :: Variable -> Type -> Checker ()
 setVar var ty = case var of
@@ -201,7 +201,7 @@ setVar var ty = case var of
     VContainer2 con (VVar name) _ -> setLocal name $ TContainer2 con ty
     VField (VVar name) field -> do
         cObjects . at name . non M.empty . at field .= Just ty
-    _ -> return () --error "changing non-local variables is not implemented yet"
+    _ -> pure () --error "changing non-local variables is not implemented yet"
 
 
 {-| Lookup for a function signature. -}
@@ -211,10 +211,10 @@ lookupFn fun = do
         VVar name -> do
             builtinFn <- bFunctions <$> view sBuiltin
             -- TODO: derive and store script types
-            return $ M.lookup name builtinFn
+            pure $ M.lookup name builtinFn
         _ -> do
             -- TODO: derive local functions
-            return Nothing
+            pure Nothing
 
 isCompOp, isNumOp, isBoolOp :: BinOp -> Bool
 isCompOp = (`elem` [Less, LessEq, Eq, NotEq, Greater, GreaterEq])
@@ -271,53 +271,53 @@ derive (e :@ pos) = let ?pos = pos in case e of
     EVariable var -> do
         mty <- lookup var
         case mty of
-            Nothing -> reportPos (EUndefinedVar var) >> return TVoid
-            Just ty -> return ty
+            Nothing -> reportPos (EUndefinedVar var) >> pure TVoid
+            Just ty -> pure ty
 
-    ENumber _ -> return TReal
-    EString _ -> return TString
+    ENumber _ -> pure TReal
+    EString _ -> pure TString
 
-    EArray [] -> return $ TArray TAny
+    EArray [] -> pure $ TArray TAny
     EArray (e1:es) -> do
         t1 <- derive e1
-        forM_ es $ \expr -> do
+        for_ es $ \expr -> do
             ty <- derive expr
             when (t1 /= ty) $ report $ WHeteroArray "literal" t1 ty
             --TODO: array of variants?
-        return $ TArray t1
+        pure $ TArray t1
 
     EStruct fields -> do
-        fieldsT <- forM fields $ \(field, expr) -> do
+        fieldsT <- for fields $ \(field, expr) -> do
             ty <- derive expr
-            return (field, ty)
-        return $ TStruct fieldsT
+            pure (field, ty)
+        pure $ TStruct fieldsT
 
     EUnary op expr -> do
         e1T <- derive expr
         case deriveUnOp op e1T of
-            Right res -> return res
+            Right res -> pure res
             Left  res -> do
                 report (EBadUnary op e1T)
-                return res
+                pure res
 
     EBinary op e1 e2 -> do
         e1T <- derive e1
         e2T <- derive e2
         case deriveOp op e1T e2T of
-            Right res -> return res
+            Right res -> pure res
             Left  res  -> do
                 report (EBadBinary op e1T e2T)
-                return res
+                pure res
 
     ETernary cond e1 e2 -> do
         checkCond cond
         e1T <- derive e1
         e2T <- derive e2
         if e1T == e2T then
-            return e1T
+            pure e1T
         else do
             report (WTernaryDiff e1T e2T)
-            return $ e1T <> e2T
+            pure $ e1T <> e2T
 
     EFuncall fn args -> deriveCall fn args
 
@@ -328,16 +328,16 @@ derive (e :@ pos) = let ?pos = pos in case e of
     EFunction (Function args _cons _body) -> do
         (argsT, optArgsT) <- partitionEithers <$> for args \arg -> do
             t <- deriveVarDecl arg
-            return $ case vdExpr arg of
+            pure $ case vdExpr arg of
                 Nothing -> Left (vdName arg, t)
                 Just _ -> Right (vdName arg, t)
         let bodyT = TAny
         
-        return $ TFunction $ Signature argsT (OptArgs optArgsT) bodyT
+        pure $ TFunction $ Signature argsT (OptArgs optArgsT) bodyT
 
     where
         deriveCall fn args = do
-            argsT <- mapM derive args
+            argsT <- traverse derive args
             msig <- lookupFn fn
             case msig of
                 Just sig@(Signature _ _ res) -> do
@@ -347,24 +347,24 @@ derive (e :@ pos) = let ?pos = pos in case e of
                     else do
                         when (na <  minn) $ report $ EWrongArgNum fn GT minn na
                         when (na >  maxn) $ report $ EWrongArgNum fn LT maxn na
-                    forM_ (zip argsT $ allArgs sig) $ \(a, (name, b)) ->
+                    for_ (zip argsT $ allArgs sig) $ \(a, (name, b)) ->
                         unless (a `isSubtype` b) $ report $ EWrongArgument fn name b a
-                    return res
+                    pure res
                 Nothing -> do
                     case fn of
                         VVar name -> do
                             scripts <- pScripts <$> view sProject
                             case scripts M.!? name of
-                                Nothing -> report (EUndefinedFunction fn) >> return TAny
+                                Nothing -> report (EUndefinedFunction fn) >> pure TAny
                                 Just pr -> do
                                     --Push the stack frame with arguments
                                     let frame = zipWith (\i t -> ("argument" <> pack (show i), t)) [0..] argsT
                                     withFrame (fromList frame) $ run pr
-                                    return TAny --FIXME: return type
+                                    pure TAny --FIXME: pure type
                                     --Pop the stack frame
                         _ -> do
                             -- FIXME
-                            return TAny
+                            pure TAny
 
 {-| Deriving the script signature. -}
 {-
@@ -386,10 +386,10 @@ execAssignModify op (var :@ p1) expr = do
             builtin <- lookupBuiltin name
             case builtin of
                 Just (_, True) -> reportPos (EAssignConst var)
-                _ -> return ()
-        _ -> return ()
+                _ -> pure ()
+        _ -> pure ()
 
-    -- Check if the assigned expression doesn't return a value
+    -- Check if the assigned expression doesn't pure a value
     when (exprT == TVoid) $ reportPos (ENoResult var)
     case op of
         -- Assignment: "a = 5"
@@ -398,7 +398,7 @@ execAssignModify op (var :@ p1) expr = do
                 Just ty | ty /= TVoid && ty /= exprT ->
                     reportPos $ WChangeType var ty exprT
                 -- It is a freshly declared instance variable
-                _ -> return ()
+                _ -> pure ()
             src <- use cSrc
             case src of
                 SrcObject obj _ -> setVar (qualify obj var) exprT
@@ -418,20 +418,20 @@ execAssignModify op (var :@ p1) expr = do
 deriveVarDecl :: VarDecl -> Checker Type
 deriveVarDecl (VarDecl var mExpr mType) = do
     exprT <- case mExpr of
-        Nothing -> return $ fromMaybe TVoid mType
+        Nothing -> pure $ fromMaybe TVoid mType
         Just expr -> do
             exprT <- derive expr
             case mType of
-                Nothing -> return exprT
+                Nothing -> pure exprT
                 Just ty -> do
                     when (exprT /= ty) $ report $ WChangeType (VVar var) exprT ty
-                    return exprT
+                    pure exprT
     setVar (VVar var) exprT
-    return exprT
+    pure exprT
 
 exec :: Stmt -> Checker ()
 exec = \case
-    SDeclare vexp -> forM_ vexp deriveVarDecl
+    SDeclare vexp -> for_ vexp deriveVarDecl
 
     -- TODO: process global variables
     SGlobalvar vexp -> void $ deriveVarDecl vexp
@@ -457,7 +457,7 @@ exec = \case
     SIf cond true false -> do
         checkCond cond
         exec true
-        mapM_ exec false
+        traverse_ exec false
 
     SWhile cond stmt -> do
         checkCond cond
@@ -482,7 +482,7 @@ exec = \case
     STry block mcatch mfinally -> do
         run block
         case mcatch of
-            Nothing -> return ()
+            Nothing -> pure ()
             Just (e, body) -> withFrame (fromList [(e, TException)]) $ run body
         for_ mfinally run
 
@@ -492,15 +492,15 @@ exec = \case
 
     --TODO: for break/continue/exit/return/throw, check that it's the last statement in a block
 
-    _ -> return ()
+    _ -> pure ()
 
 run :: Program -> Checker ()
-run stmts = withFrame emptyMem $ mapM_ exec stmts
+run stmts = withFrame emptyMem $ traverse_ exec stmts
 
 runObject :: (Name, Object) -> Checker ()
 runObject (name, Object {oEvents}) = do
     traceM $ "Checking " ++ show name
-    forM_ (M.toList oEvents) $ \(event, pr) -> do
+    for_ (M.toList oEvents) $ \(event, pr) -> do
         cSrc .= SrcObject name event
         traceM ("-- " ++ show event)
         con <- get
@@ -510,7 +510,7 @@ runObject (name, Object {oEvents}) = do
 runProject :: Checker ()
 runProject = do
     objects <- pObjects <$> view sProject
-    forM_ (M.toList objects) runObject
+    for_ (M.toList objects) runObject
 
 collectMacros :: Name -> Project -> [(Name, Expr)]
 collectMacros config Project {pScripts, pObjects} = do
@@ -518,7 +518,7 @@ collectMacros config Project {pScripts, pObjects} = do
     -- Assuming that all macro declarations are at the top
     SMacro mConf name expr <- script
     guard $ maybe True (== config) mConf
-    return (name, expr)
+    pure (name, expr)
 
 runChecker :: Builtin -> Project -> ErrorSet -> Report
 runChecker builtin project disabledErrors = do

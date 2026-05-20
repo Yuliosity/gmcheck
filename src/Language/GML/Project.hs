@@ -16,7 +16,7 @@ module Language.GML.Project
     ) where
 
 import Control.Applicative ((<|>))
-import Control.Monad (forM)
+import Data.Traversable (for)
 import qualified Data.ByteString as BS
 import Data.Either (fromRight)
 import Data.List (find)
@@ -78,9 +78,9 @@ loadResources path ty = do
     let rPath = path </> (ty ++ "s")
     rNames <- listDirectory rPath
     logTrace $ "Loading resources from " ++ rPath
-    return $ M.fromList [(pack res, TNewtype $ pack ty) | res <- rNames]
+    pure $ M.fromList [(pack res, TNewtype $ pack ty) | res <- rNames]
     <|>
-    return M.empty
+    pure M.empty
 
 loadProgram :: String -> FilePath -> IO Program
 loadProgram what path = do
@@ -93,7 +93,7 @@ withDirectory dir load = do
     if ok
     then do
         fnames <- listDirectory dir
-        forM fnames load
+        for fnames load
     else pure []
 
 loadScripts :: FilePath -> IO (M.Map Name Program)
@@ -104,19 +104,19 @@ loadScripts path = do
                     '@':xs -> xs --Strip the compatibility script prefix
                     xs     -> xs
         pr <- loadProgram "script" $ dir </> name </> name' <.> "gml"
-        return (pack name', pr)
+        pure (pack name', pr)
     pure $ M.fromList scripts
 
 loadObjects :: FilePath -> IO ([FilePath], M.Map Name Object)
 loadObjects path = do
     let dir = path </> "objects"
     names <- listDirectory dir
-    objects <- forM names $ \name -> do
+    objects <- for names $ \name -> do
         eNames <- filter (isExtensionOf "gml") <$> listDirectory (dir </> name)
-        events <- forM eNames $ \eName -> do
+        events <- for eNames $ \eName -> do
             pr <- loadProgram "event" $ dir </> name </> eName
-            return (read $ dropExtension eName, pr)
-        return Object
+            pure (read $ dropExtension eName, pr)
+        pure Object
             { oName = pack name
             , oEvents = M.fromList events
             }
@@ -126,7 +126,7 @@ loadRooms :: FilePath -> IO ([FilePath], M.Map Name Room)
 loadRooms path = do
     let dir = path </> "rooms"
     names <- listDirectory dir
-    rooms <- forM names $ \name -> do
+    rooms <- for names $ \name -> do
         files <- listDirectory (dir </> name)
         let configName = head $ filter ("yy" `isExtensionOf`) files
             creationCodeName = find ("gml" `isExtensionOf`) files
@@ -136,7 +136,7 @@ loadRooms path = do
         config <- fromRight (Room (pack name) [] Nothing)
                 . Yaml.decode1Strict @Room
                 <$> BS.readFile (dir </> name </> configName)
-        return config {rCreationCode}
+        pure config {rCreationCode}
     pure (names, M.fromList $ map (\o -> (rName o, o)) rooms)
 
 createResoursesMap :: [FilePath] -> Type -> M.Map Name Type
@@ -147,7 +147,7 @@ loadProject :: FilePath -> IO Project
 loadProject path = do
     --TODO: load 2.3 projects
     -- Load resources
-    resources <- mapM (loadResources path)
+    resources <- traverse (loadResources path)
         [ "font", "sound", "sprite" ]
     -- Load scripts
     pScripts <- loadScripts path
@@ -155,7 +155,7 @@ loadProject path = do
     (rFilenames, pRooms)   <- loadRooms path
     let resObjects = createResoursesMap oFilenames (TNewtype "object")
         resRooms   = createResoursesMap rFilenames (TNewtype "room")
-    return $ Project
+    pure $ Project
         { pResources = M.unions $ resRooms : resObjects : resources
         , pScripts
         , pObjects

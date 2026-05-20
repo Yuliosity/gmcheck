@@ -164,7 +164,7 @@ pEvent = do
     arg <- munch1 (\c -> isHexDigit c || c == '-')
     let code = read arg
     let keycode = toEnum code
-    return $ case event of
+    pure $ case event of
         "Create"     -> Create
         "Destroy"    -> Destroy
         "Cleanup"    -> Cleanup

@@ -7,7 +7,7 @@ Description : HTML rendering of errors report
 
 module Language.GML.Checker.Render where
 
-import Control.Monad (forM_)
+import Data.Foldable (for_, traverse_)
 import Data.ByteString.Lazy as BS
 import qualified Data.Map.Strict as M
 import Text.Blaze.Html5 as H
@@ -109,7 +109,7 @@ instance ToMarkup Type where
         TMatrix -> "matrix"
         TStruct fields -> do
             "{"
-            forM_ fields (\field -> toMarkup field >> ";")
+            for_ fields (\field -> toMarkup field >> ";")
             "}"
         TFunction (Signature args mArgs ret) -> do
             "("
@@ -169,7 +169,7 @@ instance ToMarkup Pos where
     toMarkup (Pos line col) = toMarkup line >> ":" >> toMarkup col
 
 renderLog :: Log -> Html
-renderLog log = ul $ mapM_ renderError log where
+renderLog log = ul $ traverse_ renderError log where
     renderError (err :@ pos) = li $ toMarkup pos >> " : " >> toMarkup err
 
 htmlReport :: Report -> Html
@@ -177,7 +177,7 @@ htmlReport (Report logs) = docTypeHtml $ do
     H.head $ do
         H.title "Report"
     body $ do
-        forM_ (M.toList logs) $ \(src, log) -> do
+        for_ (M.toList logs) $ \(src, log) -> do
             p $ toHtml src
             renderLog log
 

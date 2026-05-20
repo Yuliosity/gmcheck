@@ -28,46 +28,46 @@ varName = choice
 field = do
     char '.'
     name <- ident
-    return $ \var -> VField var name
+    pure $ \var -> VField var name
 
 accessor1 = do
     char '['
     spec <- option '@' $ oneOf [ '|', '?', '@', '$' ]
     spaces
     cons <- case spec of
-        '|' -> return SList
-        '?' -> return SMap
-        '@' -> return SArray
-        '$' -> return SStruct
+        '|' -> pure SList
+        '?' -> pure SMap
+        '@' -> pure SArray
+        '$' -> pure SStruct
         c   -> fail $ "Unknown accessor " <> show c
     arg <- expr
     symbol "]"
-    return $ \var -> VContainer cons var arg
+    pure $ \var -> VContainer cons var arg
 
 accessor2 = do
     char '['
     spec <- option ' ' $ char '#'
     spaces
     cons <- case spec of
-        ' ' -> return SArray2
-        '#' -> return SGrid
+        ' ' -> pure SArray2
+        '#' -> pure SGrid
         c   -> fail $ "Unknown accessor " <> show c
     arg1 <- expr <* comma
     arg2 <- expr
     symbol "]"
-    return $ \var -> VContainer2 cons var (arg1, arg2)
+    pure $ \var -> VContainer2 cons var (arg1, arg2)
 
 variable = do
     var <- varName
     accs <- many (choice [field, try accessor1, accessor2])
-    return $ foldl' (flip ($)) var accs
+    pure $ foldl' (flip ($)) var accs
 
 function = Function
     <$> parens (varDecl `sepBy` comma)
     <*> choice
         [ colon *> (Constructor . Just <$> funcall) <* kwConstructor
         , kwConstructor $> Constructor Nothing
-        , return PlainFunction
+        , pure PlainFunction
         ]
     <*> block
     where 
@@ -127,18 +127,18 @@ opTable =
 binary, binaryK :: Text -> BinOp -> Operator Parser Expr
 binary  name op = InfixL $ do --  (EBinary op <$ operator name)
     operator name
-    return $ \a b -> EBinary op a b :@ getPos a
+    pure $ \a b -> EBinary op a b :@ getPos a
 binaryK name op = InfixL $ do --  (EBinary op <$ keyword name)
     keyword name <?> "operator"
-    return $ \a b -> EBinary op a b :@ getPos a
+    pure $ \a b -> EBinary op a b :@ getPos a
 
 prefix, postfix :: Text -> UnOp -> Operator Parser Expr
 prefix  name op = Prefix $ do --  (EUnary op <$ operator name)
     _ :@ p <- located (operator name)
-    return $ \e -> EUnary op e :@ p
+    pure $ \e -> EUnary op e :@ p
 postfix name op = Postfix $ do -- (EUnary op <$ operator name)
     _ :@ p <- located (operator name)
-    return $ \e -> EUnary op e :@ p
+    pure $ \e -> EUnary op e :@ p
 
 ternary = TernR do 
     (f <$ symbol ":") <$ symbol "?"
@@ -183,13 +183,13 @@ varDecl = do
     name <- ident_ <* space
     mType <- optional $ inPragma type_
     mInit <- optional $ symbol "=" *> expr
-    return $ VarDecl name mInit mType
+    pure $ VarDecl name mInit mType
 
 sDeclare :: Parser Stmt
 sDeclare = do
     kwVar
     vars <- varDecl `sepBy1` comma
-    return $ SDeclare vars
+    pure $ SDeclare vars
 
 sEnum :: Parser Stmt
 sEnum = SEnum <$> (kwEnum *> ident) <*> braces (ident `sepBy` comma)
@@ -217,8 +217,8 @@ sSwitch = do
             <|> (kwDefault *> colon $> [])
         body <- many stmt
         optional semicolon
-        return (cases, body)
-    return $ SSwitch cond branches
+        pure (cases, body)
+    pure $ SSwitch cond branches
 
 sFor :: Parser Stmt
 sFor = do
@@ -228,7 +228,7 @@ sFor = do
     step <- try sAssign <|> SExpression <$> expr
     parenR
     body <- stmt
-    return $ SFor init cond step body
+    pure $ SFor init cond step body
 
 sTry :: Parser Stmt
 sTry = do
@@ -236,13 +236,13 @@ sTry = do
     body <- block
     catch <- optional ((,) <$> (kwCatch *> parens ident) <*> block)
     finally <- optional (kwFinally *> block)
-    return $ STry body catch finally
+    pure $ STry body catch finally
 
 sReturn :: Parser Stmt
 sReturn = do
     kwReturn
     expr <- optional expr
-    return $ maybe SReturnVoid SReturn expr
+    pure $ maybe SReturnVoid SReturn expr
 
 sMacro :: Parser Stmt
 sMacro = do
@@ -250,10 +250,10 @@ sMacro = do
     p1 <- ident_
     c <- optional $ single ':'
     (mConfig, name) <- case c of
-        Nothing -> spaces >> return (Nothing, p1)
+        Nothing -> spaces >> pure (Nothing, p1)
         Just _ -> do
             p2 <- ident
-            return (Just p1, p2)
+            pure (Just p1, p2)
     SMacro mConfig name <$> expr
 
 -- | A single statement, optionally ended with a semicolon.

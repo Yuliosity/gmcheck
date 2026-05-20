@@ -30,12 +30,12 @@ nametype =
     -- TODO: flatten
     case tyName of
         -- TODO: better rule for type variables
-        _ | T.length tyName == 1 -> return (tyName, TTypeVar tyName)
-        _ | Just res <- scalarTypes M.!? tyName -> return (tyName, res)
+        _ | T.length tyName == 1 -> pure (tyName, TTypeVar tyName)
+        _ | Just res <- scalarTypes M.!? tyName -> pure (tyName, res)
         _ | Just res <- vectorTypes M.!? tyName -> do
                 (subname, subtype) <- between (symbol "<") (symbol ">") nametype
-                return (tyName <> "<" <> subname <> ">", res subtype)
-        _ -> return (tyName, TNewtype tyName)
+                pure (tyName <> "<" <> subname <> ">", res subtype)
+        _ -> pure (tyName, TNewtype tyName)
     where
         scalarTypes = M.fromList
             -- Base types
@@ -75,7 +75,7 @@ function = do
     symbol "->"
     ret <- type_
     -- TODO: show function type
-    return ("function", TFunction (args :-> ret))
+    pure ("function", TFunction (args :-> ret))
 
 type_ = snd <$> nametype
 
@@ -94,7 +94,7 @@ vars = do
     isConst <- option False $ True <$ keyword "const"
     names <- names <* colon
     ty <- type_
-    return (names, (ty, isConst))
+    pure (names, (ty, isConst))
 
 variables :: Parser [(Name, VarType)]
 variables = concatMap unpack <$> manyAll vars
@@ -105,7 +105,7 @@ arg :: Parser Argument
 arg = do
     name <- optional (try (ident <* colon))
     (tyName, ty) <- nametype
-    return (fromMaybe tyName name, ty)
+    pure (fromMaybe tyName name, ty)
 
 signature_ :: Parser Signature
 signature_ = do
@@ -113,13 +113,13 @@ signature_ = do
         args <- arg `sepBy` comma
         moreArgs <- (VarArgs <$> (symbol "*" *> arg))
                 <|> (OptArgs <$> option [] (symbol "?" *> arg `sepBy1` comma))
-        return (args, moreArgs))
+        pure (args, moreArgs))
         <|> do
             arg <- arg
-            return ([arg], OptArgs [])
+            pure ([arg], OptArgs [])
     symbol "->"
     ret <- type_
-    return $ Signature args moreArgs ret
+    pure $ Signature args moreArgs ret
 
 signatures :: Parser [(Name, Signature)]
 signatures = concatMap unpack <$> manyAll ((,) <$> names <* colon <*> signature_)
@@ -132,7 +132,7 @@ enum = do
     name <- ident
     labels <- braces $ ident `sepBy1` comma
     --TODO: parse values
-    return $ Enum name $ zip labels [0..]
+    pure $ Enum name $ zip labels [0..]
 
 enums :: Parser [Enum]
 enums = manyAll enum

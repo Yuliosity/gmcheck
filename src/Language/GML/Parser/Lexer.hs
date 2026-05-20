@@ -34,7 +34,7 @@ inPragma p = do
     res <- p
     "*/"
     spaces
-    return res
+    pure res
 
 -- * Punctuation
 comma, colon, semicolon, parenL, parenR, braceL, braceR :: Parser ()
@@ -88,7 +88,7 @@ ident :: Parser Name
 ident = try $ do
     i <- lexeme ident_ 
     guard $ i `notElem` reserved
-    return i
+    pure i
         <?> "identifier"
 
 -- * Literals
