@@ -129,7 +129,7 @@ binary  name op = InfixL $ do --  (EBinary op <$ operator name)
     operator name
     return $ \a b -> EBinary op a b :@ getPos a
 binaryK name op = InfixL $ do --  (EBinary op <$ keyword name)
-    keyword name
+    keyword name <?> "operator"
     return $ \a b -> EBinary op a b :@ getPos a
 
 prefix, postfix :: Text -> UnOp -> Operator Parser Expr

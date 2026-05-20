@@ -77,7 +77,7 @@ opSymbol :: Parser Char
 opSymbol = satisfy (`elem` ("+-*/=<>!|&^" :: String)) --TODO: optimize
 
 operator :: Text -> Parser Text
-operator op = (lexeme . try) (string op <* notFollowedBy opSymbol)
+operator op = (lexeme . try) (string op) <?> "operator"
 
 {-| Identifier without following spaces. -}
 ident_ :: Parser Name
@@ -89,6 +89,7 @@ ident = try $ do
     i <- lexeme ident_ 
     guard $ i `notElem` reserved
     return i
+        <?> "identifier"
 
 -- * Literals
 

@@ -74,6 +74,7 @@ exprs = describe "expressions parser" $ do
     it "can parse binary operators" $ do
         parse' expr "42+foo" `shouldParse` (42 + foo)
         parse' expr "undefined ?? 42" `shouldParse` eBinary Nullish eUndefined 42
+        parse' expr "global.bar==42" `shouldParse` eBinary Eq (eVariable $ "global" `VField` "bar") 42
     it "can parse prefix and postfix operators" $ do
         parse' expr "foo++" `shouldParse` eUnary UPostInc foo
         parse' expr "foo-- - --foo" `shouldParse` (eUnary UPostDec foo - eUnary UPreDec foo)
@@ -85,6 +86,7 @@ exprs = describe "expressions parser" $ do
         parse' expr "sin(3.14)" `shouldParse` sinPi
         parse' expr "cat(foo, bar)" `shouldParse` eFuncall "cat" [foo, bar]
         parse' expr "qux(foo + 0, +bar)" `shouldParse` eFuncall "qux" [foo + 0, eUnary UPos bar]
+        parse' expr "cat(foo,\"string\",bar)" `shouldParse` eFuncall "cat" [foo, litString, bar]
         parse' expr "self.foo(bar)" `shouldParse` eFuncall ("self" `VField` "foo") [bar]
     it "can parse array literals" $ do
         parse' expr "[]" `shouldParse` eArray []
@@ -149,6 +151,8 @@ stmts = describe "statements parser" $ do
         parse' stmt "if foo bar=42 else exit" `shouldParse` SIf foo (SAssign "bar" lit42) (Just SExit)
         parse' stmt "if (foo < 42) {foo += 42 exit}" `shouldParse`
             SIf foo_lt_42 (SBlock [SModify MAdd "foo" lit42, SExit]) Nothing
+        parse' stmt "if (global.foo==-1) {exit}" `shouldParse`
+            SIf (eBinary Eq (eVariable $ "global" `VField` "foo") (eUnary UNeg 1)) (SBlock [SExit]) Nothing
     it "can parse loops" $ do
         parse' stmt "while(foo) write(\"string\")" `shouldParse` SWhile foo (SExpression writeString)
         parse' stmt "while(foo) {foo -= 42; write(\"string\")}" `shouldParse`
