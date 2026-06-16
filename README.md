@@ -10,6 +10,15 @@ GMCheck is best compiled and run using [Haskell Stack](https://haskellstack.org)
 
 `stack exec gmcheck-exe -- -o path-to-report.html path-to-gms-project-directory/`
 
+### nix
+
+`nix-shell -p hpack --command hpack` to generate cabal from package.yaml
+
+`nix-shell` for dev env with cabal and deps
+
+`nix-build` to get executable
+
+
 ## Features and Plans
 
 - ✔️ Mostly complete parser of GML, including 2.3 additions.
